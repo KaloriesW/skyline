@@ -7,12 +7,26 @@ Design (Claude Design canvas): https://claude.ai/artifact/LV5MG4J2AGih4Ew2fPBuC5
 - Designed for desktop first, then mobile.
 - Type: Bricolage Grotesque for display text, Inter for UI. Accent color: sun yellow `#FFC24B`.
 
+## Customization
+- **Everything can be changed in Settings:** accent color, risk color scale, background (live weather or static), tile style, fonts, corner roundness, skyline art, map base, pinned items, the stats grid, data sources, units and language.
+- The design shows the **defaults** only:
+  - Accent: sun yellow `#FFC24B`
+  - Risk scale: green, yellow, orange, red
+  - Background: live weather
+  - Tiles: glass
+  - Fonts: Bricolage Grotesque + Inter
+  - Corners: 24 px
+  - Skyline: follows the user's city
+  - Map base: satellite for Skyline models, Windy for others
+
 ## Screens
 | Screen | Desktop | Mobile | Notes |
 |---|---|---|---|
 | Home | `Main.dc.html` | `HomeMobile.dc.html` | Location and temperature hero, plus a fully customizable tile grid with an Edit mode for remove, reorder, resize, and add |
 | Predictions (Taiwan only) | `Predictions.dc.html` | `PredictionsMobile.dc.html` | Map layers for PM2.5, landslide risk, and climate projection. Includes a time slider, region detail, and a risk ranking |
 | AI Assistant (RAG/MCP) | `Assistant.dc.html` | `AssistantMobile.dc.html` | Grounded answers with source chips, inline charts, and suggested prompts |
+| Predictions map | (inside `Predictions.dc.html`) | `PredictionsMapMobile.dc.html` | Satellite or Windy base, colored overlay, and a past ↔ forecast slider |
+| Settings | `Settings.dc.html` | `SettingsMobile.dc.html` | Pinned count, Theme & colors (defaults), data sources, units |
 
 ## Taiwan personality
 - The Home hero shows a skyline and mountains for the user's city, switched by the **Location** tweak:
