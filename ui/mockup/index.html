@@ -461,7 +461,8 @@ var CITIES = [
   ['Seoul', '首爾', 37.5665, 126.9780, 'South Korea'],
   ['San Francisco', 'sf', 37.7749, -122.4194, 'California, USA'],
   ['New York', 'nyc', 40.7128, -74.0060, 'New York, USA'],
-  ['London', '倫敦', 51.5074, -0.1278, 'United Kingdom']
+  ['London', '倫敦', 51.5074, -0.1278, 'United Kingdom'],
+  ['Sydney', '雪梨', -33.8688, 151.2093, 'Australia']
 ];
 var LANDMARKS = [
   ['Taipei 101', '台北101 101', 25.0340, 121.5645, 'Xinyi, Taipei'],
@@ -1407,8 +1408,8 @@ function search(q) {
   var c = parseCoords(q);
   if (c) {
     var np = nearestPlace(c.lat, c.lon);
-    push({ kind: 'Coordinates', tag: 'coords', name: fmtCoord(c.lat, c.lon), sub: np.place ? 'Near ' + np.place.name + ' · ' + fmtKm(np.d) : '', lat: c.lat, lon: c.lon,
-      loc: { name: np.place && np.d < 20 ? np.place.name.split(',')[0] : fmtCoord(c.lat, c.lon), sub: np.place && np.d < 20 ? fmtCoord(c.lat, c.lon) : (np.place ? 'Near ' + np.place.name : ''), lat: c.lat, lon: c.lon, kind: 'Coordinates' } });
+    push({ kind: 'Coordinates', tag: 'coords', name: fmtCoord(c.lat, c.lon), sub: np.place && np.d < 150 ? 'Near ' + np.place.name + ' · ' + fmtKm(np.d) : 'Point forecast from Windy', lat: c.lat, lon: c.lon,
+      loc: { name: np.place && np.d < 20 ? np.place.name.split(',')[0] : fmtCoord(c.lat, c.lon), sub: np.place && np.d < 20 ? fmtCoord(c.lat, c.lon) : (np.place && np.d < 150 ? 'Near ' + np.place.name : 'Coordinates'), lat: c.lat, lon: c.lon, kind: 'Coordinates' } });
     return out;
   }
   var code = q.trim().toUpperCase();
