@@ -566,7 +566,8 @@ AIRPORTS.forEach(function (a) {
 
 // Weather stations used for the "nearest source" rule
 var STATIONS = [{ name: 'CWA Xinyi station', lat: 25.0375, lon: 121.5637, cwa: true }];
-CITIES.forEach(function (c) { if (inTW(c[2], c[3]) && c[0] !== 'Xinyi District') STATIONS.push({ name: 'CWA ' + c[0].split(',')[0] + ' station', lat: c[2], lon: c[3], cwa: true }); });
+STATIONS.push({ name: 'CWA Taipei station', lat: 25.0377, lon: 121.5149, cwa: true });
+CITIES.forEach(function (c) { if (inTW(c[2], c[3]) && c[0] !== 'Xinyi District' && c[0] !== 'Taipei') STATIONS.push({ name: 'CWA ' + c[0].split(',')[0] + ' station', lat: c[2], lon: c[3], cwa: true }); });
 [['Alishan', 23.5100, 120.8050], ['Yushan', 23.4876, 120.9595], ['Sun Moon Lake', 23.8830, 120.9000], ['Hengchun', 22.0039, 120.7463], ['Tamsui', 25.1650, 121.4489], ['Banqiao', 24.9976, 121.4420], ['Hsinchu (Science Park)', 24.7800, 121.0000]].forEach(function (s) {
   STATIONS.push({ name: 'CWA ' + s[0] + ' station', lat: s[1], lon: s[2], cwa: true });
 });
