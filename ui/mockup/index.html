@@ -1,0 +1,1585 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skyline Weather</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --accent:#FFC24B; --accent-ink:#2A1A00;
+  --navy:#0B1B3F; --navy-2:#081430; --panel:#12285A;
+  --glass:rgba(8,24,56,.5); --glass-line:rgba(255,255,255,.12);
+  --muted:#B8C7E8; --soft:#D5DEF2;
+  --light-bg:#F3F6FC; --light-card:#FFFFFF; --light-ink:#0B1B3F; --light-muted:#34466B; --light-line:#E3E9F5;
+  --r:24px;
+  --display:'Bricolage Grotesque',system-ui,sans-serif;
+  --body:Inter,system-ui,sans-serif;
+  color-scheme:dark;
+}
+body.system-fonts{--display:system-ui,-apple-system,'Segoe UI',sans-serif;--body:system-ui,-apple-system,'Segoe UI',sans-serif}
+body.solid-tiles{--glass:#16306A}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--navy);color:#fff;font-family:var(--body);-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:inherit}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+h1,h2,h3{margin:0}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* ---------- animation ---------- */
+@keyframes sk-drift{from{transform:translateX(-6%)}to{transform:translateX(6%)}}
+@keyframes sk-rain{from{transform:translateY(0)}to{transform:translateY(50%)}}
+@keyframes sk-flash{0%,88%,100%{opacity:0}89%{opacity:.9}90%{opacity:.15}92%{opacity:.7}94%{opacity:0}}
+@keyframes sk-twinkle{0%,100%{opacity:.85}50%{opacity:.45}}
+@keyframes sk-shimmer{0%,100%{opacity:.9;transform:scale(1)}50%{opacity:.75;transform:scale(1.04)}}
+@keyframes sk-flow{to{stroke-dashoffset:-60}}
+@keyframes sk-pulse{0%{r:6;opacity:.8}100%{r:22;opacity:0}}
+@keyframes sk-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.sk-cloud{animation:sk-drift ease-in-out infinite alternate}
+.sk-rain{animation:sk-rain linear infinite}
+.sk-flash{animation:sk-flash 7s infinite}
+.sk-stars{animation:sk-twinkle 5s ease-in-out infinite}
+.sk-flare{animation:sk-shimmer 6s ease-in-out infinite}
+.sk-flow{animation:sk-flow 3s linear infinite}
+.sk-pulse{animation:sk-pulse 2s ease-out infinite}
+body.reduce-motion *, body.reduce-motion *::before{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+
+/* ---------- top bar & tab bar ---------- */
+.topbar{position:fixed;inset:0 0 auto 0;z-index:30;height:64px;display:flex;align-items:center;gap:20px;padding:0 28px;background:rgba(8,20,48,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+body[data-page=home] .topbar{background:linear-gradient(180deg,rgba(0,0,0,.22),rgba(0,0,0,0));backdrop-filter:none;-webkit-backdrop-filter:none}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:22px;text-decoration:none}
+.topnav{display:flex;gap:4px}
+.topnav a{padding:10px 14px;border-radius:999px;text-decoration:none;font-weight:600;font-size:15px;color:rgba(255,255,255,.82)}
+.topnav a:hover{color:#fff;background:rgba(255,255,255,.08)}
+.topnav a[aria-current=page]{background:rgba(255,255,255,.18);color:#fff}
+.search-btn{margin-left:auto;display:flex;align-items:center;gap:10px;min-height:44px;min-width:300px;padding:0 8px 0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.12);color:#fff;font-size:14px;text-align:left}
+.search-btn:hover{background:rgba(255,255,255,.2)}
+.search-btn .sb-text{color:rgba(255,255,255,.85)}
+kbd{font:600 12px var(--body);padding:3px 7px;border-radius:7px;background:rgba(255,255,255,.16);color:#fff}
+.search-btn kbd{margin-left:auto}
+.tabbar{display:none}
+main{min-height:100vh}
+
+/* ---------- home hero ---------- */
+.hero{position:relative;min-height:100vh;display:flex;flex-direction:column;overflow:hidden;
+  background:linear-gradient(180deg,var(--top) 0%,var(--mid) 34%,var(--bottom) 62%,var(--navy) 86%)}
+.sky{position:absolute;left:0;right:0;top:0;height:80%;overflow:hidden;pointer-events:none}
+.stars{position:absolute;inset:0 0 40% 0;background-image:radial-gradient(1.5px 1.5px at 20px 30px,#fff,rgba(255,255,255,0)),radial-gradient(1px 1px at 90px 120px,#fff,rgba(255,255,255,0)),radial-gradient(1.2px 1.2px at 160px 60px,#fff,rgba(255,255,255,0)),radial-gradient(1px 1px at 230px 170px,#DDE6FF,rgba(255,255,255,0)),radial-gradient(2px 2px at 300px 40px,#fff,rgba(255,255,255,0));background-size:340px 220px}
+.moon{position:absolute;left:74%;top:120px;width:96px;height:96px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#FFFDF4 0%,#ECE7D6 55%,#CFC8B2 100%);box-shadow:0 0 60px 20px rgba(230,235,255,.25),0 0 180px 60px rgba(160,180,255,.12)}
+.sun-glow{position:absolute;width:900px;height:900px;margin:-450px 0 0 -450px;border-radius:50%}
+.sun{position:absolute;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%}
+.streak{position:absolute;width:1400px;height:4px;margin:-2px 0 0 -700px;background:linear-gradient(90deg,rgba(180,220,255,0),rgba(200,230,255,.55) 45%,rgba(255,255,255,.8) 50%,rgba(200,230,255,.55) 55%,rgba(180,220,255,0));filter:blur(1.5px)}
+.ghost,.cloud{position:absolute;border-radius:50%}
+.cloud{border-radius:0}
+.rain-wrap{position:absolute;inset:0;transform:rotate(10deg) scale(1.2)}
+.rain1,.rain2{position:absolute;left:0;right:0;top:-100%;height:200%}
+.rain1{animation-duration:.9s;background-image:repeating-linear-gradient(90deg,rgba(200,220,255,0) 0 17px,rgba(200,220,255,.35) 17px 18px,rgba(200,220,255,0) 18px 41px);-webkit-mask-image:repeating-linear-gradient(180deg,#000 0 46px,transparent 46px 130px);mask-image:repeating-linear-gradient(180deg,#000 0 46px,transparent 46px 130px)}
+.rain2{left:7px;animation-duration:.55s;background-image:repeating-linear-gradient(90deg,rgba(220,235,255,0) 0 29px,rgba(220,235,255,.55) 29px 31px,rgba(220,235,255,0) 31px 67px);-webkit-mask-image:repeating-linear-gradient(180deg,#000 0 70px,transparent 70px 210px);mask-image:repeating-linear-gradient(180deg,#000 0 70px,transparent 70px 210px)}
+.flash{position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(235,240,255,.85),rgba(200,210,255,.25) 50%,rgba(200,210,255,0) 80%)}
+.bolt{position:absolute;left:26%;top:60px;filter:drop-shadow(0 0 10px #CFD8FF) drop-shadow(0 0 30px #9FB2FF)}
+
+.hero-main{position:relative;z-index:1;flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:96px 24px 8px;text-align:center}
+.loc{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:6px 16px;border-radius:999px;border:0;background:rgba(255,255,255,.14);color:#fff;font-size:20px;font-weight:600;text-shadow:0 1px 12px rgba(0,0,0,.2)}
+.loc:hover{background:rgba(255,255,255,.24)}
+.loc .loc-sub{font-weight:500;opacity:.8;font-size:16px}
+.temp{font-family:var(--display);font-weight:800;font-size:clamp(132px,15vw,210px);line-height:.92;letter-spacing:-.04em;margin-left:.08em;text-shadow:0 6px 40px rgba(0,0,0,.12)}
+.headline{font-family:var(--display);font-weight:700;font-size:clamp(20px,2.2vw,28px);text-shadow:0 1px 14px rgba(0,0,0,.25)}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:10px}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:7px 13px;border-radius:999px;background:rgba(8,24,56,.42);font-size:13px;font-weight:600;color:#fff;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.chip .dot{width:8px;height:8px;border-radius:50%;background:#4ADE80;box-shadow:0 0 0 3px rgba(74,222,128,.25)}
+.chip.warn{background:rgba(255,194,75,.2);color:#FFE4A8}
+.demo{position:absolute;z-index:2;right:24px;top:76px;display:flex;align-items:center;gap:8px;padding:6px 8px 6px 12px;border-radius:14px;background:rgba(8,24,56,.42);font-size:12px;font-weight:600;color:rgba(255,255,255,.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.demo select{min-height:32px;border-radius:9px;border:0;padding:0 8px;background:rgba(255,255,255,.16);color:#fff}
+.demo select option{color:#0B1B3F}
+.skyline{position:relative;display:block;width:100%;height:clamp(120px,15vw,220px);margin-top:4px}
+.pinned-wrap{position:relative;z-index:1;background:var(--navy);padding:8px 40px 28px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.pinned{width:100%;max-width:1200px;display:grid;gap:16px}
+.pinned.few{grid-template-columns:repeat(3,minmax(0,1fr))}
+.pinned.many{grid-template-columns:repeat(5,minmax(0,1fr))}
+.pin{padding:18px 20px;border-radius:var(--r);background:var(--glass);border:1px solid var(--glass-line);display:flex;flex-direction:column;gap:4px;min-width:0}
+.pin .t{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.pin .v{font-family:var(--display);font-weight:800;font-size:44px;line-height:1.05}
+.pinned.many .pin .v{font-size:28px}
+.pin .s{font-size:14px;color:var(--soft)}
+.pin .src{font-size:12px;color:var(--muted)}
+.scroll-hint{min-height:44px;padding:0 18px;border-radius:999px;border:1px solid rgba(255,255,255,.28);background:transparent;color:#fff;font-weight:600}
+.scroll-hint:hover{background:rgba(255,255,255,.1)}
+
+/* ---------- stats grid ---------- */
+.stats{max-width:1280px;margin:0 auto;padding:56px 40px 80px;display:flex;flex-direction:column;gap:18px;scroll-margin-top:64px}
+.stats-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.stats-head h2{font-family:var(--display);font-weight:800;font-size:40px}
+.stats-head p{margin:4px 0 0;color:var(--soft);font-size:15px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{min-height:44px;padding:0 18px;border-radius:999px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-weight:600;font-size:15px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn:hover{background:rgba(255,255,255,.18)}
+.btn.accent{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.btn.ghost{background:transparent}
+.edit-tip{margin:0;padding:12px 16px;border-radius:14px;background:rgba(255,194,75,.14);color:#FFE4A8;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(176px,auto);gap:16px;grid-auto-flow:dense}
+.tile{position:relative;min-width:0;padding:20px 22px;border-radius:var(--r);background:var(--tbg,var(--glass));color:var(--tfg,#fff);border:1px solid var(--glass-line);display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.s1{grid-column:span 1}.s2{grid-column:span 2}.s3{grid-column:span 3}.s4{grid-column:span 4}
+.r2{grid-row:span 2}
+.grid.editing .tile{border:2px dashed rgba(255,255,255,.6);cursor:grab}
+.tile.dragging{opacity:.4}
+.tile.drop-target{outline:3px solid var(--accent);outline-offset:2px}
+.tile header{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.tile h3{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.85}
+.tile .src{font-size:12px;opacity:.7;text-align:right}
+.tile .val{font-family:var(--display);font-weight:800;font-size:40px;line-height:1.05}
+.tile .sub{margin:0;font-size:14px;line-height:1.45;opacity:.9}
+.meter{position:relative;height:8px;border-radius:4px;margin-top:auto}
+.meter span{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(0,0,0,.25)}
+.hours{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.hour{flex:1 0 72px;display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 4px;border-radius:16px;font-size:14px}
+.hour:first-child{background:rgba(255,255,255,.1)}
+.hour .ic{width:26px;height:26px;border-radius:50%}
+.hour .tt{font-weight:700;font-size:18px}
+.hour .rp{font-size:12px;color:#7DD3FC}
+.week{display:flex;flex-direction:column}
+.wrow{display:grid;grid-template-columns:64px 22px 40px 1fr 40px;align-items:center;gap:10px;min-height:44px;border-top:1px solid rgba(255,255,255,.1);font-size:15px}
+.wrow:first-child{border-top:0}
+.wrow .ic{width:18px;height:18px;border-radius:50%}
+.wrow .lo{opacity:.7;text-align:right}
+.wbar{position:relative;height:6px;border-radius:3px;background:rgba(255,255,255,.14)}
+.wbar span{position:absolute;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,#7DD3FC,#FFC24B,#FB923C)}
+.tile-map{position:relative;flex:1;min-height:200px;margin:0 -22px -20px;overflow:hidden}
+.tile-map svg{position:absolute;inset:0;width:100%;height:100%}
+.tile-map .open{position:absolute;right:14px;bottom:14px}
+.edit-ctl{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:8px}
+.edit-ctl button{min-width:40px;min-height:40px;padding:0 10px;border-radius:12px;border:0;background:#fff;color:#0B1B3F;font-weight:600;font-size:13px}
+.edit-ctl button.hide{background:#FF6B5A;color:#fff}
+.edit-ctl button:disabled{opacity:.4;cursor:not-allowed}
+.hidden-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px;color:var(--soft)}
+.hidden-row button{min-height:40px;padding:0 14px;border-radius:999px;border:1px dashed rgba(255,255,255,.5);background:transparent;color:#fff;font-weight:600}
+.foot{margin:0;font-size:12px;color:var(--muted);line-height:1.5}
+
+/* ---------- pages ---------- */
+.page{max-width:1280px;margin:0 auto;padding:96px 40px 80px;display:flex;flex-direction:column;gap:28px;animation:sk-in .25s ease-out}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent)}
+.page h1{font-family:var(--display);font-weight:800;font-size:48px;line-height:1.05}
+.lede{margin:6px 0 0;font-size:16px;color:var(--soft);max-width:720px;line-height:1.5}
+.banner{padding:14px 18px;border-radius:16px;background:rgba(255,194,75,.14);color:#FFE4A8;font-size:14px;line-height:1.5}
+.group-head{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+.group-head h2{font-family:var(--display);font-weight:800;font-size:26px}
+.group-head span{color:var(--muted);font-size:14px}
+.pred-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
+.pcard{display:flex;flex-direction:column;border-radius:var(--r);background:var(--panel);text-decoration:none;overflow:hidden;border:1px solid var(--glass-line);transition:transform .15s}
+.pcard:hover{transform:translateY(-3px)}
+.pcard.own{border:2px solid var(--accent)}
+.thumb{position:relative;height:180px;background:#05172E}
+.thumb svg{position:absolute;inset:0;width:100%;height:100%}
+.base-tag{position:absolute;left:10px;bottom:10px;padding:4px 10px;border-radius:999px;background:rgba(5,23,46,.78);font-size:12px;font-weight:600}
+.own-tag{position:absolute;right:10px;top:10px;padding:4px 10px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-size:12px;font-weight:700}
+.pc-body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:6px}
+.pc-body h3{font-family:var(--display);font-weight:700;font-size:20px}
+.pc-body p{margin:0;font-size:14px;color:var(--soft);line-height:1.45}
+.pc-body .src{font-size:12px;color:var(--muted)}
+.pm-head{display:flex;flex-wrap:wrap;align-items:center;gap:16px}
+.pm-head h1{font-size:40px}
+.pm-head .grow{flex:1}
+.chip.solid{background:rgba(255,255,255,.14);backdrop-filter:none}
+.chip.own{background:var(--accent);color:var(--accent-ink)}
+.pm-body{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.pm-map{flex:3 1 520px;min-width:0;padding:22px;border-radius:28px;background:var(--panel);display:flex;flex-direction:column;gap:18px}
+.map-box{position:relative;overflow:hidden;border-radius:20px;background:#05172E;height:clamp(420px,62vh,660px)}
+.map-box svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.map-top{position:absolute;left:14px;top:14px;right:14px;z-index:1;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
+.mode{padding:7px 12px;border-radius:999px;font-size:13px;font-weight:700}
+.seg{display:inline-flex;gap:4px;padding:4px;border-radius:12px;background:rgba(5,23,46,.75)}
+.seg button{min-height:36px;padding:0 12px;border-radius:9px;border:0;background:transparent;color:#fff;font-weight:600;font-size:13px}
+.seg button[aria-pressed=true]{background:#fff;color:#0B1B3F}
+.slider label{display:flex;justify-content:space-between;font-size:15px;font-weight:600;margin-bottom:10px}
+.slider label .now{color:var(--accent)}
+input[type=range].time{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:4px;background:linear-gradient(90deg,#5B6F99 0 36.4%,var(--accent) 36.4% 100%);margin:10px 0}
+input[type=range].time::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid var(--navy);box-shadow:0 2px 8px rgba(0,0,0,.4)}
+input[type=range].time::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--navy)}
+.ticks{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));font-size:11px;color:var(--muted);text-align:center}
+.ticks .is-now{color:#fff;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--soft)}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{display:block;width:14px;height:14px;border-radius:4px}
+.pm-side{flex:2 1 320px;min-width:0;display:flex;flex-direction:column;gap:16px}
+.note{padding:22px 24px;border-radius:24px;background:#fff;color:#0B1B3F;display:flex;flex-direction:column;gap:8px}
+.note .k{font-size:13px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#4A5A7A}
+.note p{margin:0;font-size:15px;line-height:1.5}
+.note .conf{font-size:13px;font-weight:600;color:#34466B}
+.regions{padding:12px 24px;border-radius:24px;background:var(--panel)}
+.region{display:flex;justify-content:space-between;align-items:center;min-height:46px;border-top:1px solid rgba(255,255,255,.1);font-size:15px}
+.region:first-child{border-top:0}
+.region b{padding:4px 10px;border-radius:8px;font-size:13px}
+.region.you span::after{content:" · you";color:var(--accent);font-weight:600}
+
+/* ---------- light pages ---------- */
+body[data-page=ask], body[data-page=settings]{background:var(--light-bg);color:var(--light-ink);color-scheme:light}
+.light .lede{color:var(--light-muted)}
+.light .eyebrow{color:#1E5BC6}
+.card{padding:22px 24px;border-radius:var(--r);background:var(--light-card);box-shadow:0 2px 12px rgba(11,27,63,.05);display:flex;flex-direction:column;gap:12px}
+.card h2{font-size:18px;font-weight:700}
+.card .hint{margin:0;font-size:14px;color:var(--light-muted)}
+.chat{display:flex;flex-direction:column;gap:14px;max-width:860px}
+.msg{max-width:80%;padding:14px 16px;font-size:15px;line-height:1.5}
+.msg.me{align-self:flex-end;border-radius:20px 20px 6px 20px;background:#1E5BC6;color:#fff}
+.msg.ai{align-self:flex-start;max-width:88%;border-radius:20px 20px 20px 6px;background:#fff;box-shadow:0 2px 10px rgba(11,27,63,.06);display:flex;flex-direction:column;gap:10px}
+.msg.ai p{margin:0}
+.msg.typing{color:var(--light-muted);font-style:italic}
+.srcs{display:flex;flex-wrap:wrap;gap:6px}
+.srcs span{padding:4px 10px;border-radius:999px;background:#E8EEFA;color:#1E3C7A;font-size:12px;font-weight:600}
+.srcs span.own{background:#FFF4E0;color:#7A3A00}
+.bars{display:flex;align-items:flex-end;gap:6px;height:70px}
+.bars div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%;font-size:11px;color:var(--light-muted)}
+.bars i{display:block;width:100%;border-radius:5px}
+.suggest{display:flex;flex-wrap:wrap;gap:8px}
+.suggest button{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid #C5D2EC;background:#fff;color:#0B1B3F;font-weight:500;font-size:14px}
+.suggest button:hover{border-color:#1E5BC6}
+.ask-form{position:sticky;bottom:16px;max-width:860px;display:flex;gap:8px;padding:6px;border-radius:18px;background:#fff;box-shadow:0 4px 20px rgba(11,27,63,.12)}
+.ask-form input{flex:1;min-width:0;min-height:48px;padding:0 12px;border:0;outline:none;background:transparent;color:#0B1B3F;font-size:16px}
+.ask-form button{min-height:48px;padding:0 20px;border-radius:12px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:700}
+.settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
+.set-row{display:flex;justify-content:space-between;align-items:center;gap:16px;min-height:52px;border-top:1px solid var(--light-line);font-size:15px}
+.set-row:first-of-type{border-top:0}
+.set-row .lbl{display:flex;flex-direction:column}
+.set-row .lbl small{color:var(--light-muted);font-size:13px}
+.light .seg{background:#E8EEFA}
+.light .seg button{color:#0B1B3F}
+.light .seg button[aria-pressed=true]{background:#0B1B3F;color:#fff}
+.switch{position:relative;flex:none;width:50px;height:30px;border-radius:999px;border:0;background:#C5D2EC;padding:0}
+.switch::before{content:"";position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .15s}
+.switch[aria-checked=true]{background:#1E5BC6}
+.switch[aria-checked=true]::before{transform:translateX(20px)}
+.swatches{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.swatch{width:40px;height:40px;border-radius:50%;border:3px solid transparent;box-shadow:inset 0 0 0 2px rgba(255,255,255,.6)}
+.swatch[aria-pressed=true]{border-color:#0B1B3F}
+.swatches input[type=color]{width:44px;height:44px;border:1px dashed #4A5A7A;border-radius:50%;padding:2px;background:#fff}
+.badge{padding:3px 10px;border-radius:999px;background:#E8EEFA;font-size:12px;font-weight:700}
+.badge.custom{background:#FFF4E0;color:#7A3A00}
+.pins-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.pins-list li{display:flex;align-items:center;gap:10px;min-height:46px;border-top:1px solid var(--light-line);font-size:15px}
+.pins-list li.off{color:#8090AE}
+.pins-list .n{width:26px;height:26px;border-radius:50%;background:#E8EEFA;display:grid;place-items:center;font-size:12px;font-weight:700}
+.pins-list li.off .n{background:transparent;border:1px dashed #C5D2EC}
+.pins-list .grow{flex:1}
+.mini{min-width:36px;min-height:36px;border-radius:10px;border:1px solid #C5D2EC;background:#fff;color:#0B1B3F;font-weight:700}
+.mini:disabled{opacity:.35}
+.light-btn{min-height:44px;padding:0 16px;border-radius:12px;border:1px solid #C5D2EC;background:#fff;color:#0B1B3F;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.light-btn.primary{background:#0B1B3F;color:#fff;border-color:#0B1B3F}
+input[type=range].plain{width:100%;accent-color:#1E5BC6}
+.light a.link{color:#1E5BC6;font-weight:600}
+
+/* ---------- search ---------- */
+.search-overlay{position:fixed;inset:0;z-index:50;display:flex;justify-content:center;align-items:flex-start;padding:10vh 16px 16px;background:rgba(4,10,30,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.search-overlay[hidden]{display:none}
+.search-panel{width:100%;max-width:640px;max-height:80vh;display:flex;flex-direction:column;border-radius:24px;background:#fff;color:#0B1B3F;box-shadow:0 24px 80px rgba(0,0,0,.35);overflow:hidden;animation:sk-in .18s ease-out;color-scheme:light}
+.search-field{display:flex;align-items:center;gap:10px;padding:12px 14px 12px 18px;border-bottom:1px solid var(--light-line)}
+.search-field input{flex:1;min-width:0;min-height:44px;border:0;outline:none;font-size:18px;background:transparent;color:#0B1B3F}
+.search-field kbd{background:#E8EEFA;color:#34466B}
+.search-field .close{min-width:44px;min-height:44px;border:0;border-radius:12px;background:#F3F6FC;font-size:15px;font-weight:600;color:#0B1B3F}
+.search-body{overflow-y:auto;padding:10px}
+.s-label{padding:10px 10px 6px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#4A5A7A}
+.examples{display:flex;flex-wrap:wrap;gap:6px;padding:0 10px 10px}
+.examples button{min-height:36px;padding:0 12px;border-radius:999px;border:1px solid #C5D2EC;background:#fff;color:#0B1B3F;font-size:13px}
+.examples button b{font-weight:600}
+.results{list-style:none;margin:0;padding:0}
+.res{display:flex;align-items:center;gap:12px;padding:10px;border-radius:14px;cursor:pointer;min-height:56px}
+.res[aria-selected=true],.res:hover{background:#EEF3FC}
+.res .ico{flex:none;width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:#E8EEFA;color:#1E3C7A}
+.res .txt{flex:1;min-width:0;display:flex;flex-direction:column}
+.res .nm{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res .sb{font-size:13px;color:#4A5A7A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res .tag{flex:none;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;background:#E8EEFA;color:#1E3C7A}
+.tag.k-coords{background:#E6F7EE;color:#0E6B3A}
+.tag.k-iata,.tag.k-icao,.tag.k-airport{background:#EEE8FF;color:#4B2FA8}
+.tag.k-university{background:#FFF4E0;color:#7A3A00}
+.res.note-row{cursor:default;color:#4A5A7A;font-size:14px}
+.res.note-row:hover{background:transparent}
+.s-actions{display:flex;flex-wrap:wrap;gap:8px;padding:10px;border-top:1px solid var(--light-line)}
+.s-actions button{min-height:40px;padding:0 14px;border-radius:12px;border:1px solid #C5D2EC;background:#fff;color:#0B1B3F;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px}
+.toast{position:fixed;left:50%;bottom:28px;z-index:60;transform:translateX(-50%);max-width:calc(100% - 32px);padding:12px 18px;border-radius:14px;background:#0B1B3F;color:#fff;font-size:14px;font-weight:500;box-shadow:0 10px 30px rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.15)}
+.toast[hidden]{display:none}
+
+/* ---------- mobile ---------- */
+@media (max-width:900px){
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .s3,.s4{grid-column:span 2}
+  .settings-grid{grid-template-columns:1fr}
+}
+@media (max-width:760px){
+  .topbar{height:56px;padding:0 16px}
+  .topnav{display:none}
+  .search-btn{min-width:0;min-height:40px;padding:0 12px}
+  .search-btn .sb-text{display:inline}
+  .search-btn kbd{display:none}
+  .tabbar{display:grid;position:fixed;inset:auto 0 0 0;z-index:30;grid-template-columns:repeat(4,minmax(0,1fr));height:78px;padding:6px 6px 20px;background:var(--navy);border-top:1px solid rgba(255,255,255,.08)}
+  .tabbar a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:600;text-decoration:none;color:#fff}
+  .tabbar a[aria-current=page]{color:var(--accent)}
+  main{padding-bottom:78px}
+  .hero{min-height:calc(100vh - 78px)}
+  .hero-main{padding:76px 16px 4px}
+  .loc{font-size:17px}.loc .loc-sub{font-size:14px}
+  .temp{font-size:124px}
+  .headline{font-size:20px}
+  .demo{left:16px;right:16px;top:auto;bottom:auto;position:relative;margin:8px auto 0;justify-content:center}
+  .pinned-wrap{padding:4px 16px 20px}
+  .pinned{gap:10px}
+  .pinned.few{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .pinned.many{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pin{padding:14px;border-radius:calc(var(--r) - 6px)}
+  .pin .v{font-size:26px}.pinned.many .pin .v{font-size:24px}
+  .pin .s{font-size:12px}.pin .src{display:none}
+  .stats{padding:36px 16px 40px}
+  .stats-head h2{font-size:30px}
+  .grid{gap:12px;grid-auto-rows:minmax(150px,auto)}
+  .tile{padding:16px;border-radius:calc(var(--r) - 4px)}
+  .tile .val{font-size:30px}
+  .tile .src{display:none}
+  .s2,.s3,.s4{grid-column:span 2}
+  .wrow{grid-template-columns:52px 18px 34px 1fr 34px;gap:8px;font-size:14px}
+  .page{padding:76px 16px 40px;gap:20px}
+  .page h1{font-size:34px}
+  .pm-head h1{font-size:28px}
+  .pm-map{padding:12px;border-radius:22px}
+  .map-box{height:460px}
+  .ticks{font-size:9px}
+  .ticks span:nth-child(odd):not(.is-now){visibility:hidden}
+  .msg{max-width:90%}
+  .ask-form{bottom:94px}
+  .search-overlay{padding:0;align-items:stretch}
+  .search-panel{max-width:none;max-height:none;border-radius:0}
+  .toast{bottom:96px}
+}
+</style>
+</head>
+<body data-page="home">
+<!-- Shared SVG definitions for maps -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <clipPath id="sk-isl" clipPathUnits="userSpaceOnUse"><path d="M200,30 L235,45 L245,75 L238,120 L232,170 L228,230 L215,290 L200,340 L180,400 L160,460 L148,470 L140,440 L118,395 L100,350 L90,300 L95,250 L110,200 L130,150 L155,100 L175,60 Z"/></clipPath>
+    <radialGradient id="sk-ocean" cx="0.55" cy="0.45" r="0.8"><stop offset="0" stop-color="#0E3557"/><stop offset="1" stop-color="#05172E"/></radialGradient>
+    <linearGradient id="sk-windy" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2D4F8E"/><stop offset="0.5" stop-color="#2F7A8E"/><stop offset="1" stop-color="#3B5FA0"/></linearGradient>
+    <filter id="sk-tex" filterUnits="userSpaceOnUse" x="60" y="0" width="220" height="500">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="4" seed="7" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.10  0 0 0 0 0.20  0 0 0 0 0.08  1.6 0 0 0 -0.5"/>
+    </filter>
+    <filter id="sk-b3" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter>
+    <filter id="sk-b8" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8"/></filter>
+    <filter id="sk-b16" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="16"/></filter>
+  </defs>
+</svg>
+
+<header class="topbar">
+  <a class="brand" href="#home" aria-label="Skyline home">
+    <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><circle cx="20" cy="12" r="7" fill="var(--accent)"/><path d="M2 28h28v-4l-4-3-3 2-3-6-3 4-3-3-4 5-3-1-5 3z" fill="#fff"/></svg>
+    Skyline
+  </a>
+  <nav class="topnav" aria-label="Main">
+    <a href="#home" data-nav="home">Home</a>
+    <a href="#predictions" data-nav="predictions">Predictions</a>
+    <a href="#ask" data-nav="ask">Ask AI</a>
+    <a href="#settings" data-nav="settings">Settings</a>
+  </nav>
+  <button type="button" class="search-btn" data-action="open-search" aria-keyshortcuts="Meta+K Control+K /">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <span class="sb-text">Search any place, coordinates, airport…</span>
+    <kbd>⌘K</kbd>
+  </button>
+</header>
+
+<main id="app"></main>
+
+<nav class="tabbar" aria-label="Main">
+  <a href="#home" data-nav="home"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Home</a>
+  <a href="#predictions" data-nav="predictions"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Predictions</a>
+  <a href="#ask" data-nav="ask"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg>Ask AI</a>
+  <a href="#settings" data-nav="settings"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>Settings</a>
+</nav>
+
+<div class="search-overlay" id="search" hidden>
+  <div class="search-panel" role="dialog" aria-modal="true" aria-labelledby="search-title">
+    <h2 id="search-title" class="sr-only">Search for a location</h2>
+    <div class="search-field">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A5A7A" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <label for="q" class="sr-only">Place, coordinates, airport code or university</label>
+      <input id="q" type="search" data-input="q" autocomplete="off" spellcheck="false"
+        placeholder="City, 25.03, 121.56, TPE, RCTP, or a university"
+        role="combobox" aria-expanded="true" aria-controls="results" aria-autocomplete="list">
+      <button type="button" class="close" data-action="close-search">Esc</button>
+    </div>
+    <div class="search-body" id="search-body"></div>
+    <div class="s-actions">
+      <button type="button" data-action="geolocate"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Use my location</button>
+      <button type="button" data-action="worldwide" id="ww-btn" hidden></button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(function () {
+'use strict';
+
+/* ============================================================
+   Data
+   ============================================================ */
+var ISL = 'M200,30 L235,45 L245,75 L238,120 L232,170 L228,230 L215,290 L200,340 L180,400 L160,460 L148,470 L140,440 L118,395 L100,350 L90,300 L95,250 L110,200 L130,150 L155,100 L175,60 Z';
+var PALS = { 'default': ['#4ADE80', '#FACC15', '#FB923C', '#EF4444'], cb: ['#2C7BB6', '#ABD9E9', '#FDAE61', '#D7191C'] };
+var TIMES = ['−72h', '−48h', '−24h', '−12h', 'Now', '+6h', '+12h', '+24h', '+48h', '+72h', '+5d', '+7d'];
+var NOW = 4;
+
+// Taiwan places → search entries. kind: City | Landmark | University | Airport
+var CITIES = [
+  ['Taipei', '台北 臺北 taipei city', 25.0330, 121.5654, 'Taiwan'],
+  ['Xinyi District', '信義區 xinyi', 25.0330, 121.5654, 'Taipei, Taiwan'],
+  ['New Taipei', '新北 banqiao 板橋', 25.0120, 121.4650, 'Taiwan'],
+  ['Keelung', '基隆 jilong', 25.1276, 121.7392, 'Taiwan'],
+  ['Taoyuan', '桃園', 24.9936, 121.3010, 'Taiwan'],
+  ['Hsinchu', '新竹 xinzhu', 24.8138, 120.9675, 'Taiwan'],
+  ['Miaoli', '苗栗', 24.5602, 120.8214, 'Taiwan'],
+  ['Taichung', '台中 臺中 taizhong', 24.1477, 120.6736, 'Taiwan'],
+  ['Changhua', '彰化', 24.0518, 120.5161, 'Taiwan'],
+  ['Nantou', '南投', 23.9609, 120.9719, 'Taiwan'],
+  ['Douliu, Yunlin', '斗六 雲林 yunlin', 23.7092, 120.4313, 'Taiwan'],
+  ['Chiayi', '嘉義 jiayi', 23.4801, 120.4491, 'Taiwan'],
+  ['Tainan', '台南 臺南', 22.9999, 120.2270, 'Taiwan'],
+  ['Kaohsiung', '高雄 gaoxiong', 22.6273, 120.3014, 'Taiwan'],
+  ['Pingtung', '屏東', 22.6690, 120.4860, 'Taiwan'],
+  ['Yilan', '宜蘭 ilan', 24.7570, 121.7530, 'Taiwan'],
+  ['Hualien', '花蓮 hualian', 23.9769, 121.6044, 'Taiwan'],
+  ['Taitung', '台東 臺東 taidong', 22.7583, 121.1444, 'Taiwan'],
+  ['Magong, Penghu', '馬公 澎湖 penghu pescadores', 23.5655, 119.5793, 'Taiwan'],
+  ['Kinmen', '金門 quemoy', 24.4321, 118.3171, 'Taiwan'],
+  ['Nangan, Matsu', '南竿 馬祖 matsu', 26.1505, 119.9499, 'Taiwan'],
+  ['Tokyo', '東京', 35.6762, 139.6503, 'Japan'],
+  ['Hong Kong', '香港', 22.3193, 114.1694, 'China'],
+  ['Singapore', '新加坡', 1.3521, 103.8198, 'Singapore'],
+  ['Seoul', '首爾', 37.5665, 126.9780, 'South Korea'],
+  ['San Francisco', 'sf', 37.7749, -122.4194, 'California, USA'],
+  ['New York', 'nyc', 40.7128, -74.0060, 'New York, USA'],
+  ['London', '倫敦', 51.5074, -0.1278, 'United Kingdom']
+];
+var LANDMARKS = [
+  ['Taipei 101', '台北101 101', 25.0340, 121.5645, 'Xinyi, Taipei'],
+  ['Yangmingshan', '陽明山 yangming', 25.1550, 121.5480, 'Taipei'],
+  ['Jiufen', '九份', 25.1090, 121.8440, 'New Taipei'],
+  ['Sun Moon Lake', '日月潭', 23.8570, 120.9150, 'Nantou'],
+  ['Alishan', '阿里山 ali mountain', 23.5100, 120.8020, 'Chiayi'],
+  ['Yushan (Jade Mountain)', '玉山 jade mountain', 23.4700, 120.9570, 'Nantou · 3,952 m'],
+  ['Taroko Gorge', '太魯閣 taroko', 24.1580, 121.6200, 'Hualien'],
+  ['Kenting', '墾丁', 21.9480, 120.7800, 'Pingtung']
+];
+var UNIS = [
+  ['National Taiwan University', '台灣大學 臺灣大學 台大 ntu', 25.0173, 121.5398, 'Da’an, Taipei'],
+  ['National Tsing Hua University', '清華大學 清大 nthu tsinghua', 24.7961, 120.9967, 'Hsinchu'],
+  ['National Yang Ming Chiao Tung University', '陽明交通大學 陽明交大 交大 nycu nctu chiao tung', 24.7869, 120.9975, 'Hsinchu'],
+  ['National Cheng Kung University', '成功大學 成大 ncku', 22.9970, 120.2210, 'Tainan'],
+  ['National Chengchi University', '政治大學 政大 nccu', 24.9867, 121.5763, 'Wenshan, Taipei'],
+  ['National Taiwan Normal University', '台灣師範大學 臺灣師範大學 師大 ntnu', 25.0262, 121.5276, 'Taipei'],
+  ['National Taiwan University of Science and Technology', '台灣科技大學 臺灣科技大學 台科大 ntust taiwan tech', 25.0136, 121.5415, 'Taipei'],
+  ['National Taipei University of Technology', '台北科技大學 臺北科技大學 北科大 ntut taipei tech', 25.0424, 121.5354, 'Taipei'],
+  ['National Central University', '中央大學 中央 ncu', 24.9681, 121.1950, 'Taoyuan'],
+  ['National Chung Hsing University', '中興大學 興大 nchu', 24.1226, 120.6750, 'Taichung'],
+  ['National Chung Cheng University', '中正大學 中正 ccu', 23.5603, 120.4735, 'Chiayi'],
+  ['National Sun Yat-sen University', '中山大學 中山 nsysu', 22.6273, 120.2660, 'Kaohsiung'],
+  ['National Dong Hwa University', '東華大學 東華 ndhu', 23.8970, 121.5420, 'Hualien'],
+  ['Fu Jen Catholic University', '輔仁大學 輔大 fju', 25.0362, 121.4320, 'New Taipei'],
+  ['Tamkang University', '淡江大學 淡江 tku', 25.1753, 121.4497, 'Tamsui, New Taipei'],
+  ['Chang Gung University', '長庚大學 長庚 cgu', 25.0336, 121.3894, 'Taoyuan'],
+  ['Feng Chia University', '逢甲大學 逢甲 fcu', 24.1790, 120.6466, 'Taichung'],
+  ['Tunghai University', '東海大學 東海 thu', 24.1810, 120.6000, 'Taichung'],
+  ['Taipei Medical University', '台北醫學大學 臺北醫學大學 北醫 tmu', 25.0265, 121.5617, 'Taipei'],
+  ['Massachusetts Institute of Technology', 'mit', 42.3601, -71.0942, 'Cambridge, MA, USA'],
+  ['Stanford University', 'stanford', 37.4275, -122.1697, 'Stanford, CA, USA'],
+  ['Harvard University', 'harvard', 42.3770, -71.1167, 'Cambridge, MA, USA'],
+  ['University of California, Berkeley', 'uc berkeley ucb cal', 37.8719, -122.2585, 'Berkeley, CA, USA'],
+  ['University of Tokyo', '東京大學 東大 todai utokyo', 35.7126, 139.7620, 'Tokyo, Japan'],
+  ['National University of Singapore', 'nus', 1.2966, 103.7764, 'Singapore'],
+  ['University of Hong Kong', '香港大學 港大 hku', 22.2830, 114.1371, 'Hong Kong'],
+  ['University of Oxford', 'oxford', 51.7548, -1.2544, 'Oxford, UK'],
+  ['University of Cambridge', 'cambridge', 52.2043, 0.1149, 'Cambridge, UK']
+];
+// [name, iata, icao, lat, lon, where, chinese]
+var AIRPORTS = [
+  ['Taoyuan International Airport', 'TPE', 'RCTP', 25.0777, 121.2328, 'Taoyuan, Taiwan', '桃園機場 桃園國際機場'],
+  ['Taipei Songshan Airport', 'TSA', 'RCSS', 25.0694, 121.5525, 'Taipei, Taiwan', '松山機場'],
+  ['Kaohsiung International Airport', 'KHH', 'RCKH', 22.5771, 120.3500, 'Kaohsiung, Taiwan', '高雄機場 小港機場'],
+  ['Taichung International Airport', 'RMQ', 'RCMQ', 24.2647, 120.6208, 'Taichung, Taiwan', '台中機場 清泉崗'],
+  ['Tainan Airport', 'TNN', 'RCNN', 22.9504, 120.2057, 'Tainan, Taiwan', '台南機場'],
+  ['Hualien Airport', 'HUN', 'RCYU', 24.0231, 121.6178, 'Hualien, Taiwan', '花蓮機場'],
+  ['Taitung Airport', 'TTT', 'RCFN', 22.7550, 121.1018, 'Taitung, Taiwan', '台東機場 豐年機場'],
+  ['Chiayi Airport', 'CYI', 'RCKU', 23.4618, 120.3928, 'Chiayi, Taiwan', '嘉義機場'],
+  ['Penghu Magong Airport', 'MZG', 'RCQC', 23.5687, 119.6282, 'Penghu, Taiwan', '馬公機場 澎湖機場'],
+  ['Kinmen Airport', 'KNH', 'RCBS', 24.4279, 118.3592, 'Kinmen, Taiwan', '金門機場 尚義機場'],
+  ['Matsu Nangan Airport', 'LZN', 'RCFG', 26.1598, 119.9582, 'Matsu, Taiwan', '南竿機場'],
+  ['Matsu Beigan Airport', 'MFK', 'RCMT', 26.2242, 120.0028, 'Matsu, Taiwan', '北竿機場'],
+  ['Green Island Airport', 'GNI', 'RCGI', 22.6739, 121.4667, 'Taitung, Taiwan', '綠島機場'],
+  ['Lanyu Airport', 'KYD', 'RCLY', 22.0270, 121.5350, 'Orchid Island, Taiwan', '蘭嶼機場'],
+  ['Hengchun Airport', 'HCN', 'RCKW', 22.0411, 120.7300, 'Pingtung, Taiwan', '恆春機場'],
+  ['Hong Kong International Airport', 'HKG', 'VHHH', 22.3080, 113.9185, 'Hong Kong', '香港機場 赤鱲角'],
+  ['Narita International Airport', 'NRT', 'RJAA', 35.7720, 140.3929, 'Tokyo, Japan', '成田'],
+  ['Tokyo Haneda Airport', 'HND', 'RJTT', 35.5494, 139.7798, 'Tokyo, Japan', '羽田'],
+  ['Kansai International Airport', 'KIX', 'RJBB', 34.4320, 135.2304, 'Osaka, Japan', '關西機場'],
+  ['Naha Airport', 'OKA', 'ROAH', 26.1958, 127.6459, 'Okinawa, Japan', '那霸'],
+  ['Incheon International Airport', 'ICN', 'RKSI', 37.4602, 126.4407, 'Seoul, South Korea', '仁川'],
+  ['Shanghai Pudong International Airport', 'PVG', 'ZSPD', 31.1443, 121.8083, 'Shanghai, China', '浦東'],
+  ['Beijing Capital International Airport', 'PEK', 'ZBAA', 40.0799, 116.6031, 'Beijing, China', '首都機場'],
+  ['Singapore Changi Airport', 'SIN', 'WSSS', 1.3644, 103.9915, 'Singapore', '樟宜'],
+  ['Suvarnabhumi Airport', 'BKK', 'VTBS', 13.6900, 100.7501, 'Bangkok, Thailand', '曼谷'],
+  ['Ninoy Aquino International Airport', 'MNL', 'RPLL', 14.5086, 121.0194, 'Manila, Philippines', '馬尼拉'],
+  ['San Francisco International Airport', 'SFO', 'KSFO', 37.6213, -122.3790, 'California, USA', ''],
+  ['Los Angeles International Airport', 'LAX', 'KLAX', 33.9416, -118.4085, 'California, USA', ''],
+  ['Seattle–Tacoma International Airport', 'SEA', 'KSEA', 47.4502, -122.3088, 'Washington, USA', ''],
+  ['John F. Kennedy International Airport', 'JFK', 'KJFK', 40.6413, -73.7781, 'New York, USA', ''],
+  ['London Heathrow Airport', 'LHR', 'EGLL', 51.4700, -0.4543, 'London, UK', '希斯洛'],
+  ['Paris Charles de Gaulle Airport', 'CDG', 'LFPG', 49.0097, 2.5479, 'Paris, France', ''],
+  ['Frankfurt Airport', 'FRA', 'EDDF', 50.0379, 8.5622, 'Frankfurt, Germany', ''],
+  ['Amsterdam Airport Schiphol', 'AMS', 'EHAM', 52.3105, 4.7683, 'Amsterdam, Netherlands', ''],
+  ['Dubai International Airport', 'DXB', 'OMDB', 25.2532, 55.3657, 'Dubai, UAE', ''],
+  ['Sydney Kingsford Smith Airport', 'SYD', 'YSSY', -33.9399, 151.1753, 'Sydney, Australia', '']
+];
+
+function norm(s) {
+  return String(s).toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '')
+    .replace(/臺/g, '台').replace(/[.,'’\-–()]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+var PLACES = [];
+function addPlace(kind, name, aliases, lat, lon, sub, extra) {
+  var keys = [norm(name)].concat(String(aliases || '').split(/\s+(?=[^\s]*[一-鿿])|\s{2,}/).map(norm));
+  // aliases are space-separated words; also keep each word as its own key
+  String(aliases || '').split(/\s+/).forEach(function (w) { if (w) keys.push(norm(w)); });
+  keys.push(norm(aliases || ''));
+  var p = { id: kind + ':' + name, kind: kind, name: name, sub: sub, lat: lat, lon: lon, keys: keys.filter(Boolean) };
+  if (extra) for (var k in extra) p[k] = extra[k];
+  PLACES.push(p);
+  return p;
+}
+CITIES.forEach(function (c) { addPlace('City', c[0], c[1], c[2], c[3], c[4]); });
+LANDMARKS.forEach(function (c) { addPlace('Landmark', c[0], c[1], c[2], c[3], c[4]); });
+UNIS.forEach(function (c) { addPlace('University', c[0], c[1], c[2], c[3], c[4]); });
+AIRPORTS.forEach(function (a) {
+  addPlace('Airport', a[0], a[1] + ' ' + a[2] + ' ' + a[6], a[3], a[4], a[5], { iata: a[1], icao: a[2] });
+});
+
+// Weather stations used for the "nearest source" rule
+var STATIONS = [{ name: 'CWA Xinyi station', lat: 25.0375, lon: 121.5637, cwa: true }];
+CITIES.forEach(function (c) { if (inTW(c[2], c[3]) && c[0] !== 'Xinyi District') STATIONS.push({ name: 'CWA ' + c[0].split(',')[0] + ' station', lat: c[2], lon: c[3], cwa: true }); });
+[['Alishan', 23.5100, 120.8050], ['Yushan', 23.4876, 120.9595], ['Sun Moon Lake', 23.8830, 120.9000], ['Hengchun', 22.0039, 120.7463], ['Tamsui', 25.1650, 121.4489], ['Banqiao', 24.9976, 121.4420], ['Hsinchu (Science Park)', 24.7800, 121.0000]].forEach(function (s) {
+  STATIONS.push({ name: 'CWA ' + s[0] + ' station', lat: s[1], lon: s[2], cwa: true });
+});
+AIRPORTS.forEach(function (a) {
+  var tw = a[2].indexOf('RC') === 0;
+  STATIONS.push({ name: (tw ? 'CWA ' : '') + 'METAR ' + a[2] + ' (' + a[1] + ')', lat: a[3], lon: a[4], cwa: tw });
+});
+
+var SKYLINES = (function () {
+  var mk = function (hs, x0, w) { return hs.map(function (h, i) { return { x: x0 + i * (w + 6), y: 220 - h, w: w, h: h }; }); };
+  return {
+    Taipei: { lat: 25.0330, lon: 121.5654, label: 'Taipei skyline: Taipei 101 between city blocks, with Elephant Mountain and Yangmingshan behind',
+      mtnFar: 'M0,220 L0,120 Q140,60 300,100 Q420,40 560,90 Q640,70 700,110 L1200,140 L1200,220 Z', mtnNear: 'M820,220 L820,170 Q900,120 980,150 Q1060,110 1200,160 L1200,220 Z',
+      blds: mk([60, 90, 70, 110, 80, 50, 95, 120, 70], 420, 30).concat(mk([70, 100, 60, 85, 55], 860, 34)),
+      landmark: 'M752,220 V160 H744 L752,142 H746 L754,124 H748 L756,106 H750 L758,88 H752 L760,70 H756 V44 H760 V14 H764 V44 H768 V70 H764 L772,88 H766 L774,106 H768 L776,124 H770 L778,142 H772 L780,160 H772 V220 Z' },
+    Taichung: { lat: 24.1477, lon: 120.6736, label: 'Taichung skyline: the National Theater’s wave roof in front of the Dakeng hills',
+      mtnFar: 'M0,220 L0,140 L160,80 L260,120 L380,60 L520,110 L660,70 L800,120 L960,80 L1200,120 L1200,220 Z', mtnNear: 'M0,220 L0,180 Q200,140 400,170 Q600,150 800,175 Q1000,150 1200,180 L1200,220 Z',
+      blds: mk([50, 80, 65, 95, 70, 55], 300, 34).concat(mk([60, 85, 75, 50], 860, 34)),
+      landmark: 'M520,220 V160 Q560,120 600,160 Q640,118 680,160 Q720,122 760,160 V220 Z' },
+    Tainan: { lat: 22.9999, lon: 120.2270, label: 'Tainan skyline: a temple roof with upturned eaves among low old-town houses',
+      mtnFar: 'M0,220 L0,170 Q300,140 600,165 Q900,145 1200,170 L1200,220 Z', mtnNear: 'M0,220 L1200,220 L1200,219 L0,219 Z',
+      blds: mk([40, 55, 45, 60, 50, 42], 300, 40).concat(mk([45, 58, 40, 52, 48], 820, 40)),
+      landmark: 'M590,220 V170 H556 Q584,164 600,138 H720 Q736,164 764,170 H730 V220 Z M612,138 Q640,126 660,108 Q680,126 708,138 Z' },
+    Kaohsiung: { lat: 22.6273, lon: 120.3014, label: 'Kaohsiung skyline: the 85 Sky Tower with Shoushan behind',
+      mtnFar: 'M0,220 L0,130 Q120,70 260,110 Q320,130 380,160 L1200,175 L1200,220 Z', mtnNear: 'M0,220 L0,205 Q300,198 600,206 Q900,198 1200,206 L1200,220 Z',
+      blds: mk([60, 95, 70, 110, 80], 420, 34).concat(mk([90, 65, 100, 75, 55], 820, 34)),
+      landmark: 'M640,220 V100 H660 V70 H680 V30 H686 V4 H690 V30 H696 V70 H716 V100 H736 V220 H706 V150 H670 V220 Z' },
+    Hualien: { lat: 23.9769, lon: 121.6044, label: 'Hualien: the steep Central Range dropping to Pacific waves',
+      mtnFar: 'M0,220 L0,110 L110,30 L200,100 L320,10 L430,90 L560,20 L690,100 L820,40 L960,110 L1080,50 L1200,100 L1200,220 Z', mtnNear: 'M0,220 L0,150 L160,80 L300,150 L460,90 L620,160 L800,110 L1000,170 L1200,140 L1200,220 Z',
+      blds: mk([30, 40, 34, 45, 30, 38, 42], 380, 36),
+      landmark: 'M0,220 V206 Q30,196 60,206 Q90,196 120,206 Q150,196 180,206 Q210,196 240,206 L240,220 Z M900,220 V206 Q930,196 960,206 Q990,196 1020,206 Q1050,196 1080,206 Q1110,196 1140,206 Q1170,196 1200,206 V220 Z' },
+    World: { label: 'A generic city skyline. City art is drawn for Taiwan locations.',
+      mtnFar: 'M0,220 L0,170 Q300,130 600,160 Q900,130 1200,165 L1200,220 Z', mtnNear: 'M0,220 L1200,220 L1200,219 L0,219 Z',
+      blds: mk([50, 80, 60, 100, 70, 55, 90], 380, 40).concat(mk([60, 75, 50], 820, 40)), landmark: '' }
+  };
+})();
+
+var WEATHER = (function () {
+  var white = 'rgba(255,255,255,0.95)', whiteU = 'rgba(205,215,230,0.9)';
+  return {
+    'clear-day': { label: 'Clear day', top: '#1550C4', mid: '#3F8EE8', bottom: '#86C3F4', sun: true, sx: 78, sy: 14, glow: 'rgba(255,245,215,0.45)', core: '#FFF1B8', clouds: [1, 'rgba(255,255,255,0.7)', 'rgba(230,236,245,0.6)', 0.6, 120], mtn: '#FFFFFF', temp: 27, headline: 'Sunny · UV high until 3 PM' },
+    'partly-cloudy': { label: 'Partly cloudy', top: '#1A58C4', mid: '#4A93E4', bottom: '#93C6F0', sun: true, sx: 76, sy: 16, glow: 'rgba(255,245,215,0.4)', core: '#FFF1B8', clouds: [4, white, whiteU, 0.92, 260], mtn: '#FFFFFF', temp: 24, headline: 'Thunderstorms likely 4–7 PM' },
+    'cloudy': { label: 'Cloudy', top: '#5F708A', mid: '#8695AA', bottom: '#AEB9C8', clouds: [7, 'rgba(236,240,246,0.95)', 'rgba(150,162,180,0.9)', 0.95, 300], mtn: '#DDE3EC', temp: 23, headline: 'Overcast · light rain after 6 PM' },
+    'rain': { label: 'Rain', top: '#344255', mid: '#4F5E73', bottom: '#6E7C92', clouds: [8, 'rgba(150,162,180,0.95)', 'rgba(80,92,110,0.95)', 0.95, 300], rain: true, mtn: '#9AA6B8', temp: 21, headline: 'Rain · 12 mm in the next hour' },
+    'thunderstorm': { label: 'Thunderstorm', top: '#141A26', mid: '#262E3D', bottom: '#3F4757', clouds: [9, 'rgba(90,98,115,0.97)', 'rgba(35,40,52,0.97)', 0.97, 300], rain: true, storm: true, mtn: '#6B7486', temp: 22, headline: 'Thunderstorm · lightning 3 km away' },
+    'clear-night': { label: 'Clear night', top: '#040A1E', mid: '#0C1A42', bottom: '#1E3068', stars: true, moon: true, clouds: [1, 'rgba(120,135,170,0.5)', 'rgba(60,70,100,0.5)', 0.5, 200], mtn: '#3A4C80', temp: 20, headline: 'Clear · low of 19° before dawn' },
+    'dawn': { label: 'Dawn', top: '#26346F', mid: '#B9799F', bottom: '#F5C08A', sun: true, sx: 22, sy: 46, glow: 'rgba(255,200,150,0.5)', core: '#FFD8A0', warm: true, stars: true, clouds: [3, 'rgba(255,205,200,0.85)', 'rgba(170,120,150,0.8)', 0.85, 200], mtn: '#6B4E7A', temp: 19, headline: 'Sunrise 6:12 AM · clear morning' },
+    'dusk': { label: 'Dusk', top: '#1C2054', mid: '#8F4C82', bottom: '#F0895C', sun: true, sx: 80, sy: 48, glow: 'rgba(255,170,110,0.5)', core: '#FFC48A', warm: true, clouds: [3, 'rgba(255,180,140,0.85)', 'rgba(140,80,110,0.85)', 0.85, 220], mtn: '#5A3A6A', temp: 23, headline: 'Sunset 5:18 PM · storms clearing' }
+  };
+})();
+
+var MAP_PLACES = [
+  { name: 'Taipei', x: 205, y: 55 }, { name: 'Taichung', x: 125, y: 190 }, { name: 'Nantou', x: 165, y: 230 },
+  { name: 'Hualien', x: 225, y: 215 }, { name: 'Chiayi', x: 110, y: 290 }, { name: 'Kaohsiung', x: 118, y: 385 }, { name: 'Taitung', x: 195, y: 350 }
+];
+var DATASETS = [
+  { id: 'pm25', group: 'By Skyline', title: 'PM2.5 forecast', src: 'Team PM2.5 model', desc: 'Fine-particle pollution by region, up to 7 days ahead.',
+    base: [2, 2, 1, 0, 2, 3, 0], trend: [1, 1, 0, 0, 1, 0, 0], labels: ['Good', 'Moderate', 'Sensitive', 'Unhealthy'], legend: ['Good (0–15)', 'Moderate (16–35)', 'Sensitive (36–54)', 'Unhealthy (55+)'],
+    note: 'West-coast haze builds as the northeast monsoon weakens. The east coast stays clean behind the Central Range.', conf: ['91%', '84%', '72%'] },
+  { id: 'landslide', group: 'By Skyline', title: 'Landslide risk', src: 'Team landslide model', desc: 'Slope-failure risk from satellite data, rain and soil saturation.',
+    base: [0, 1, 3, 2, 1, 0, 2], trend: [0, 0, 0, 1, 1, 0, 1], labels: ['Low', 'Medium', 'High', 'Very high'], legend: ['Low', 'Medium', 'High', 'Very high'],
+    note: 'Saturated slopes in Nantou and Hualien. Risk peaks 12–24h after the heaviest rain. Watch Provincial Highway 8.', conf: ['88%', '76%', '61%'] },
+  { id: 'rain', group: 'Others', title: 'Rain', src: 'Windy · precip', desc: 'Hourly rainfall totals.',
+    base: [1, 0, 2, 3, 1, 0, 2], trend: [1, 1, 1, -1, 1, 1, 0], labels: ['< 2 mm', '2–10 mm', '10–40 mm', '40+ mm'], legend: ['< 2 mm', '2–10 mm', '10–40 mm', '40+ mm'],
+    note: 'A frontal band moves south over the next 48 hours, with the heaviest totals on the east coast.', conf: ['95%', '80%', '64%'] },
+  { id: 'thunder', group: 'Others', title: 'Thunderstorms', src: 'Windy · CAPE + warnings', desc: 'Storm energy (CAPE) and thunderstorm warnings.',
+    base: [2, 1, 2, 1, 1, 2, 0], trend: [1, 1, 1, 0, 1, 1, 0], labels: ['Unlikely', 'Possible', 'Likely', 'Severe'], legend: ['CAPE < 500', '500–1500', '1500–2500', '2500+ J/kg'],
+    note: 'Afternoon storms form over the western foothills. Hail is possible where CAPE tops 2,500 J/kg (code 96).', conf: ['93%', '78%', '58%'] },
+  { id: 'wind', group: 'Others', title: 'Wind & gusts', src: 'Windy · windGust', desc: 'Sustained wind and peak gusts.',
+    base: [1, 0, 0, 2, 0, 1, 2], trend: [0, 0, 0, 1, 0, 1, 1], labels: ['Calm', 'Breezy', 'Strong', 'Gale'], legend: ['< 20 km/h', '20–40', '40–60', '60+ km/h'],
+    note: 'The northeast monsoon funnels strong gusts through the Taiwan Strait and along the east coast.', conf: ['94%', '82%', '66%'] },
+  { id: 'typhoon', group: 'Others', title: 'Typhoon track', src: 'CWA typhoon warnings', desc: 'Storm position, forecast cone and local impact.',
+    base: [0, 0, 0, 1, 0, 1, 1], trend: [1, 0, 1, 2, 0, 1, 2], labels: ['None', 'Watch', 'Warning', 'Direct hit'], legend: ['No impact', 'Watch', 'Warning', 'Direct impact'],
+    note: 'Sample storm TD-27 tracks northwest. The east coast enters the watch area in about 48 hours.', conf: ['97%', '70%', '45%'] },
+  { id: 'waves', group: 'Others', title: 'Coast & waves', src: 'Windy · gfsWave', desc: 'Wave height and swell along the coast.',
+    base: [2, 0, 0, 2, 0, 1, 2], trend: [0, 0, 0, 1, 0, 0, 1], labels: ['< 1 m', '1–2 m', '2–3 m', '3+ m'], legend: ['< 1 m', '1–2 m', '2–3 m', '3+ m'],
+    note: 'Northeast swell builds on the north and east coasts. Keep away from the Keelung and Yilan shores.', conf: ['92%', '80%', '63%'] },
+  { id: 'climate', group: 'Others', title: 'Climate projection', src: 'Climate projections', desc: 'Seasonal temperature anomaly vs 1991–2020.',
+    base: [1, 2, 1, 1, 2, 3, 1], trend: [0, 0, 0, 0, 0, 0, 0], labels: ['+0–0.5°', '+0.5–1°', '+1–1.5°', '+1.5°+'], legend: ['+0–0.5°', '+0.5–1°', '+1–1.5°', '+1.5°+'],
+    note: 'The coming season is projected warmer than the baseline, with more intense short bursts of rain.', conf: ['70%', '66%', '60%'] }
+];
+
+var PIN_IDS = ['thunder', 'pm25', 'wind', 'landslide', 'rain', 'humidity', 'uv', 'pressure', 'visibility', 'waves'];
+
+/* ============================================================
+   State (saved in localStorage when available)
+   ============================================================ */
+var KEY = 'skyline-mockup-v1';
+var DEFAULTS = {
+  loc: { name: 'Taipei', sub: 'Xinyi District', lat: 25.0330, lon: 121.5654, kind: 'City' },
+  weather: 'partly-cloudy', pinCount: 3, pins: PIN_IDS.slice(), order: null, spans: {}, hidden: {},
+  accent: '#FFC24B', risk: 'default', bgMode: 'live', tiles: 'glass', fonts: 'default', radius: 24, skyline: 'city', mapBase: 'auto',
+  reduceMotion: false, units: 'C', lang: 'en',
+  sources: { cwa: true, windyPoint: true, windyMap: true, pm25: true, landslide: true, typhoon: true },
+  recents: [], predBase: {}, predT: NOW
+};
+var THEME_KEYS = ['accent', 'risk', 'bgMode', 'tiles', 'fonts', 'radius', 'skyline', 'mapBase'];
+function clone(o) { return JSON.parse(JSON.stringify(o)); }
+var S = clone(DEFAULTS);
+try {
+  var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+  if (saved && typeof saved === 'object') {
+    for (var k in saved) if (k in DEFAULTS) S[k] = saved[k];
+    S.sources = Object.assign(clone(DEFAULTS.sources), saved.sources || {});
+  }
+} catch (e) { /* storage unavailable: run with defaults */ }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+var editing = false, dragId = null, chat = null, lastRoute = '';
+
+/* ============================================================
+   Helpers
+   ============================================================ */
+function $(s, el) { return (el || document).querySelector(s); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function inTW(lat, lon) { return lat >= 21.7 && lat <= 26.5 && lon >= 118.0 && lon <= 122.2; }
+function km(aLat, aLon, bLat, bLon) {
+  var R = 6371, toR = Math.PI / 180;
+  var dLat = (bLat - aLat) * toR, dLon = (bLon - aLon) * toR;
+  var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(aLat * toR) * Math.cos(bLat * toR) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+function fmtKm(d) { return d < 1 ? d.toFixed(1) + ' km' : d < 10 ? d.toFixed(1) + ' km' : Math.round(d).toLocaleString() + ' km'; }
+function fmtCoord(lat, lon) {
+  return Math.abs(lat).toFixed(4) + '° ' + (lat >= 0 ? 'N' : 'S') + ', ' + Math.abs(lon).toFixed(4) + '° ' + (lon >= 0 ? 'E' : 'W');
+}
+function pal() { return PALS[S.risk] || PALS['default']; }
+function inkFor(hex) {
+  var m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex || '');
+  if (!m) return '#0B1B3F';
+  var c = [m[1], m[2], m[3]].map(function (x) { var v = parseInt(x, 16) / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+  var L = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  return L > 0.35 ? '#2A1A00' : '#FFFFFF';
+}
+function tempOffset(L) { return inTW(L.lat, L.lon) ? 0 : Math.max(-26, Math.min(8, Math.round((23.7 - Math.abs(L.lat)) * 0.45))); }
+function fmtT(c) { return (S.units === 'F' ? Math.round(c * 9 / 5 + 32) : Math.round(c)) + '°'; }
+function nearestSource(L) {
+  var best = null, bd = Infinity;
+  STATIONS.forEach(function (s) {
+    if (s.cwa && !S.sources.cwa) return;
+    var d = km(L.lat, L.lon, s.lat, s.lon);
+    if (d < bd) { bd = d; best = s; }
+  });
+  if (best && bd <= 30) return { name: best.name, dist: fmtKm(bd), station: true };
+  if (S.sources.windyPoint) return { name: 'Windy point forecast', dist: 'at your exact point', station: false };
+  return best ? { name: best.name, dist: fmtKm(bd), station: true } : { name: 'No source enabled', dist: '', station: false };
+}
+function nearestPlace(lat, lon) {
+  var best = null, bd = Infinity;
+  PLACES.forEach(function (p) { if (p.kind === 'Airport') return; var d = km(lat, lon, p.lat, p.lon); if (d < bd) { bd = d; best = p; } });
+  return { place: best, d: bd };
+}
+function skylineFor(L) {
+  if (!inTW(L.lat, L.lon)) return SKYLINES.World;
+  var best = 'Taipei', bd = Infinity;
+  ['Taipei', 'Taichung', 'Tainan', 'Kaohsiung', 'Hualien'].forEach(function (n) {
+    var d = km(L.lat, L.lon, SKYLINES[n].lat, SKYLINES[n].lon);
+    if (d < bd) { bd = d; best = n; }
+  });
+  return SKYLINES[best];
+}
+function project(L) { return { x: 205 + (L.lon - 121.5654) * 69, y: 55 + (25.033 - L.lat) * 137.5 }; }
+function toast(msg) {
+  var t = $('#toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast._t); toast._t = setTimeout(function () { t.hidden = true; }, 3600);
+}
+
+/* ============================================================
+   Theme
+   ============================================================ */
+function applyTheme() {
+  var r = document.documentElement.style;
+  r.setProperty('--accent', S.accent);
+  r.setProperty('--accent-ink', inkFor(S.accent));
+  r.setProperty('--r', S.radius + 'px');
+  document.body.classList.toggle('solid-tiles', S.tiles === 'solid');
+  document.body.classList.toggle('system-fonts', S.fonts === 'system');
+  document.body.classList.toggle('reduce-motion', !!S.reduceMotion);
+}
+function themeIsDefault() { return THEME_KEYS.every(function (k) { return S[k] === DEFAULTS[k]; }); }
+
+/* ============================================================
+   Sky background
+   ============================================================ */
+function cloudBg(c, under) {
+  return 'radial-gradient(ellipse 34% 46% at 28% 58%, ' + c + ' 0%, rgba(0,0,0,0) 70%), radial-gradient(ellipse 30% 54% at 50% 42%, ' + c + ' 0%, rgba(0,0,0,0) 70%), radial-gradient(ellipse 26% 42% at 72% 55%, ' + c + ' 0%, rgba(0,0,0,0) 70%), radial-gradient(ellipse 58% 26% at 50% 78%, ' + under + ' 0%, rgba(0,0,0,0) 75%)';
+}
+function skyLayers(b) {
+  var h = '<div class="sky" aria-hidden="true">';
+  if (b.stars) h += '<div class="stars sk-stars"></div>';
+  if (b.moon) h += '<div class="moon"></div>';
+  if (b.sun) {
+    var x = b.sx + '%', y = b.sy + '%';
+    h += '<div class="sun-glow" style="left:' + x + ';top:' + y + ';background:radial-gradient(circle,' + b.glow + ' 0%,rgba(255,240,200,0) 60%)"></div>' +
+      '<div class="sun sk-flare" style="left:' + x + ';top:' + y + ';background:radial-gradient(circle,#FFFFFF 0%,#FFFBEA 18%,' + b.core + ' 34%,rgba(255,210,120,0) 70%)"></div>' +
+      '<div class="streak" style="left:' + x + ';top:' + y + '"></div>';
+    var ks = [0.35, 0.62, 0.9, 1.25, 1.6], sizes = [40, 90, 24, 140, 60];
+    var cols = b.warm
+      ? ['rgba(255,190,120,0.22)', 'rgba(255,140,90,0.12)', 'rgba(255,220,160,0.3)', 'rgba(255,150,120,0.08)', 'rgba(255,200,140,0.15)']
+      : ['rgba(160,220,255,0.22)', 'rgba(140,255,200,0.12)', 'rgba(255,230,160,0.3)', 'rgba(180,160,255,0.08)', 'rgba(140,200,255,0.16)'];
+    ks.forEach(function (k, i) {
+      var gx = b.sx + (50 - b.sx) * k * 1.2, gy = b.sy + (55 - b.sy) * k * 1.2, s = sizes[i];
+      h += '<div class="ghost" style="left:' + gx + '%;top:' + gy + '%;width:' + s + 'px;height:' + s + 'px;margin:' + (-s / 2) + 'px 0 0 ' + (-s / 2) + 'px;background:radial-gradient(circle,' + cols[i] + ' 0%,rgba(255,255,255,0) 72%);' + (i === 3 ? 'border:1px solid rgba(200,230,255,0.18)' : '') + '"></div>';
+    });
+  }
+  var c = b.clouds, xs = [4, 52, 22, 70, 38, 84, 10, 60, 30], ys = [40, 90, 150, 60, 210, 130, 260, 300, 20];
+  for (var i = 0; i < c[0]; i++) {
+    var w = 420 + (i % 3) * 160;
+    h += '<div class="cloud sk-cloud" style="left:' + (xs[i] - 10) + '%;top:' + Math.min(ys[i], c[4]) + 'px;width:' + w + 'px;height:' + Math.round(w * 0.42) + 'px;opacity:' + c[3] + ';filter:blur(' + (6 + (i % 2) * 6) + 'px);animation-duration:' + (70 + i * 17) + 's;background:' + cloudBg(c[1], c[2]) + '"></div>';
+  }
+  if (b.rain) h += '<div class="rain-wrap"><div class="rain1 sk-rain"></div><div class="rain2 sk-rain"></div></div>';
+  if (b.storm) h += '<div class="flash sk-flash"></div><svg class="bolt sk-flash" width="160" height="420" viewBox="0 0 160 420"><path d="M90,0 L70,120 L96,128 L52,260 L80,266 L30,420" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="bevel"/><path d="M70,120 L40,180 M52,260 L18,300" fill="none" stroke="#fff" stroke-width="2"/></svg>';
+  return h + '</div>';
+}
+function skylineSVG(city, b) {
+  var blds = city.blds.map(function (r) { return '<rect x="' + r.x + '" y="' + r.y + '" width="' + r.w + '" height="' + r.h + '" rx="2"/>'; }).join('');
+  return '<svg class="skyline" viewBox="0 0 1200 220" preserveAspectRatio="xMidYMax slice" role="img" aria-label="' + esc(city.label) + '">' +
+    '<path d="' + city.mtnFar + '" fill="' + b.mtn + '" fill-opacity="0.35"/>' +
+    '<path d="' + city.mtnNear + '" fill="#0B1B3F" fill-opacity="0.4"/>' +
+    '<g fill="#0B1B3F" fill-opacity="0.82">' + blds + '</g>' +
+    (city.landmark ? '<path d="' + city.landmark + '" fill="#0B1B3F" fill-opacity="0.95"/>' : '') +
+    '<rect x="0" y="214" width="1200" height="8" fill="#0B1B3F"/></svg>';
+}
+
+/* ============================================================
+   Tile catalog (sample values)
+   ============================================================ */
+function catalog(L) {
+  var sun = '#FFC24B', cloud = '#E2E8F0', rainc = '#7DD3FC', storm = '#A78BFA';
+  var src = nearestSource(L), off = tempOffset(L);
+  var near = 'Nearest: ' + src.name;
+  var hrs = [['Now', 24, sun, '0%'], ['3 PM', 26, sun, '5%'], ['4 PM', 26, cloud, '20%'], ['5 PM', 25, storm, '60%'], ['6 PM', 23, storm, '80%'], ['7 PM', 22, rainc, '55%'], ['8 PM', 22, cloud, '30%'], ['9 PM', 21, cloud, '10%'], ['10 PM', 21, cloud, '5%'], ['11 PM', 20, cloud, '5%']];
+  var wk = [['Today', 21, 27, storm], ['Sun', 20, 25, storm], ['Mon', 19, 24, rainc], ['Tue', 20, 26, cloud], ['Wed', 21, 28, sun], ['Thu', 22, 29, sun], ['Fri', 21, 27, cloud]];
+  var grad = 'linear-gradient(90deg,' + pal().join(',') + ')';
+  return [
+    { id: 'hourly', title: 'Hourly', src: near, span: 4, rows: 1, kind: 'hourly', hours: hrs.map(function (h) { return { t: h[0], temp: fmtT(h[1] + off), c: h[2], rain: h[3] }; }) },
+    { id: 'map', title: 'Live map', src: 'Windy Map Forecast', span: 2, rows: 2, kind: 'map' },
+    { id: 'thunder', title: 'Thunderstorm risk', src: 'Windy · CAPE + convPrecip', value: 'High', sub: 'CAPE 2,400 J/kg · storms likely 4–7 PM', meter: '78%', meterBg: grad, span: 1, rows: 1, kind: 'stat', bg: '#3B2F6B' },
+    { id: 'storms', title: 'Storm outlook · 72h', src: 'Windy warnings + models', value: '2 events', sub: 'Afternoon storms Sat and Sun. Hail possible Sat (code 96).', span: 1, rows: 1, kind: 'stat' },
+    { id: 'typhoon', title: 'Typhoon watch', src: 'CWA typhoon warnings', span: 2, rows: 1, kind: 'typhoon', bg: '#123A5E' },
+    { id: 'pm25', title: 'PM2.5', src: 'Team model · Windy CAMS', value: '18 µg/m³', sub: 'Moderate · peaks 9 PM', meter: '30%', meterBg: grad, span: 1, rows: 1, kind: 'stat' },
+    { id: 'landslide', title: 'Landslide risk', src: 'Team model', value: 'Low', sub: 'Rises to Medium if rain tops 80 mm', span: 1, rows: 1, kind: 'stat', bg: '#FFF4E0', fg: '#5A2E00' },
+    { id: 'week', title: '7-day forecast', src: near, span: 2, rows: 2, kind: 'week', week: wk.map(function (w) { return { day: w[0], lo: fmtT(w[1] + off), hi: fmtT(w[2] + off), c: w[3], l: ((w[1] - 17) / 14 * 100) + '%', r: ((31 - w[2]) / 14 * 100) + '%' }; }) },
+    { id: 'wind', title: 'Wind & gusts', src: 'Windy · wind, windGust', value: '14 km/h', sub: 'Gusts 38 km/h · from NE', span: 1, rows: 1, kind: 'stat' },
+    { id: 'rain', title: 'Rain today', src: 'Windy · precip', value: '32 mm', sub: 'Mostly convective, 4–7 PM', span: 1, rows: 1, kind: 'stat' },
+    { id: 'clouds', title: 'Cloud layers', src: 'Windy · l/m/hclouds', value: '65%', sub: 'Low 40% · Mid 55% · High 70% · Base 900 m', span: 1, rows: 1, kind: 'stat' },
+    { id: 'humidity', title: 'Humidity', src: 'Windy · rh, dewpoint', value: '78%', sub: 'Dew point ' + fmtT(20 + off), span: 1, rows: 1, kind: 'stat' },
+    { id: 'pressure', title: 'Pressure', src: 'Windy · pressure', value: '1008 hPa', sub: 'Falling. Storms are building.', span: 1, rows: 1, kind: 'stat' },
+    { id: 'visibility', title: 'Visibility', src: 'Windy · visibility', value: '12 km', sub: 'Drops to 3 km in storms', span: 1, rows: 1, kind: 'stat' },
+    { id: 'waves', title: 'Coast & waves', src: 'Windy · gfsWave', value: '1.8 m', sub: 'NE swell · avoid the Keelung coast', span: 1, rows: 1, kind: 'stat' },
+    { id: 'uv', title: 'UV index', src: 'CWA', value: '7', sub: 'High until 3 PM', span: 1, rows: 1, kind: 'stat' },
+    { id: 'climate', title: 'Climate outlook · 30 days', src: 'Climate projections', value: S.units === 'F' ? '+2.2°' : '+1.2°', sub: 'Warmer and wetter than normal (115% of normal rain)', span: 2, rows: 1, kind: 'stat' }
+  ];
+}
+function currentOrder(cat) {
+  var ids = cat.map(function (t) { return t.id; });
+  var o = Array.isArray(S.order) ? S.order.filter(function (id) { return ids.indexOf(id) >= 0; }) : [];
+  ids.forEach(function (id) { if (o.indexOf(id) < 0) o.push(id); });
+  return o;
+}
+
+/* ============================================================
+   Maps
+   ============================================================ */
+var SAT_BASE =
+  '<rect x="-200" y="-20" width="700" height="540" fill="url(#sk-ocean)"/>' +
+  '<path d="' + ISL + '" fill="none" stroke="#2E6E86" stroke-width="16" stroke-opacity="0.6" filter="url(#sk-b8)"/>' +
+  '<path d="' + ISL + '" fill="#41693A"/>' +
+  '<g clip-path="url(#sk-isl)">' +
+    '<rect x="60" y="0" width="220" height="500" fill="#000" filter="url(#sk-tex)"/>' +
+    '<path d="M175,60 L155,100 L130,150 L110,200 L95,250 L90,300 L100,350 L118,395 L140,440" fill="none" stroke="#8E9A5C" stroke-width="30" stroke-opacity="0.75" filter="url(#sk-b8)"/>' +
+    '<path d="M206,70 L198,110 L192,150 L184,195 L176,240 L170,285 L166,330 L160,380 L154,430" fill="none" stroke="#24401F" stroke-width="50" filter="url(#sk-b8)"/>' +
+    '<path d="M206,70 L198,110 L192,150 L184,195 L176,240 L170,285 L166,330 L160,380 L154,430" fill="none" stroke="#7D7862" stroke-width="7" stroke-opacity="0.8" filter="url(#sk-b3)"/>' +
+    '<circle cx="205" cy="55" r="11" fill="#A6A49C" fill-opacity="0.8" filter="url(#sk-b3)"/>' +
+    '<circle cx="125" cy="190" r="9" fill="#A6A49C" fill-opacity="0.75" filter="url(#sk-b3)"/>' +
+    '<circle cx="112" cy="340" r="7" fill="#A6A49C" fill-opacity="0.7" filter="url(#sk-b3)"/>' +
+    '<circle cx="118" cy="385" r="10" fill="#A6A49C" fill-opacity="0.8" filter="url(#sk-b3)"/>' +
+  '</g>' +
+  '<ellipse cx="260" cy="150" rx="40" ry="12" fill="#fff" fill-opacity="0.22" filter="url(#sk-b8)"/>' +
+  '<ellipse cx="60" cy="260" rx="34" ry="10" fill="#fff" fill-opacity="0.18" filter="url(#sk-b8)"/>';
+var WINDY_BG = '<rect x="-200" y="-20" width="700" height="540" fill="url(#sk-windy)"/>';
+var WINDY_LINES =
+  '<path d="' + ISL + '" fill="none" stroke="#fff" stroke-opacity="0.85" stroke-width="1.4"/>' +
+  '<g fill="none" stroke="#fff" stroke-opacity="0.5" stroke-width="1.1" stroke-linecap="round" stroke-dasharray="10 14">' +
+  ['M-10,40 C60,20 140,60 220,30 S300,10 320,30', 'M-10,120 C60,100 130,140 210,110 S300,90 320,110', 'M-10,200 C70,180 140,220 220,190 S300,170 320,190',
+   'M-10,280 C60,260 150,300 230,270 S300,250 320,270', 'M-10,360 C70,340 150,380 230,350 S300,330 320,350', 'M-10,440 C60,420 150,460 230,430 S300,410 320,430']
+    .map(function (d) { return '<path class="sk-flow" d="' + d + '"/>'; }).join('') + '</g>';
+
+function lvlAt(d, i, t) { return Math.max(0, Math.min(3, d.base[i] + Math.round(d.trend[i] * (t - NOW) / 4))); }
+function baseFor(d) {
+  if (S.predBase[d.id]) return S.predBase[d.id];
+  if (S.mapBase === 'sat' || S.mapBase === 'windy') return S.mapBase;
+  return d.group === 'By Skyline' ? 'sat' : 'windy';
+}
+function mapSVG(d, t, base, o) {
+  o = o || {};
+  var isSat = base === 'sat', P = pal();
+  var s = '<svg viewBox="0 0 300 500" preserveAspectRatio="xMidYMid ' + (o.slice ? 'slice' : 'meet') + '" role="img" aria-label="' + esc(o.label || 'Map of Taiwan') + '">';
+  s += isSat ? SAT_BASE : WINDY_BG;
+  if (d) MAP_PLACES.forEach(function (p, i) {
+    var l = lvlAt(d, i, t);
+    s += '<circle cx="' + p.x + '" cy="' + p.y + '" r="' + ((o.thumb ? 18 : 22) + l * (o.thumb ? 10 : 9)) + '" fill="' + P[l] + '" fill-opacity="' + (isSat ? 0.62 : 0.8) + '" filter="url(#sk-b16)"/>';
+  });
+  if (!isSat) s += WINDY_LINES;
+  if (d && d.id === 'typhoon') {
+    var k = t / 11, sx = Math.round(300 - k * 100), sy = Math.round(470 - k * 320), sr = Math.round(18 + k * 14);
+    s += '<path d="M300,470 Q270,420 262,360 T236,250 T200,150" fill="none" stroke="#FFC24B" stroke-width="2.5" stroke-dasharray="6 6"/>' +
+      '<circle cx="' + sx + '" cy="' + sy + '" r="' + sr + '" fill="#EF4444" fill-opacity="0.25" stroke="#fff" stroke-width="2"/><circle cx="' + sx + '" cy="' + sy + '" r="5" fill="#fff"/>';
+  }
+  if (o.labels) MAP_PLACES.forEach(function (p) {
+    s += '<circle cx="' + p.x + '" cy="' + p.y + '" r="3.5" fill="#fff" stroke="#05172E" stroke-width="1"/>' +
+      '<text x="' + (p.x + 8) + '" y="' + p.y + '" fill="#fff" font-size="11" font-weight="600" font-family="Inter,sans-serif" dominant-baseline="middle" stroke="#05172E" stroke-width="2.5" paint-order="stroke">' + p.name + '</text>';
+  });
+  if (o.you && inTW(S.loc.lat, S.loc.lon)) {
+    var y = project(S.loc);
+    s += '<circle class="sk-pulse" cx="' + y.x + '" cy="' + y.y + '" r="6" fill="none" stroke="var(--accent)" stroke-width="2"/>' +
+      '<circle cx="' + y.x + '" cy="' + y.y + '" r="6" fill="var(--accent)" stroke="#fff" stroke-width="2"/>';
+  }
+  return s + '</svg>';
+}
+
+/* ============================================================
+   Views
+   ============================================================ */
+function homeView() {
+  var b = WEATHER[S.weather] || WEATHER['partly-cloudy'];
+  var live = S.bgMode === 'live';
+  var L = S.loc, src = nearestSource(L), tw = inTW(L.lat, L.lon);
+  var bgVars = live ? '--top:' + b.top + ';--mid:' + b.mid + ';--bottom:' + b.bottom : '--top:#163A7A;--mid:#1F4C94;--bottom:#2A5AA8';
+  var cat = catalog(L), byId = {};
+  cat.forEach(function (t) { byId[t.id] = t; });
+  var n = Math.max(3, Math.min(10, S.pinCount));
+  var pins = S.pins.slice(0, n).map(function (id) {
+    var t = byId[id]; if (!t) return '';
+    return '<div class="pin"><span class="t">' + t.title + '</span><span class="v">' + t.value + '</span><span class="s">' + t.sub + '</span><span class="src">' + t.src + '</span></div>';
+  }).join('');
+  var opts = Object.keys(WEATHER).map(function (k) { return '<option value="' + k + '"' + (k === S.weather ? ' selected' : '') + '>' + WEATHER[k].label + '</option>'; }).join('');
+
+  return '<section class="hero" style="' + bgVars + '" aria-label="Current weather">' +
+    (live ? skyLayers(b) : '') +
+    '<label class="demo"><span>Demo: station conditions</span><select id="demo-weather" data-input="weather">' + opts + '</select></label>' +
+    '<div class="hero-main">' +
+      '<button type="button" class="loc" data-action="open-search" aria-label="Location: ' + esc(L.name) + '. Change location">' +
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>' +
+        '<span>' + esc(L.name) + '</span>' + (L.sub ? '<span class="loc-sub">· ' + esc(L.sub) + '</span>' : '') +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>' +
+      '</button>' +
+      '<div class="temp" aria-label="Temperature ' + fmtT(b.temp + tempOffset(L)) + '">' + fmtT(b.temp + tempOffset(L)) + '</div>' +
+      '<div class="headline">' + esc(b.headline) + '</div>' +
+      '<div class="chips"><span class="chip"><span class="dot" aria-hidden="true"></span>Live from nearest source: ' + esc(src.name) + (src.dist ? ' · ' + esc(src.dist) : '') + '</span>' +
+      (tw ? '' : '<span class="chip warn">Outside Taiwan: PM2.5, landslide and Predictions cover Taiwan only</span>') + '</div>' +
+    '</div>' +
+    (S.skyline === 'city' ? skylineSVG(skylineFor(L), b) : '') +
+    '<div class="pinned-wrap"><div class="pinned ' + (n <= 3 ? 'few' : 'many') + '">' + pins + '</div>' +
+      '<button type="button" class="scroll-hint" data-action="scroll-stats">All stats ↓</button></div>' +
+  '</section>' +
+  '<section id="stats" class="stats" aria-labelledby="stats-h">' + statsInner() + '</section>';
+}
+
+function statsInner() {
+  var L = S.loc, cat = catalog(L), byId = {};
+  cat.forEach(function (t) { byId[t.id] = t; });
+  var order = currentOrder(cat);
+  var visible = order.filter(function (id) { return !S.hidden[id]; });
+  var tiles = visible.map(function (id, vi) {
+    var t = byId[id], span = S.spans[id] || t.span;
+    var style = (t.bg ? '--tbg:' + t.bg + ';' : '') + (t.fg ? '--tfg:' + t.fg + ';' : '');
+    return '<article class="tile s' + span + (t.rows > 1 ? ' r2' : '') + '" data-id="' + id + '"' + (editing ? ' draggable="true"' : '') + ' style="' + style + '" aria-label="' + t.title + '">' +
+      '<header><h3>' + t.title + '</h3><span class="src">' + esc(t.src) + '</span></header>' + tileBody(t) +
+      (editing ? '<div class="edit-ctl">' +
+        '<button type="button" data-action="tile-left" data-id="' + id + '" aria-label="Move ' + t.title + ' earlier"' + (vi === 0 ? ' disabled' : '') + '>◀</button>' +
+        '<button type="button" data-action="tile-right" data-id="' + id + '" aria-label="Move ' + t.title + ' later"' + (vi === visible.length - 1 ? ' disabled' : '') + '>▶</button>' +
+        '<button type="button" data-action="tile-smaller" data-id="' + id + '"' + (span <= 1 ? ' disabled' : '') + '>Smaller</button>' +
+        '<button type="button" data-action="tile-bigger" data-id="' + id + '"' + (span >= 4 ? ' disabled' : '') + '>Bigger</button>' +
+        '<button type="button" class="hide" data-action="tile-hide" data-id="' + id + '">Hide</button></div>' : '') +
+      '</article>';
+  }).join('');
+  var hidden = order.filter(function (id) { return S.hidden[id]; });
+  return '<div class="stats-head"><div><h2 id="stats-h">All stats</h2><p>Each reading uses the source nearest ' + esc(L.name) + '.</p></div>' +
+    '<div class="row">' + (editing ? '<button type="button" class="btn ghost" data-action="reset-grid">Reset layout</button>' : '') +
+    '<button type="button" class="btn' + (editing ? ' accent' : '') + '" data-action="toggle-edit" aria-pressed="' + editing + '">' + (editing ? 'Done' : 'Customize') + '</button></div></div>' +
+    (editing ? '<p class="edit-tip">Drag a tile to move it, or use its buttons. Make tiles bigger or smaller, or hide the ones you don’t need. Hidden tiles wait below so you can bring them back.</p>' : '') +
+    '<div class="grid' + (editing ? ' editing' : '') + '" id="grid">' + tiles + '</div>' +
+    (hidden.length ? '<div class="hidden-row"><span>Hidden:</span>' + hidden.map(function (id) { return '<button type="button" data-action="tile-restore" data-id="' + id + '">+ ' + byId[id].title + '</button>'; }).join('') + '</div>' : '') +
+    '<p class="foot">Sample data for the mockup. In the app, every reading comes from the source closest to your location (CWA station, Windy point forecast, or other APIs). Typhoon tracks come from CWA warnings, because Windy’s API doesn’t provide them.</p>';
+}
+
+function tileBody(t) {
+  if (t.kind === 'stat') {
+    return '<div class="val">' + t.value + '</div><p class="sub">' + t.sub + '</p>' +
+      (t.meter ? '<div class="meter" style="background:' + t.meterBg + '" aria-hidden="true"><span style="left:' + t.meter + '"></span></div>' : '');
+  }
+  if (t.kind === 'hourly') {
+    return '<div class="hours">' + t.hours.map(function (h) {
+      return '<div class="hour"><span>' + h.t + '</span><span class="ic" style="background:' + h.c + '" aria-hidden="true"></span><span class="tt">' + h.temp + '</span><span class="rp">' + h.rain + '</span></div>';
+    }).join('') + '</div>';
+  }
+  if (t.kind === 'week') {
+    return '<div class="week">' + t.week.map(function (w) {
+      return '<div class="wrow"><span>' + w.day + '</span><span class="ic" style="background:' + w.c + '" aria-hidden="true"></span><span class="lo">' + w.lo + '</span><span class="wbar" aria-hidden="true"><span style="left:' + w.l + ';right:' + w.r + '"></span></span><span>' + w.hi + '</span></div>';
+    }).join('') + '</div>';
+  }
+  if (t.kind === 'map') {
+    var wind = DATASETS.filter(function (d) { return d.id === 'wind'; })[0];
+    return '<div class="tile-map">' + mapSVG(wind, NOW, 'windy', { slice: true, thumb: true, you: true, label: 'Windy wind map of Taiwan' }) +
+      '<a class="btn accent open" href="#predictions/wind">Open map</a></div>';
+  }
+  if (t.kind === 'typhoon') {
+    return '<div style="display:flex;gap:16px;align-items:center;flex:1">' +
+      '<svg width="120" height="96" viewBox="0 0 300 240" aria-hidden="true" style="flex:none;border-radius:14px;background:#0A2A48">' +
+        '<g transform="translate(40,10) scale(0.42)"><path d="' + ISL + '" fill="#2F5A49"/></g>' +
+        '<path d="M290,230 Q250,190 230,150 T160,90" fill="none" stroke="#FFC24B" stroke-width="5" stroke-dasharray="12 10"/>' +
+        '<circle cx="246" cy="178" r="26" fill="#EF4444" fill-opacity="0.3" stroke="#fff" stroke-width="3"/><circle cx="246" cy="178" r="7" fill="#fff"/></svg>' +
+      '<div><div class="val" style="font-size:26px">TD-27 · 860 km SE</div><p class="sub">Sample storm. Moving NW at 18 km/h. A sea warning is possible in about 48h.</p></div></div>';
+  }
+  return '';
+}
+
+function predView(sub) {
+  var tw = inTW(S.loc.lat, S.loc.lon);
+  var banner = tw ? '' : '<div class="banner">You’re looking at <b>' + esc(S.loc.name) + '</b>. Predictions and the team models cover Taiwan only, so these maps always show Taiwan.</div>';
+  var d = DATASETS.filter(function (x) { return x.id === sub; })[0];
+  if (!d) {
+    var groups = [['By Skyline', 'Our own Taiwan models'], ['Others', 'Pulled from Windy, CWA and other APIs']];
+    return '<div class="page"><header><div class="eyebrow">Taiwan only</div><h1>Predictions</h1>' +
+      '<p class="lede">Pick a dataset to open its map, then scrub back through the past or forward into the forecast.</p></header>' + banner +
+      groups.map(function (g) {
+        return '<section aria-labelledby="g-' + g[0].replace(/\s/g, '') + '"><div class="group-head"><h2 id="g-' + g[0].replace(/\s/g, '') + '">' + g[0] + '</h2><span>' + g[1] + '</span></div><div class="pred-grid">' +
+          DATASETS.filter(function (x) { return x.group === g[0]; }).map(function (x) {
+            var base = baseFor(x), own = x.group === 'By Skyline';
+            return '<a class="pcard' + (own ? ' own' : '') + '" href="#predictions/' + x.id + '"><div class="thumb">' +
+              mapSVG(x, NOW, base, { thumb: true, slice: true, label: x.title + ' preview' }) +
+              '<span class="base-tag">' + (base === 'sat' ? 'Satellite' : 'Windy') + '</span>' + (own ? '<span class="own-tag">Skyline</span>' : '') + '</div>' +
+              '<div class="pc-body"><h3>' + x.title + '</h3><p>' + x.desc + '</p><span class="src">' + x.src + '</span></div></a>';
+          }).join('') + '</div></section>';
+      }).join('') + '</div>';
+  }
+  var own = d.group === 'By Skyline';
+  return '<div class="page"><header class="pm-head"><a class="btn ghost" href="#predictions">← All predictions</a>' +
+    '<div><div class="eyebrow">' + d.group + '</div><h1>' + d.title + '</h1></div><div class="grow"></div>' +
+    '<span class="chip ' + (own ? 'own' : 'solid') + '">' + d.src + '</span></header>' + banner +
+    '<div class="pm-body"><section class="pm-map" aria-label="Map">' +
+      '<div class="map-box"><div class="map-top"><span class="mode" id="pm-mode"></span>' +
+        '<div class="seg" role="group" aria-label="Map base"><button type="button" data-action="set-base" data-base="sat" id="base-sat">Satellite</button><button type="button" data-action="set-base" data-base="windy" id="base-windy">Windy</button></div></div>' +
+        '<div id="pm-svg"></div></div>' +
+      '<div class="slider"><label for="pred-time"><span>Past ← Now → Prediction</span><span class="now" id="pm-time"></span></label>' +
+        '<input id="pred-time" class="time" type="range" min="0" max="11" step="1" value="' + S.predT + '" data-input="predT" aria-valuetext="' + TIMES[S.predT] + '">' +
+        '<div class="ticks" aria-hidden="true">' + TIMES.map(function (l, i) { return '<span' + (i === NOW ? ' class="is-now"' : '') + '>' + l + '</span>'; }).join('') + '</div></div>' +
+      '<div class="legend" id="pm-legend"></div></section>' +
+    '<aside class="pm-side" aria-label="Region values"><div class="note"><div class="k" id="pm-k"></div><p>' + d.note + '</p><div class="conf" id="pm-conf"></div></div>' +
+      '<div class="regions" id="pm-rows"></div>' +
+      '<a class="btn accent" href="#ask" style="border-radius:14px;min-height:50px">Ask the AI about this map</a></aside></div></div>';
+}
+function updatePred() {
+  var sub = route().sub, d = DATASETS.filter(function (x) { return x.id === sub; })[0];
+  if (!d || !$('#pm-svg')) return;
+  var t = S.predT, base = baseFor(d), P = pal();
+  var mode = t < NOW ? ['Observed (past)', '#5B6F99', '#fff'] : t === NOW ? ['Now', '#fff', '#0B1B3F'] : ['Prediction', 'var(--accent)', 'var(--accent-ink)'];
+  $('#pm-svg').innerHTML = mapSVG(d, t, base, { labels: true, you: true, label: 'Map of Taiwan showing ' + d.title + ' at ' + TIMES[t] + ' on a ' + (base === 'sat' ? 'satellite' : 'Windy') + ' base' });
+  var m = $('#pm-mode'); m.textContent = mode[0]; m.style.background = mode[1]; m.style.color = mode[2];
+  $('#pm-time').textContent = TIMES[t];
+  $('#pm-k').textContent = mode[0] + ' · ' + TIMES[t];
+  $('#pm-conf').textContent = 'Confidence: ' + (t <= NOW ? 'Observed' : t <= 7 ? d.conf[0] : t <= 9 ? d.conf[1] : d.conf[2]);
+  $('#base-sat').setAttribute('aria-pressed', base === 'sat');
+  $('#base-windy').setAttribute('aria-pressed', base === 'windy');
+  var yours = inTW(S.loc.lat, S.loc.lon) ? nearestMapPlace() : -1;
+  $('#pm-rows').innerHTML = MAP_PLACES.map(function (p, i) {
+    var l = lvlAt(d, i, t);
+    return '<div class="region' + (i === yours ? ' you' : '') + '"><span>' + p.name + '</span><b style="background:' + P[l] + ';color:' + inkFor(P[l]) + '">' + d.labels[l] + '</b></div>';
+  }).join('');
+  $('#pm-legend').innerHTML = d.legend.map(function (l, i) { return '<span><i style="background:' + P[i] + '"></i>' + l + '</span>'; }).join('');
+  var r = $('#pred-time'); r.setAttribute('aria-valuetext', TIMES[t] + ', ' + mode[0]);
+}
+function nearestMapPlace() {
+  var y = project(S.loc), bi = 0, bd = Infinity;
+  MAP_PLACES.forEach(function (p, i) { var d = Math.hypot(p.x - y.x, p.y - y.y); if (d < bd) { bd = d; bi = i; } });
+  return bi;
+}
+
+/* ---------- Ask AI ---------- */
+function bars(levels, labels) {
+  var P = pal(), max = 4;
+  return '<div class="bars" role="img" aria-label="' + esc(labels.map(function (l, i) { return l + ': ' + ['low', 'medium', 'high', 'very high'][levels[i]]; }).join(', ')) + '">' +
+    levels.map(function (l, i) { return '<div><i style="height:' + ((l + 1) / max * 100) + '%;background:' + P[l] + '"></i>' + labels[i] + '</div>'; }).join('') + '</div>';
+}
+function answer(q) {
+  var l = q.toLowerCase(), L = S.loc, b = WEATHER[S.weather], src = nearestSource(L);
+  var tw = inTW(L.lat, L.lon);
+  if (/landslide|slope|suhua|highway|road|drive|hike|trail|山崩|土石流/.test(l)) return {
+    text: tw ? 'Saturday is the risky day: heavy rain pushes landslide risk to <strong>High</strong> on eastern slopes. Sunday after 10 AM it drops to <strong>Medium</strong>. If you can, go Sunday afternoon.' : 'The landslide model only covers Taiwan, so I can’t rate slopes near ' + esc(L.name) + '.',
+    bars: tw ? [[1, 1, 2, 3, 3, 2, 1, 0], ['Fri', 'PM', 'Sat', 'PM', 'Night', 'Sun', 'PM', 'Mon']] : null,
+    src: ['CWA rain gauges', 'Windy · precip', '★Landslide model'] };
+  if (/pm|air|haze|aqi|smog|空氣/.test(l)) return {
+    text: tw ? 'PM2.5 near ' + esc(L.name) + ' is <strong>Moderate (18 µg/m³)</strong> and peaks around 9 PM at about 30 µg/m³. It clears by tomorrow morning as the northeast monsoon picks up.' : 'The team PM2.5 model covers Taiwan only. Windy CAMS puts PM2.5 near ' + esc(L.name) + ' in the moderate range (sample value).',
+    bars: [[0, 1, 1, 2, 1, 0], ['Now', '6 PM', '8 PM', '9 PM', '11 PM', '6 AM']],
+    src: tw ? ['★PM2.5 model', 'Windy CAMS pm2p5'] : ['Windy CAMS pm2p5'] };
+  if (/typhoon|颱風/.test(l)) return {
+    text: 'There’s one system to watch: sample storm <strong>TD-27</strong>, about 860 km southeast and moving northwest. CWA could issue a sea warning in about 48 hours. The east coast would feel it first.',
+    bars: null, src: ['CWA typhoon warnings', 'Windy · wind, waves'] };
+  if (/thunder|storm|lightning|hail|雷/.test(l)) return {
+    text: 'Storm energy is high this afternoon (CAPE 2,400 J/kg). Thunderstorms are <strong>likely from 4 to 7 PM</strong>, and hail is possible on Saturday (Windy warning code 96).',
+    bars: [[0, 1, 2, 3, 3, 1], ['2 PM', '3 PM', '4 PM', '5 PM', '6 PM', '7 PM']], src: ['Windy · CAPE', 'Windy · weatherWarnings'] };
+  if (/rain|umbrella|wet|下雨|雨/.test(l)) return {
+    text: 'Bring an umbrella. About <strong>32 mm</strong> of rain is expected today, most of it between 4 and 7 PM.',
+    bars: [[0, 0, 1, 3, 3, 2, 1], ['2 PM', '3 PM', '4 PM', '5 PM', '6 PM', '7 PM', '8 PM']], src: ['Windy · precip', src.name] };
+  return {
+    text: 'Right now in ' + esc(L.name) + ' it’s <strong>' + fmtT(b.temp + tempOffset(L)) + '</strong>: ' + esc(b.headline) + '. Reading from ' + esc(src.name) + '. Ask me about PM2.5, landslide risk, thunderstorms, typhoons or rain.',
+    bars: null, src: [src.name, 'Windy point forecast'] };
+}
+function seedChat() {
+  return [{ me: true, text: 'Safe to drive Suhua Highway this weekend?' }, Object.assign({ me: false }, answer('suhua highway'))];
+}
+function msgHTML(m) {
+  if (m.me) return '<div class="msg me">' + esc(m.text) + '</div>';
+  if (m.typing) return '<div class="msg ai typing">Checking the nearest sources…</div>';
+  return '<div class="msg ai"><p>' + m.text + '</p>' + (m.bars ? bars(m.bars[0], m.bars[1]) : '') +
+    '<div class="srcs">' + m.src.map(function (s) { return s.charAt(0) === '★' ? '<span class="own">' + esc(s.slice(1)) + '</span>' : '<span>' + esc(s) + '</span>'; }).join('') + '</div></div>';
+}
+function askView() {
+  if (!chat) chat = seedChat();
+  var sugg = ['PM2.5 tonight?', 'Typhoon outlook', 'Will it storm this afternoon?', 'Do I need an umbrella?', 'Landslide risk on Highway 8'];
+  return '<div class="page light"><header><div class="eyebrow">RAG + MCP over our data</div><h1>Ask Skyline</h1>' +
+    '<p class="lede">Answers are grounded in CWA stations, Windy and the team’s PM2.5 and landslide models, for ' + esc(S.loc.name) + '. In this mockup the answers are canned.</p></header>' +
+    '<div class="chat" id="chat" aria-live="polite">' + chat.map(msgHTML).join('') + '</div>' +
+    '<div class="suggest">' + sugg.map(function (s) { return '<button type="button" data-action="ask" data-q="' + esc(s) + '">' + esc(s) + '</button>'; }).join('') + '</div>' +
+    '<form class="ask-form" id="ask-form"><label for="ask-input" class="sr-only">Ask a question</label><input id="ask-input" type="text" placeholder="Ask about Taiwan weather…" autocomplete="off"><button type="submit">Ask</button></form></div>';
+}
+function ask(q) {
+  q = q.trim(); if (!q) return;
+  chat.push({ me: true, text: q }, { typing: true });
+  renderChat();
+  setTimeout(function () {
+    chat.pop(); chat.push(Object.assign({ me: false }, answer(q)));
+    renderChat();
+  }, 700);
+}
+function renderChat() {
+  var c = $('#chat'); if (!c) return;
+  c.innerHTML = chat.map(msgHTML).join('');
+  var last = c.lastElementChild; if (last) last.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+/* ---------- Settings ---------- */
+function seg(key, label, options) {
+  return '<div class="seg" role="group" aria-label="' + label + '">' + options.map(function (o) {
+    return '<button type="button" data-action="set" data-key="' + key + '" data-val="' + o[0] + '" aria-pressed="' + (String(S[key]) === String(o[0])) + '">' + o[1] + '</button>';
+  }).join('') + '</div>';
+}
+function sw(path, label) {
+  var on = path.indexOf('.') > 0 ? S.sources[path.split('.')[1]] : S[path];
+  return '<button type="button" class="switch" role="switch" aria-checked="' + !!on + '" aria-label="' + label + '" data-action="toggle" data-key="' + path + '"></button>';
+}
+function setRow(label, small, control) {
+  return '<div class="set-row"><span class="lbl">' + label + (small ? '<small>' + small + '</small>' : '') + '</span>' + control + '</div>';
+}
+function settingsView() {
+  var cat = catalog(S.loc), byId = {};
+  cat.forEach(function (t) { byId[t.id] = t; });
+  var n = S.pinCount, src = nearestSource(S.loc);
+  var swatches = [['#FFC24B', 'Sun yellow (default)'], ['#FF6B5A', 'Coral'], ['#4C8DFF', 'Sky blue'], ['#2FBF9B', 'Jade'], ['#C084FC', 'Orchid']];
+  var isPreset = swatches.some(function (s) { return s[0].toLowerCase() === S.accent.toLowerCase(); });
+  return '<div class="page light"><header><h1>Settings</h1><p class="lede">Everything in Skyline can be changed here, down to the colors. What you see now are the defaults.</p></header>' +
+  '<div class="settings-grid"><div style="display:flex;flex-direction:column;gap:20px">' +
+
+  '<section class="card" aria-labelledby="st-loc"><h2 id="st-loc">Location</h2>' +
+    setRow(esc(S.loc.name), esc((S.loc.sub ? S.loc.sub + ' · ' : '') + fmtCoord(S.loc.lat, S.loc.lon)), '<button type="button" class="light-btn" data-action="open-search">Change</button>') +
+    setRow('Nearest source', esc(src.name + (src.dist ? ' · ' + src.dist : '')), '') +
+  '</section>' +
+
+  '<section class="card" aria-labelledby="st-home"><h2 id="st-home">Home screen</h2>' +
+    '<label for="pin-count" style="display:flex;justify-content:space-between;font-weight:600;font-size:15px"><span>Pinned items under the temperature</span><span id="pin-out" style="color:#1E5BC6">' + n + '</span></label>' +
+    '<input id="pin-count" class="plain" type="range" min="3" max="10" value="' + n + '" data-input="pinCount">' +
+    '<p class="hint">Shows the first ' + n + '. Reorder to choose which ones.</p>' +
+    '<ol class="pins-list">' + S.pins.map(function (id, i) {
+      var t = byId[id]; if (!t) return '';
+      return '<li class="' + (i < n ? '' : 'off') + '"><span class="n">' + (i + 1) + '</span><span class="grow">' + t.title + (i < n ? '' : ' <small>(not shown)</small>') + '</span>' +
+        '<button type="button" class="mini" data-action="pin-up" data-id="' + id + '" aria-label="Move ' + t.title + ' up"' + (i === 0 ? ' disabled' : '') + '>↑</button>' +
+        '<button type="button" class="mini" data-action="pin-down" data-id="' + id + '" aria-label="Move ' + t.title + ' down"' + (i === S.pins.length - 1 ? ' disabled' : '') + '>↓</button></li>';
+    }).join('') + '</ol>' +
+    '<a class="link" href="#stats">Customize All stats →</a>' +
+  '</section>' +
+
+  '<section class="card" aria-labelledby="st-data"><h2 id="st-data">Data sources</h2><p class="hint">Each reading always comes from the closest enabled source.</p>' +
+    setRow('CWA weather stations', 'Observed conditions', sw('sources.cwa', 'CWA weather stations')) +
+    setRow('Windy Point Forecast', 'Forecasts at your exact point', sw('sources.windyPoint', 'Windy Point Forecast')) +
+    setRow('Windy Map Forecast', 'Live maps', sw('sources.windyMap', 'Windy Map Forecast')) +
+    setRow('Team PM2.5 model', 'Taiwan only', sw('sources.pm25', 'Team PM2.5 model')) +
+    setRow('Team landslide model', 'Taiwan only, satellite-based', sw('sources.landslide', 'Team landslide model')) +
+    setRow('CWA typhoon warnings', '', sw('sources.typhoon', 'CWA typhoon warnings')) +
+  '</section></div>' +
+
+  '<div style="display:flex;flex-direction:column;gap:20px">' +
+  '<section class="card" aria-labelledby="st-theme"><div style="display:flex;justify-content:space-between;align-items:center"><h2 id="st-theme">Theme &amp; colors</h2>' +
+    (themeIsDefault() ? '<span class="badge">Default</span>' : '<span class="badge custom">Custom</span>') + '</div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px"><span style="font-weight:600;font-size:15px">Accent color</span><div class="swatches" role="group" aria-label="Accent color">' +
+      swatches.map(function (s) { return '<button type="button" class="swatch" style="background:' + s[0] + '" aria-label="' + s[1] + '" aria-pressed="' + (s[0].toLowerCase() === S.accent.toLowerCase()) + '" data-action="set" data-key="accent" data-val="' + s[0] + '"></button>'; }).join('') +
+      '<input type="color" id="accent-custom" data-input="accent" value="' + S.accent + '" aria-label="Custom accent color"' + (isPreset ? '' : ' style="border:3px solid #0B1B3F"') + '></div></div>' +
+    setRow('Risk color scale', '<span style="display:flex;gap:3px;margin-top:4px">' + pal().map(function (c) { return '<i style="display:block;width:18px;height:10px;border-radius:3px;background:' + c + '"></i>'; }).join('') + '</span>',
+      seg('risk', 'Risk color scale', [['default', 'Default'], ['cb', 'Color-blind safe']])) +
+    setRow('Background', 'Follows the nearest station', seg('bgMode', 'Background', [['live', 'Live weather'], ['static', 'Static']])) +
+    setRow('Tile style', '', seg('tiles', 'Tile style', [['glass', 'Glass'], ['solid', 'Solid']])) +
+    setRow('Fonts', '', seg('fonts', 'Fonts', [['default', 'Bricolage + Inter'], ['system', 'System']])) +
+    '<div class="set-row"><label for="radius" class="lbl">Corner roundness<small id="radius-out">' + S.radius + ' px</small></label><input id="radius" class="plain" style="max-width:200px" type="range" min="6" max="36" value="' + S.radius + '" data-input="radius"></div>' +
+    setRow('Skyline art', 'Taiwan city silhouettes', seg('skyline', 'Skyline art', [['city', 'Follow my city'], ['off', 'Off']])) +
+    setRow('Map base', 'Default for prediction maps', seg('mapBase', 'Map base', [['auto', 'Auto'], ['sat', 'Satellite'], ['windy', 'Windy']])) +
+    '<p class="hint" style="margin-top:-4px">Auto: satellite for Skyline models, Windy for everything else.</p>' +
+    '<button type="button" class="light-btn" data-action="reset-theme"' + (themeIsDefault() ? ' disabled' : '') + '>Reset theme to default</button>' +
+  '</section>' +
+
+  '<section class="card" aria-labelledby="st-look"><h2 id="st-look">Motion</h2>' +
+    setRow('Reduce motion', 'Stops drifting clouds, rain, lightning and map flow', sw('reduceMotion', 'Reduce motion')) +
+  '</section>' +
+
+  '<section class="card" aria-labelledby="st-units"><h2 id="st-units">Units &amp; language</h2>' +
+    setRow('Temperature', '', seg('units', 'Temperature unit', [['C', '°C'], ['F', '°F']])) +
+    setRow('Language', 'Chinese UI isn’t in the mockup yet', seg('lang', 'Language', [['zh', '中文'], ['en', 'English']])) +
+  '</section>' +
+  '<button type="button" class="light-btn" data-action="reset-all">Reset everything to default</button>' +
+  '</div></div></div>';
+}
+
+/* ============================================================
+   Router & render
+   ============================================================ */
+function route() {
+  var h = decodeURIComponent(location.hash.slice(1)) || 'home';
+  var parts = h.split('/');
+  var page = parts[0] === 'stats' ? 'home' : parts[0];
+  if (['home', 'predictions', 'ask', 'settings'].indexOf(page) < 0) page = 'home';
+  return { page: page, sub: parts[1] || '', stats: parts[0] === 'stats' };
+}
+function render() {
+  var r = route(), key = r.page + '/' + r.sub;
+  document.body.dataset.page = r.page;
+  var app = $('#app');
+  app.innerHTML = r.page === 'home' ? homeView() : r.page === 'predictions' ? predView(r.sub) : r.page === 'ask' ? askView() : settingsView();
+  document.querySelectorAll('[data-nav]').forEach(function (a) {
+    if (a.dataset.nav === r.page) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+  });
+  if (r.page === 'predictions' && r.sub) updatePred();
+  document.title = { home: S.loc.name + ' · Skyline', predictions: 'Predictions · Skyline', ask: 'Ask AI · Skyline', settings: 'Settings · Skyline' }[r.page];
+  if (key !== lastRoute) {
+    if (r.stats) { var st = $('#stats'); if (st) st.scrollIntoView(); }
+    else window.scrollTo(0, 0);
+  }
+  lastRoute = key;
+}
+function selectorFor(el) {
+  if (!el || el === document.body) return null;
+  if (el.id) return '#' + el.id;
+  if (el.dataset && el.dataset.action) {
+    var s = '[data-action="' + el.dataset.action + '"]';
+    ['key', 'val', 'id', 'base'].forEach(function (k) { if (el.dataset[k] != null) s += '[data-' + k + '="' + el.dataset[k] + '"]'; });
+    return s;
+  }
+  return null;
+}
+function rerender() {
+  var sel = selectorFor(document.activeElement);
+  render();
+  if (sel) { var el = document.querySelector(sel); if (el && !el.disabled) el.focus({ preventScroll: true }); }
+}
+function rerenderStats(focusSel) {
+  var st = $('#stats'); if (!st) return;
+  st.innerHTML = statsInner();
+  if (focusSel) { var el = document.querySelector(focusSel); if (el && !el.disabled) el.focus({ preventScroll: true }); else { var g = $('#grid .edit-ctl button'); if (g) g.focus({ preventScroll: true }); } }
+}
+
+/* ============================================================
+   Actions
+   ============================================================ */
+function moveIn(arr, id, dir) {
+  var i = arr.indexOf(id), j = i + dir;
+  if (i < 0 || j < 0 || j >= arr.length) return arr;
+  var o = arr.slice(); o.splice(i, 1); o.splice(j, 0, id); return o;
+}
+function visibleNeighbor(order, id, dir) {
+  var vis = order.filter(function (x) { return !S.hidden[x]; });
+  var i = vis.indexOf(id), j = i + dir;
+  return j >= 0 && j < vis.length ? vis[j] : null;
+}
+var ACTIONS = {
+  'open-search': function () { openSearch(); },
+  'close-search': function () { closeSearch(); },
+  'scroll-stats': function () { var s = $('#stats'); if (s) s.scrollIntoView({ behavior: 'smooth' }); },
+  'toggle-edit': function () { editing = !editing; rerenderStats('[data-action="toggle-edit"]'); },
+  'reset-grid': function () { S.order = null; S.spans = {}; S.hidden = {}; save(); rerenderStats('[data-action="toggle-edit"]'); toast('Layout reset to default'); },
+  'tile-left': function (el) { tileMove(el.dataset.id, -1, '[data-action="tile-left"][data-id="' + el.dataset.id + '"]'); },
+  'tile-right': function (el) { tileMove(el.dataset.id, 1, '[data-action="tile-right"][data-id="' + el.dataset.id + '"]'); },
+  'tile-bigger': function (el) { tileSpan(el.dataset.id, 1); rerenderStats('[data-action="tile-bigger"][data-id="' + el.dataset.id + '"]'); },
+  'tile-smaller': function (el) { tileSpan(el.dataset.id, -1); rerenderStats('[data-action="tile-smaller"][data-id="' + el.dataset.id + '"]'); },
+  'tile-hide': function (el) { S.hidden[el.dataset.id] = true; save(); rerenderStats('[data-action="tile-restore"][data-id="' + el.dataset.id + '"]'); },
+  'tile-restore': function (el) { delete S.hidden[el.dataset.id]; save(); rerenderStats('[data-action="tile-hide"][data-id="' + el.dataset.id + '"]'); },
+  'set-base': function (el) { var sub = route().sub; S.predBase[sub] = el.dataset.base; save(); updatePred(); },
+  'ask': function (el) { ask(el.dataset.q); },
+  'set': function (el) { S[el.dataset.key] = el.dataset.val; save(); applyTheme(); rerender(); },
+  'toggle': function (el) {
+    var k = el.dataset.key;
+    if (k.indexOf('sources.') === 0) { var sk = k.split('.')[1]; S.sources[sk] = !S.sources[sk]; } else S[k] = !S[k];
+    save(); applyTheme(); rerender();
+  },
+  'pin-up': function (el) { S.pins = moveIn(S.pins, el.dataset.id, -1); save(); rerender(); },
+  'pin-down': function (el) { S.pins = moveIn(S.pins, el.dataset.id, 1); save(); rerender(); },
+  'reset-theme': function () { THEME_KEYS.forEach(function (k) { S[k] = DEFAULTS[k]; }); save(); applyTheme(); render(); toast('Theme reset to default'); },
+  'reset-all': function () {
+    var keepLoc = S.loc, keepRecents = S.recents;
+    S = clone(DEFAULTS); S.loc = keepLoc; S.recents = keepRecents;
+    save(); applyTheme(); render(); toast('Everything reset to default (location kept)');
+  },
+  'pick': function (el) { pickResult(+el.dataset.i); },
+  'example': function (el) { var q = $('#q'); q.value = el.dataset.q; runSearch(); q.focus(); },
+  'worldwide': function () { worldwide(); },
+  'geolocate': function () { geolocate(); }
+};
+function tileMove(id, dir, focusSel) {
+  var cat = catalog(S.loc), order = currentOrder(cat);
+  var nb = visibleNeighbor(order, id, dir); if (!nb) return;
+  var o = order.slice(), i = o.indexOf(id); o.splice(i, 1);
+  var j = o.indexOf(nb); o.splice(dir < 0 ? j : j + 1, 0, id);
+  S.order = o; save(); rerenderStats(focusSel);
+}
+function tileSpan(id, d) {
+  var t = catalog(S.loc).filter(function (x) { return x.id === id; })[0];
+  var cur = S.spans[id] || t.span;
+  S.spans[id] = Math.max(1, Math.min(4, cur + d)); save();
+}
+
+document.addEventListener('click', function (e) {
+  var el = e.target.closest('[data-action]');
+  if (!el || el.disabled) return;
+  var fn = ACTIONS[el.dataset.action];
+  if (fn) { e.preventDefault(); fn(el, e); }
+});
+document.addEventListener('input', function (e) {
+  var el = e.target, k = el.dataset && el.dataset.input;
+  if (!k) return;
+  if (k === 'predT') { S.predT = +el.value; updatePred(); save(); }
+  else if (k === 'radius') { S.radius = +el.value; applyTheme(); var o = $('#radius-out'); if (o) o.textContent = S.radius + ' px'; }
+  else if (k === 'pinCount') { var p = $('#pin-out'); if (p) p.textContent = el.value; }
+  else if (k === 'accent') { S.accent = el.value; applyTheme(); }
+  else if (k === 'q') runSearch();
+});
+document.addEventListener('change', function (e) {
+  var el = e.target, k = el.dataset && el.dataset.input;
+  if (!k) return;
+  if (k === 'pinCount') { S.pinCount = +el.value; save(); rerender(); }
+  else if (k === 'radius' || k === 'accent') { save(); rerender(); }
+  else if (k === 'weather') { S.weather = el.value; save(); rerender(); }
+});
+document.addEventListener('submit', function (e) {
+  if (e.target.id === 'ask-form') { e.preventDefault(); var i = $('#ask-input'); ask(i.value); i.value = ''; }
+});
+
+// Drag and drop for the stats grid
+document.addEventListener('dragstart', function (e) {
+  var t = e.target.closest && e.target.closest('.grid.editing .tile');
+  if (!t) return;
+  dragId = t.dataset.id; t.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  try { e.dataTransfer.setData('text/plain', dragId); } catch (err) {}
+});
+document.addEventListener('dragover', function (e) {
+  var t = e.target.closest && e.target.closest('.grid.editing .tile');
+  if (!t || !dragId) return;
+  e.preventDefault();
+  document.querySelectorAll('.drop-target').forEach(function (x) { if (x !== t) x.classList.remove('drop-target'); });
+  if (t.dataset.id !== dragId) t.classList.add('drop-target');
+});
+document.addEventListener('drop', function (e) {
+  var t = e.target.closest && e.target.closest('.grid.editing .tile');
+  if (!t || !dragId) return;
+  e.preventDefault();
+  var target = t.dataset.id;
+  if (target !== dragId) {
+    var o = currentOrder(catalog(S.loc)).slice();
+    var from = o.indexOf(dragId), to = o.indexOf(target);
+    o.splice(from, 1); o.splice(o.indexOf(target) + (from < to ? 1 : 0), 0, dragId);
+    S.order = o; save();
+  }
+  dragId = null; rerenderStats();
+});
+document.addEventListener('dragend', function () {
+  dragId = null;
+  document.querySelectorAll('.dragging,.drop-target').forEach(function (x) { x.classList.remove('dragging', 'drop-target'); });
+});
+
+/* ============================================================
+   Location search
+   Accepts: place names (EN / 中文), decimal or DMS coordinates,
+   IATA (3-letter) and ICAO (4-letter) airport codes, universities.
+   ============================================================ */
+var results = [], active = -1, lastFocus = null, wwSeq = 0;
+
+function parseCoords(q) {
+  var s = q.replace(/\b(lat(itude)?|lon(gitude)?|lng)\b\s*[:=]?/gi, ' ').replace(/[()\[\]]/g, ' ').trim();
+  if (!/\d/.test(s)) return null;
+  var re = /([+-]?\d+(?:\.\d+)?)\s*(?:°|º|d|deg)?\s*(?:(\d+(?:\.\d+)?)\s*(?:'|′|’|m)\s*)?(?:(\d+(?:\.\d+)?)\s*(?:"|″|”|''|s)\s*)?\s*([NSEW])?/gi;
+  var parts = [], m, rest = s;
+  while ((m = re.exec(s)) !== null) {
+    if (m[0].trim() === '') { re.lastIndex++; continue; }
+    parts.push(m);
+    rest = rest.replace(m[0], ' ');
+  }
+  if (parts.length !== 2) return null;
+  if (rest.replace(/[\s,;\/]+/g, '') !== '') return null;
+  var vals = parts.map(function (p) {
+    var v = Math.abs(parseFloat(p[1])) + (p[2] ? parseFloat(p[2]) / 60 : 0) + (p[3] ? parseFloat(p[3]) / 3600 : 0);
+    var neg = /^-/.test(p[1]) || /[SW]/i.test(p[4] || '');
+    return { v: neg ? -v : v, h: (p[4] || '').toUpperCase() };
+  });
+  var lat = vals[0], lon = vals[1];
+  if (/[EW]/.test(lat.h) || /[NS]/.test(lon.h)) { var tmp = lat; lat = lon; lon = tmp; }
+  if (!isFinite(lat.v) || !isFinite(lon.v) || Math.abs(lat.v) > 90 || Math.abs(lon.v) > 180) return null;
+  return { lat: lat.v, lon: lon.v };
+}
+
+function textScore(p, nq) {
+  var best = 0;
+  p.keys.forEach(function (a) {
+    if (a === nq) best = Math.max(best, 100);
+    else if (a.indexOf(nq) === 0) best = Math.max(best, 70);
+    else if (a.split(' ').some(function (w) { return w.indexOf(nq) === 0; })) best = Math.max(best, 55);
+    else if (nq.length >= 2 && a.indexOf(nq) >= 0) best = Math.max(best, 35);
+  });
+  // multi-word queries: every word must appear somewhere
+  if (!best && nq.indexOf(' ') > 0) {
+    var all = p.keys.join(' ');
+    if (nq.split(' ').every(function (w) { return all.indexOf(w) >= 0; })) best = 40;
+  }
+  if (best && p.kind === 'City') best += 3;
+  return best;
+}
+
+function search(q) {
+  var out = [], seen = {};
+  var push = function (r) { var key = r.id || (r.lat.toFixed(4) + ',' + r.lon.toFixed(4)); if (seen[key]) return; seen[key] = true; out.push(r); };
+  var c = parseCoords(q);
+  if (c) {
+    var np = nearestPlace(c.lat, c.lon);
+    push({ kind: 'Coordinates', tag: 'coords', name: fmtCoord(c.lat, c.lon), sub: np.place ? 'Near ' + np.place.name + ' · ' + fmtKm(np.d) : '', lat: c.lat, lon: c.lon,
+      loc: { name: np.place && np.d < 20 ? np.place.name.split(',')[0] : fmtCoord(c.lat, c.lon), sub: np.place && np.d < 20 ? fmtCoord(c.lat, c.lon) : (np.place ? 'Near ' + np.place.name : ''), lat: c.lat, lon: c.lon, kind: 'Coordinates' } });
+    return out;
+  }
+  var code = q.trim().toUpperCase();
+  var codeNote = null;
+  if (/^[A-Z]{3}$/.test(code)) {
+    var a3 = PLACES.filter(function (p) { return p.iata === code; })[0];
+    if (a3) push(airportResult(a3, 'IATA'));
+    else codeNote = 'No airport with IATA code ' + code + ' in the offline list.';
+  } else if (/^[A-Z]{4}$/.test(code)) {
+    var a4 = PLACES.filter(function (p) { return p.icao === code; })[0];
+    if (a4) push(airportResult(a4, 'ICAO'));
+    else codeNote = 'No airport with ICAO code ' + code + ' in the offline list.';
+  }
+  var nq = norm(q);
+  if (nq) {
+    PLACES.map(function (p) { return { p: p, s: textScore(p, nq) }; })
+      .filter(function (x) { return x.s > 0; })
+      .sort(function (a, b) { return b.s - a.s; })
+      .slice(0, 8)
+      .forEach(function (x) { push(x.p.kind === 'Airport' ? airportResult(x.p, 'Airport') : placeResult(x.p)); });
+  }
+  if (codeNote && !out.length) out.push({ note: codeNote + ' Try searching worldwide below.' });
+  return out;
+}
+function airportResult(p, how) {
+  return { id: p.id, kind: how, tag: how.toLowerCase(), name: p.name, sub: 'IATA ' + p.iata + ' · ICAO ' + p.icao + ' · ' + p.sub, lat: p.lat, lon: p.lon,
+    loc: { name: p.name.replace(/ International Airport| Airport/, '') + ' Airport (' + p.iata + ')', sub: p.sub, lat: p.lat, lon: p.lon, kind: 'Airport' } };
+}
+function placeResult(p) {
+  return { id: p.id, kind: p.kind, tag: p.kind.toLowerCase(), name: p.name, sub: p.sub, lat: p.lat, lon: p.lon,
+    loc: { name: p.name, sub: p.sub, lat: p.lat, lon: p.lon, kind: p.kind } };
+}
+
+var ICONS = {
+  coords: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="7"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>',
+  airport: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>',
+  university: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg>',
+  place: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>',
+  recent: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
+};
+function iconFor(tag) { return tag === 'coords' ? ICONS.coords : (tag === 'iata' || tag === 'icao' || tag === 'airport') ? ICONS.airport : tag === 'university' ? ICONS.university : tag === 'recent' ? ICONS.recent : ICONS.place; }
+
+function resultsHTML(list) {
+  return '<ul class="results" id="results" role="listbox" aria-label="Locations">' + list.map(function (r, i) {
+    if (r.note) return '<li class="res note-row" role="presentation">' + esc(r.note) + '</li>';
+    return '<li class="res" role="option" id="opt-' + i + '" aria-selected="' + (i === active) + '" data-action="pick" data-i="' + i + '">' +
+      '<span class="ico" aria-hidden="true">' + iconFor(r.tag) + '</span>' +
+      '<span class="txt"><span class="nm">' + esc(r.name) + '</span><span class="sb">' + esc(r.sub || '') + '</span></span>' +
+      '<span class="tag k-' + esc(r.tag) + '">' + esc(r.kind) + '</span></li>';
+  }).join('') + '</ul>';
+}
+function runSearch() {
+  var q = $('#q').value, body = $('#search-body'), ww = $('#ww-btn');
+  wwSeq++;
+  if (!q.trim()) {
+    results = S.recents.map(function (l) { return { kind: 'Recent', tag: 'recent', name: l.name, sub: l.sub || fmtCoord(l.lat, l.lon), lat: l.lat, lon: l.lon, loc: l }; });
+    active = -1;
+    var ex = [['25.0330, 121.5654', 'Coordinates'], ['23°58′N 121°36′E', 'DMS'], ['TPE', 'IATA'], ['RCKH', 'ICAO'], ['NTU', 'University'], ['清華大學', '中文'], ['Hualien', 'City']];
+    body.innerHTML = '<div class="s-label">Try</div><div class="examples">' + ex.map(function (e) { return '<button type="button" data-action="example" data-q="' + esc(e[0]) + '"><b>' + esc(e[0]) + '</b> · ' + e[1] + '</button>'; }).join('') + '</div>' +
+      (results.length ? '<div class="s-label">Recent</div>' + resultsHTML(results) : '');
+    ww.hidden = true;
+    $('#q').removeAttribute('aria-activedescendant');
+    return;
+  }
+  results = search(q);
+  active = results.length && !results[0].note ? 0 : -1;
+  body.innerHTML = results.length ? resultsHTML(results) : '<div class="res note-row">Nothing in the offline list matches “' + esc(q) + '”.</div>';
+  var isCoord = results[0] && results[0].tag === 'coords';
+  ww.hidden = isCoord;
+  ww.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>Search worldwide for “' + esc(q.trim()) + '”';
+  syncActive();
+}
+function syncActive() {
+  document.querySelectorAll('#results .res[role=option]').forEach(function (li) { li.setAttribute('aria-selected', String(+li.dataset.i === active)); });
+  var q = $('#q');
+  if (active >= 0) { q.setAttribute('aria-activedescendant', 'opt-' + active); var el = $('#opt-' + active); if (el) el.scrollIntoView({ block: 'nearest' }); }
+  else q.removeAttribute('aria-activedescendant');
+}
+function worldwide() {
+  var q = $('#q').value.trim(); if (!q) return;
+  var seq = ++wwSeq, body = $('#search-body');
+  body.insertAdjacentHTML('beforeend', '<div class="s-label" id="ww-status">Searching worldwide…</div>');
+  fetch('https://geocoding-api.open-meteo.com/v1/search?count=8&language=en&format=json&name=' + encodeURIComponent(q))
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function (j) {
+      if (seq !== wwSeq) return;
+      var st = $('#ww-status'); if (st) st.remove();
+      var extra = (j.results || []).map(function (g) {
+        var sub = [g.admin1, g.country].filter(Boolean).join(', ');
+        return { kind: 'Place', tag: 'place', name: g.name, sub: sub + ' · ' + fmtCoord(g.latitude, g.longitude), lat: g.latitude, lon: g.longitude,
+          loc: { name: g.name, sub: sub, lat: g.latitude, lon: g.longitude, kind: 'Place' } };
+      });
+      results = results.filter(function (r) { return !r.note; }).concat(extra);
+      if (!results.length) { body.innerHTML = '<div class="res note-row">No places found for “' + esc(q) + '”.</div>'; return; }
+      if (active < 0) active = 0;
+      body.innerHTML = resultsHTML(results) + (extra.length ? '' : '<div class="res note-row">No extra worldwide matches.</div>');
+      syncActive();
+    })
+    .catch(function () {
+      if (seq !== wwSeq) return;
+      var st = $('#ww-status'); if (st) st.textContent = 'Worldwide search is unavailable (offline?). Coordinates still work.';
+    });
+}
+function pickResult(i) {
+  var r = results[i]; if (!r || !r.loc) return;
+  setLocation(r.loc);
+}
+function setLocation(loc) {
+  S.loc = { name: loc.name, sub: loc.sub || '', lat: +loc.lat, lon: +loc.lon, kind: loc.kind || 'Place' };
+  S.recents = [S.loc].concat(S.recents.filter(function (x) { return !(Math.abs(x.lat - S.loc.lat) < 1e-4 && Math.abs(x.lon - S.loc.lon) < 1e-4); })).slice(0, 5);
+  save(); closeSearch(true);
+  var src = nearestSource(S.loc);
+  var r = route();
+  if (r.page === 'home' || r.page === 'settings' || r.page === 'ask') rerender(); else render();
+  toast('Showing ' + S.loc.name + ' · nearest source: ' + src.name + (src.dist ? ' (' + src.dist + ')' : ''));
+}
+function geolocate() {
+  if (!navigator.geolocation) { toast('This browser can’t share your location.'); return; }
+  toast('Finding your location…');
+  navigator.geolocation.getCurrentPosition(function (pos) {
+    var lat = pos.coords.latitude, lon = pos.coords.longitude, np = nearestPlace(lat, lon);
+    setLocation({ name: np.place && np.d < 25 ? np.place.name.split(',')[0] : 'My location', sub: 'Current location · ' + fmtCoord(lat, lon), lat: lat, lon: lon, kind: 'GPS' });
+  }, function (err) {
+    toast(err.code === 1 ? 'Location permission was denied.' : 'Couldn’t get your location.');
+  }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 });
+}
+function openSearch() {
+  var ov = $('#search');
+  if (!ov.hidden) { $('#q').focus(); return; }
+  lastFocus = document.activeElement;
+  ov.hidden = false;
+  var q = $('#q'); q.value = ''; runSearch(); q.focus();
+}
+function closeSearch(skipRestore) {
+  var ov = $('#search'); if (ov.hidden) return;
+  ov.hidden = true; wwSeq++;
+  if (!skipRestore && lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+}
+$('#search').addEventListener('click', function (e) { if (e.target.id === 'search') closeSearch(); });
+document.addEventListener('keydown', function (e) {
+  var ov = $('#search'), open = !ov.hidden;
+  var typing = /INPUT|TEXTAREA|SELECT/.test((e.target.tagName || '')) || e.target.isContentEditable;
+  if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) { e.preventDefault(); open ? closeSearch() : openSearch(); return; }
+  if (!open && e.key === '/' && !typing) { e.preventDefault(); openSearch(); return; }
+  if (!open) return;
+  if (e.key === 'Escape') { e.preventDefault(); closeSearch(); return; }
+  if (e.target.id === 'q') {
+    var opts = results.map(function (r, i) { return r.note ? -1 : i; }).filter(function (i) { return i >= 0; });
+    if (e.key === 'ArrowDown' && opts.length) { e.preventDefault(); var k = opts.indexOf(active); active = opts[(k + 1) % opts.length]; syncActive(); }
+    else if (e.key === 'ArrowUp' && opts.length) { e.preventDefault(); var k2 = opts.indexOf(active); active = opts[(k2 - 1 + opts.length) % opts.length]; syncActive(); }
+    else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (active >= 0) pickResult(active);
+      else if ($('#q').value.trim()) worldwide();
+    }
+  }
+  if (e.key === 'Tab') { // keep focus inside the dialog
+    var f = Array.prototype.filter.call(ov.querySelectorAll('button:not([hidden]),input,[tabindex]'), function (x) { return x.offsetParent !== null; });
+    if (!f.length) return;
+    if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
+    else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
+  }
+});
+
+/* ============================================================
+   Boot
+   ============================================================ */
+window.addEventListener('hashchange', render);
+applyTheme();
+render();
+})();
+</script>
+</body>
+</html>
