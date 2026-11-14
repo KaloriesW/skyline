@@ -1,6 +1,7 @@
 # UI Planning — Skyline (weather app)
 
 Design (Claude Design canvas): https://claude.ai/artifact/LV5MG4J2AGih4Ew2fPBuC5
+HTML mockup: [mockup/index.html](mockup/index.html)
 
 ## Direction
 - Like Apple Weather, but more playful and dynamic. The sky gradient changes with the weather mood (day, sunset, night, rain).
@@ -36,6 +37,15 @@ Design (Claude Design canvas): https://claude.ai/artifact/LV5MG4J2AGih4Ew2fPBuC5
   - Kaohsiung: 85 Sky Tower, Shoushan
   - Hualien: the steep Central Range and Pacific waves
 - The Predictions map shows the Central Range ridge and marks Yushan (3,952 m).
+
+## Location search
+- The search button (also `/` or ⌘K) accepts:
+  - place names in English or 中文
+  - decimal or degrees/minutes/seconds coordinates
+  - IATA and ICAO airport codes
+  - university names and short forms
+- An offline list covers Taiwan cities, landmarks, airports and universities, plus a few international ones. Anything else goes to a worldwide geocoder.
+- Picking a result sets the location, which drives the skyline, the nearest source, and the map pin.
 
 ## Data-source rule
 - Weather data can come from several APIs (CWA stations, Windy, others). **Each reading always comes from the source closest to the user's current location.**
