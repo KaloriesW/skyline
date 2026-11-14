@@ -549,10 +549,9 @@ function norm(s) {
 }
 var PLACES = [];
 function addPlace(kind, name, aliases, lat, lon, sub, extra) {
-  var keys = [norm(name)].concat(String(aliases || '').split(/\s+(?=[^\s]*[一-鿿])|\s{2,}/).map(norm));
-  // aliases are space-separated words; also keep each word as its own key
+  // Keys: the full name, plus each space-separated alias (abbreviations, 中文 names, codes)
+  var keys = [norm(name)];
   String(aliases || '').split(/\s+/).forEach(function (w) { if (w) keys.push(norm(w)); });
-  keys.push(norm(aliases || ''));
   var p = { id: kind + ':' + name, kind: kind, name: name, sub: sub, lat: lat, lon: lon, keys: keys.filter(Boolean) };
   if (extra) for (var k in extra) p[k] = extra[k];
   PLACES.push(p);
