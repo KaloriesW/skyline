@@ -33,6 +33,12 @@ Design (Claude Design canvas): https://claude.ai/artifact/LV5MG4J2AGih4Ew2fPBuC5
 - **Scroll down → All stats:** a fully customizable grid. Each tile can be moved, made bigger or smaller, or hidden.
 - **Live background** follows the nearest station's conditions: clear day with lens flare, partly cloudy, cloudy, rain, thunderstorm with lightning, clear night with moon and stars, dawn, and dusk. Settings has a "Reduce motion" switch.
 
+## Predictions layout
+- A grid of dataset cards in two categories:
+  - **By Skyline** (our own models, gold outline): PM2.5 forecast, landslide risk
+  - **Others** (pulled from APIs): rain, thunderstorms, wind and gusts, typhoon track, coast and waves, climate projection
+- Opening a card shows a Taiwan map of that dataset, with a time slider underneath that runs from −72h through Now to +7d. Left of Now shows observed past data, and right of Now shows predictions with a confidence level. A side panel lists the value for each region.
+
 ## What Windy's API gives us
 - **Point Forecast:** temp, dewpoint, precip, convPrecip, snowPrecip, wind, windGust, **cape** (thunderstorm energy), ptype, low/mid/high clouds, rh, pressure, cbase, visibility, **weatherWarnings** (code 95 = thunderstorm, 96 = heavy thunderstorm or hail). Sea: waves, swell, currents (gfsWave etc.). Air quality: CAMS aqi, pm2p5, pm10, no2, o3.
 - **Map Forecast:** an embeddable Leaflet map with Windy layers. The free key is for development only, and production needs a paid plan.
