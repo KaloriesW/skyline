@@ -27,6 +27,17 @@ Design (Claude Design canvas): https://claude.ai/artifact/LV5MG4J2AGih4Ew2fPBuC5
 - Weather data can come from several APIs (CWA stations, Windy, others). **Each reading always comes from the source closest to the user's current location.**
 - The UI shows which source it used and how far away it is, e.g. "Nearest source: CWA Xinyi station · 0.9 km". Tile headers name that source too.
 
+## Home layout
+- **Top half:** a big centered temperature, the location, and one headline (e.g. "Thunderstorms likely 4–7 PM").
+- **Bottom half:** pinned items, 3 by default and up to 10 (set in Settings).
+- **Scroll down → All stats:** a fully customizable grid. Each tile can be moved, made bigger or smaller, or hidden.
+- **Live background** follows the nearest station's conditions: clear day with lens flare, partly cloudy, cloudy, rain, thunderstorm with lightning, clear night with moon and stars, dawn, and dusk. Settings has a "Reduce motion" switch.
+
+## What Windy's API gives us
+- **Point Forecast:** temp, dewpoint, precip, convPrecip, snowPrecip, wind, windGust, **cape** (thunderstorm energy), ptype, low/mid/high clouds, rh, pressure, cbase, visibility, **weatherWarnings** (code 95 = thunderstorm, 96 = heavy thunderstorm or hail). Sea: waves, swell, currents (gfsWave etc.). Air quality: CAMS aqi, pm2p5, pm10, no2, o3.
+- **Map Forecast:** an embeddable Leaflet map with Windy layers. The free key is for development only, and production needs a paid plan.
+- **Not in Windy's API:** typhoon tracks. Use CWA typhoon warnings for those.
+
 ## Tile catalog → data source
 | Tile | Source |
 |---|---|
@@ -34,7 +45,11 @@ Design (Claude Design canvas): https://claude.ai/artifact/LV5MG4J2AGih4Ew2fPBuC5
 | PM2.5 | Team PM2.5 model |
 | Landslide risk | Team landslide model (Taiwan) |
 | Climate outlook | Climate projections |
-| Future: typhoon track, tides, AQI | TBD |
+| Thunderstorm risk, storm outlook | Windy cape + convPrecip + weatherWarnings |
+| Live map | Windy Map Forecast |
+| Typhoon watch | CWA typhoon warnings |
+| Cloud layers, pressure, visibility | Windy |
+| Coast & waves | Windy gfsWave |
 
 ## Open items
 - Real data wiring. Every value in the design is sample data.
