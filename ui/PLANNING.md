@@ -14,10 +14,23 @@ Design (Claude Design canvas): https://claude.ai/artifact/LV5MG4J2AGih4Ew2fPBuC5
 | Predictions (Taiwan only) | `Predictions.dc.html` | `PredictionsMobile.dc.html` | Map layers for PM2.5, landslide risk, and climate projection. Includes a time slider, region detail, and a risk ranking |
 | AI Assistant (RAG/MCP) | `Assistant.dc.html` | `AssistantMobile.dc.html` | Grounded answers with source chips, inline charts, and suggested prompts |
 
+## Taiwan personality
+- The Home hero shows a skyline and mountains for the user's city, switched by the **Location** tweak:
+  - Taipei: Taipei 101, Elephant Mountain, Yangmingshan
+  - Taichung: the National Theater's wave roof, Dakeng hills
+  - Tainan: a temple roof with upturned eaves, low old-town houses
+  - Kaohsiung: 85 Sky Tower, Shoushan
+  - Hualien: the steep Central Range and Pacific waves
+- The Predictions map shows the Central Range ridge and marks Yushan (3,952 m).
+
+## Data-source rule
+- Weather data can come from several APIs (CWA stations, Windy, others). **Each reading always comes from the source closest to the user's current location.**
+- The UI shows which source it used and how far away it is, e.g. "Nearest source: CWA Xinyi station · 0.9 km". Tile headers name that source too.
+
 ## Tile catalog → data source
 | Tile | Source |
 |---|---|
-| Hourly, 7-day, wind, UV, humidity, rain radar | Windy API |
+| Hourly, 7-day, wind, UV, humidity, rain radar | Nearest weather source (CWA station, Windy grid point, etc.) |
 | PM2.5 | Team PM2.5 model |
 | Landslide risk | Team landslide model (Taiwan) |
 | Climate outlook | Climate projections |
