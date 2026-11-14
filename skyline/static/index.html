@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Skyline · Taichung</title>
+  <meta name="description" content="Taichung weather and air quality, with Skyline's own next-day PM2.5 forecast.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body data-mood="clear-night" data-day="0">
+  <div id="sky" aria-hidden="true">
+    <div class="sky-grad"></div>
+    <div class="sky-haze"></div>
+    <canvas id="fx"></canvas>
+  </div>
+
+  <header class="topbar" id="topbar">
+    <div class="brand"><span class="brand-dot"></span>Skyline</div>
+    <div class="compact" id="compact"><span id="compactPlace">Taichung City</span><span class="sep">|</span><span id="compactTemp">--°</span><span id="compactCond"></span></div>
+    <div class="top-actions">
+      <button class="round-btn" id="editBtn" title="Edit widgets" aria-label="Edit widgets">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
+      </button>
+      <button class="round-btn plus" id="addBtn" title="Add widget" aria-label="Add widget">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="edit-bar" id="editBar">
+    <span>Drag widgets to rearrange · tap <b>−</b> to remove</span>
+    <button id="resetBtn" class="text-btn">Reset</button>
+    <button id="doneBtn" class="pill-btn">Done</button>
+  </div>
+
+  <main>
+    <section class="hero" id="hero">
+      <div class="place">Taichung City</div>
+      <div class="temp"><span id="heroTemp">--</span><span class="deg">°</span></div>
+      <div class="cond" id="heroCond">Loading…</div>
+      <div class="hl" id="heroHL">&nbsp;</div>
+      <button class="headline" id="heroHeadline" hidden></button>
+    </section>
+
+    <div class="banner" id="banner" hidden></div>
+    <section class="grid" id="grid" aria-live="polite"></section>
+
+    <footer class="foot" id="foot"></footer>
+  </main>
+
+  <div class="sheet-backdrop" id="sheetBackdrop" hidden>
+    <div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+  </div>
+
+  <script src="/static/icons.js"></script>
+  <script src="/static/sky.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
