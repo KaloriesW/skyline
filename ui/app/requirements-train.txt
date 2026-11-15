@@ -1,5 +1,8 @@
 # Only for ui/app/model/train.py (training). The server needs none of this: see requirements.txt.
-numpy>=1.26
-pandas>=2.2
-scikit-learn>=1.5
+# The models in model/models/ were made with numpy 2.5.4, pandas 3.1.1 and scikit-learn 1.9.1.
+# train.py reads scikit-learn's tree tables and model/predict.py follows pandas' summation order, so
+# stay on these minor versions, or watch the parity lines train.py prints after an upgrade.
+numpy>=2.5,<2.6
+pandas>=3.1,<3.2
+scikit-learn>=1.9,<1.10
 httpx>=0.27
