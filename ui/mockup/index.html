@@ -1168,12 +1168,12 @@ function nearestPlace(lat, lon) {
   return { place: best, d: bd, second: second, d2: sd };
 }
 // We only have district centres, not boundaries, so "nearest centre" can name the neighbour for a
-// point close to a border. When the two nearest centres are almost equally far (within 20%), the
+// point close to a border. When the two nearest centres are almost equally far (within 10%), the
 // point is in that uncertain band: keep the nearest as the name but say which district it borders.
 function borderDistrict(np) {
   var p = np.place, s = np.second;
   if (!p || !s || p.kind !== 'District' || !(np.d2 < 25)) return null;
-  return np.d >= 0.8 * np.d2 ? s : null;
+  return np.d >= 0.9 * np.d2 ? s : null;
 }
 // Location record for a point: "Nantun District · Taichung · 408 南屯區" in Taiwan, the city elsewhere.
 function autoLoc(lat, lon, kind, extraSub) {
@@ -2419,7 +2419,7 @@ function askTopic(q) {
 // Source names inside AI bubbles (the 中文 layer skips those, so translate here).
 function zhSrc(name) {
   var m = /^CWA (.*) station$/.exec(name);
-  if (m) return '中央氣象署 ' + zh(m[1]) + ' 測站';
+  if (m) { var z = zh(m[1]); if (z === m[1]) z = zh(m[1] + ' District'); return '中央氣象署 ' + (z === m[1] + ' District' ? m[1] : z) + ' 測站'; }
   return { 'Windy point forecast': 'Windy 點預報', 'No source enabled': '未啟用任何來源' }[name] || name;
 }
 // 中文 versions of the canned answers: the same sample facts as answer() below.
