@@ -6,13 +6,17 @@ Tools
   get_air_quality          PM2.5, PM10, AQI now and over the next 24 h (Open-Meteo, CAMS)
   get_thunderstorm_risk    storm risk for the next 24 h from CAPE, rain chance and thunderstorm weather codes
   get_pm25_forecast_taichung  the team's next-day PM2.5/PM10 model (Skyline API on the hackathon box)
+  get_typhoon_status       active tropical cyclones and their tracks (CWA open data W-C0034-005; needs CWA_API_KEY)
+  get_landslide_risk       the team's landslide model, once LANDSLIDE_API_URL points at it
 
 Run
   python3 skyline_mcp.py                    # stdio (Claude Desktop, Claude Code, Cursor, ...)
   python3 skyline_mcp.py --http --port 8790 # streamable HTTP at http://localhost:8790/mcp
+  mount_http(app)                           # inside an existing FastAPI/Starlette app, at /mcp
 
-No API keys are needed. SKYLINE_API overrides where the team model is called
-(default https://veritas.premiersalesri.com).
+Most tools need no API key. SKYLINE_API overrides where the team model is called
+(default https://veritas.premiersalesri.com). CWA_API_KEY turns on get_typhoon_status and
+LANDSLIDE_API_URL turns on get_landslide_risk; without them those tools say so instead of answering.
 """
 
 from __future__ import annotations
@@ -23,6 +27,7 @@ import json
 import math
 import os
 import re
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -30,6 +35,8 @@ from pathlib import Path
 from typing import Any
 
 from mcp.server.mcpserver import MCPServer
+
+import skyline_sources as sources
 
 HERE = Path(__file__).resolve().parent
 DISTRICTS: list[dict[str, Any]] = json.loads((HERE / "taiwan_districts.json").read_text(encoding="utf-8"))
@@ -308,6 +315,100 @@ async def get_pm25_forecast_taichung() -> dict[str, Any]:
     """
     data = await _get(f"{SKYLINE_API}/api/predict")
     return {"source": f"Skyline team PM2.5 model ({SKYLINE_API}/api/predict)", **data}
+
+
+_typhoon_cache: dict[str, Any] = {}
+
+
+@mcp.tool()
+async def get_typhoon_status() -> dict[str, Any]:
+    """Tropical cyclones (typhoons and tropical depressions) currently active in the NW Pacific and South China Sea.
+
+    For each storm: English and Chinese name and its track, as past/current fixes followed by forecast
+    points (forecast: true), each with time, lat, lon, max sustained wind in m/s and central pressure in hPa.
+    Source: Taiwan's Central Weather Administration open data, dataset W-C0034-005. `active` is false when
+    CWA lists no current cyclone. If the server has no CWA key this returns `available: false` with the
+    reason; in that case tell the user typhoon data isn't connected, and don't estimate.
+    """
+    target = sources.typhoon_request()
+    if target is None:
+        return {"available": False, "error": sources.TYPHOON_NOT_CONFIGURED}
+    hit = _typhoon_cache.get("t")
+    if hit and time.time() - hit[0] < 600:
+        return hit[1]
+    url, params = target
+    try:
+        doc = await _get(url, params)
+    except RuntimeError as e:  # _get's messages name the host and status only, never the URL (it holds the key)
+        return {"available": False, "error": f"CWA typhoon data unavailable: {e}"}
+    result = {"available": True, **sources.parse_cwa_typhoon(doc)}
+    _typhoon_cache["t"] = (time.time(), result)
+    return result
+
+
+@mcp.tool()
+async def get_landslide_risk(lat: float, lon: float) -> dict[str, Any]:
+    """Landslide risk at a point in Taiwan from the Skyline team's landslide model.
+
+    The model isn't connected to an API yet. Until it is, this returns `available: false`; tell the user
+    landslide risk isn't available, and don't estimate one from rainfall or terrain.
+    """
+    url = sources.landslide_url()
+    if not url:
+        return {"available": False, "error": sources.LANDSLIDE_NOT_CONNECTED}
+    try:
+        data = await _get(url, {"lat": lat, "lon": lon})
+    except RuntimeError as e:
+        return {"available": False, "error": f"landslide model unavailable: {e}"}
+    return {"available": True, "source": "Skyline team landslide model", "location": {"lat": lat, "lon": lon, **(_nearest_district(lat, lon) or {})}, "result": data}
+
+
+# ---------- serving over HTTP inside another app ----------
+
+def mount_http(app: Any, path: str = "/mcp") -> None:
+    """Serve this MCP server over streamable HTTP at `path` inside an existing FastAPI/Starlette app.
+
+    For the hackathon box, where port 8000 is the only public port: the endpoint becomes
+    https://<public host>/mcp. Stateless JSON mode, so there are no sessions to keep in memory.
+
+    The MCP library rejects requests whose Host header isn't on an allow-list (DNS-rebinding protection).
+    MCP_ALLOWED_HOSTS is that list, comma-separated (default: veritas.premiersalesri.com plus localhost);
+    set it to * to turn the check off. MCP_ALLOWED_ORIGINS does the same for browser Origin headers
+    (default: https://<each allowed host> plus localhost).
+    """
+    from contextlib import asynccontextmanager
+
+    from mcp.server.transport_security import TransportSecuritySettings
+
+    hosts = [h.strip() for h in os.environ.get("MCP_ALLOWED_HOSTS", "veritas.premiersalesri.com").split(",") if h.strip()]
+    if "*" in hosts:
+        security = TransportSecuritySettings(enable_dns_rebinding_protection=False)
+    else:
+        local = ["127.0.0.1", "localhost", "[::1]"]
+        origins = [o.strip() for o in os.environ.get("MCP_ALLOWED_ORIGINS", "").split(",") if o.strip()]
+        origins = origins or [f"https://{h}" for h in hosts]
+        security = TransportSecuritySettings(
+            enable_dns_rebinding_protection=True,
+            allowed_hosts=[x for h in hosts + local for x in (h, f"{h}:*")],
+            allowed_origins=origins + [x for h in local for x in (f"http://{h}", f"http://{h}:*")],
+        )
+
+    sub = mcp.streamable_http_app(streamable_http_path=path, stateless_http=True, json_response=True, transport_security=security)
+    # Add the endpoint as a plain route on the host app (a Mount would redirect /mcp to /mcp/).
+    app.router.routes.extend(sub.routes)
+
+    # The session manager must be running while the app serves; a sub-app's own lifespan is not run
+    # by the host, so chain it onto the host app's lifespan.
+    manager = mcp.session_manager
+    host_lifespan = app.router.lifespan_context
+
+    @asynccontextmanager
+    async def lifespan(a: Any):
+        async with host_lifespan(a) as state:
+            async with manager.run():
+                yield state
+
+    app.router.lifespan_context = lifespan
 
 
 def main() -> None:
