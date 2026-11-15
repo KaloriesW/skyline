@@ -1671,43 +1671,59 @@ function baseFor(d) {
 /* ============================================================
    Views
    ============================================================ */
+// Options for the sky preview picker (Settings, and Home with ?demo=1)
+function skyOptions() {
+  var pv = previewOn();
+  return '<option value="live"' + (pv ? '' : ' selected') + '>Live weather</option>' +
+    Object.keys(WEATHER).map(function (k) { return '<option value="' + k + '"' + (pv && k === S.weather ? ' selected' : '') + '>' + WEATHER[k].label + '</option>'; }).join('');
+}
 function homeView() {
-  var b = WEATHER[wxKey()];
-  var live = S.bgMode === 'live';
-  var L = S.loc, src = nearestSource(L), tw = inTW(L.lat, L.lon), nowWx = wxNow(L), demo = S.weather !== 'live' && S.weather === wxKey();
-  var bgVars = live ? '--top:' + b.top + ';--mid:' + b.mid + ';--bottom:' + b.bottom : '--top:#163A7A;--mid:#1F4C94;--bottom:#2A5AA8';
+  var key = wxKey(), b = key ? WEATHER[key] : SKY_UNKNOWN;
+  var live = S.bgMode === 'live' && !!key;   // no sky is drawn until the weather is known
+  var L = S.loc, tw = inTW(L.lat, L.lon), nowWx = wxNow(), pv = previewOn(), hl = todayHL();
+  var bgVars = live ? '--top:' + b.top + ';--mid:' + b.mid + ';--bottom:' + b.bottom : '--top:' + SKY_UNKNOWN.top + ';--mid:' + SKY_UNKNOWN.mid + ';--bottom:' + SKY_UNKNOWN.bottom;
   var cat = catalog(L), byId = {};
   cat.forEach(function (t) { byId[t.id] = t; });
   var n = Math.max(3, Math.min(10, S.pinCount));
   var pins = S.pins.slice(0, n).map(function (id) {
     var t = byId[id]; if (!t) return '';
-    return '<div class="pin"><span class="t">' + t.title + '</span><span class="v">' + t.value + '</span><span class="s">' + t.sub + '</span><span class="src">' + t.src + '</span></div>';
+    return '<div class="pin' + (t.na ? ' na' : '') + '"><span class="t">' + t.title + '</span><span class="v">' + t.value + '</span><span class="s">' + t.sub + '</span><span class="src">' + t.src + '</span></div>';
   }).join('');
-  var opts = '<option value="live"' + (demo ? '' : ' selected') + '>Live weather</option>' +
-    Object.keys(WEATHER).map(function (k) { return '<option value="' + k + '"' + (demo && k === S.weather ? ' selected' : '') + '>' + WEATHER[k].label + '</option>'; }).join('');
-  var srcChip = nowWx.live ? 'Open-Meteo · live' + (nowWx.time ? ' · updated ' + nowWx.time : '')
-    : liveLoading() ? 'Sample data · loading live conditions…' : 'Sample data · nearest source: ' + esc(src.name);
+  var retry = '<button type="button" class="chip act" data-action="retry-live">Retry</button>';
+  var chips, headline;
+  if (nowWx.live) {
+    headline = esc(nowWx.headline);
+    chips = nowWx.stale ? '<span class="chip warn">Open-Meteo · updated ' + fmtAge(nowWx.t) + ' · couldn’t refresh</span>' + retry
+      : '<span class="chip"><span class="dot" aria-hidden="true"></span>Open-Meteo · live' + (nowWx.time ? ' · updated ' + nowWx.time : '') + '</span>';
+  } else if (nowWx.state === 'loading') {
+    headline = 'Loading live weather…'; chips = '<span class="chip">Open-Meteo · loading…</span>';
+  } else if (nowWx.state === 'off') {
+    headline = 'Live weather is turned off'; chips = '<span class="chip warn">Open-Meteo is switched off</span><a class="chip act" href="#settings">Open Settings</a>';
+  } else {
+    headline = 'Live weather is unavailable'; chips = '<span class="chip warn">' + (offline() ? 'You’re offline' : 'Couldn’t reach Open-Meteo') + '</span>' + retry;
+  }
+  if (pv) chips += '<span class="chip warn">Preview sky: ' + WEATHER[S.weather].label + '</span><button type="button" class="chip act" data-action="sky-live">Back to live</button>';
 
   return '<section class="hero" style="' + bgVars + '" aria-label="Current weather">' +
     (live ? skyLayers(b) : '') +
-    '<label class="demo"><span>Demo: station conditions</span><select id="demo-weather" data-input="weather">' + opts + '</select></label>' +
+    (DEMO_UI ? '<label class="demo"><span>Preview a sky</span><select id="demo-weather" data-input="weather">' + skyOptions() + '</select></label>' : '') +
     '<div class="hero-main">' +
       '<button type="button" class="loc" data-action="open-search" aria-label="Location: ' + esc(L.name) + '. Change location">' +
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>' +
         '<span>' + esc(L.name) + '</span>' + (L.sub ? '<span class="loc-sub">· ' + esc(L.sub) + '</span>' : '') +
         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>' +
       '</button>' +
-      '<div class="temp" aria-label="Temperature ' + fmtT(nowWx.temp) + '">' + fmtT(nowWx.temp) + '</div>' +
-      '<div class="headline">' + esc(nowWx.headline) + '</div>' +
-      '<div class="hilo" aria-label="Today: high ' + fmtT(todayHL(L).hi) + ', low ' + fmtT(todayHL(L).lo) + '"><span>H:' + fmtT(todayHL(L).hi) + '</span><span>L:' + fmtT(todayHL(L).lo) + '</span></div>' +
-      '<div class="chips"><span class="chip">' + (nowWx.live ? '<span class="dot" aria-hidden="true"></span>' : '') + srcChip + '</span>' +
-      (demo ? '<span class="chip warn">Demo sky: ' + b.label + '</span>' : '') +
+      (nowWx.live ? '<div class="temp" aria-label="Temperature ' + fmtT(nowWx.temp) + '">' + fmtT(nowWx.temp) + '</div>'
+                  : '<div class="temp na" aria-label="Temperature not available">—</div>') +
+      '<div class="headline">' + headline + '</div>' +
+      (hl ? '<div class="hilo" aria-label="Today: high ' + fmtT(hl.hi) + ', low ' + fmtT(hl.lo) + '"><span>H:' + fmtT(hl.hi) + '</span><span>L:' + fmtT(hl.lo) + '</span></div>' : '') +
+      '<div class="chips">' + chips +
       (tw ? '' : '<span class="chip warn">Outside Taiwan: PM2.5, landslide and Predictions cover Taiwan only</span>') + '</div>' +
     '</div>' +
     (S.skyline === 'city' ? skylineSVG(skylineFor(L), b) : '') +
     (live ? '<canvas class="wx-front" aria-hidden="true"></canvas>' : '') +
-    '<div class="pinned-wrap"><div class="days" role="list" aria-label="7-day forecast">' + weekData(L).map(function (w) {
-        return '<div class="day" role="listitem" aria-label="' + w.day + ': high ' + w.hi + ', low ' + w.lo + '"><span class="dn">' + w.day + '</span><span class="ic" style="background:' + w.c + '" aria-hidden="true"></span><span class="dh">' + w.hi + '</span><span class="dl">' + w.lo + '</span></div>';
+    '<div class="pinned-wrap"><div class="days" role="list" aria-label="7-day forecast">' + weekData().map(function (w) {
+        return '<div class="day' + (w.na ? ' na' : '') + '" role="listitem" aria-label="' + (w.na ? w.day + ': not available' : w.day + ': high ' + w.hi + ', low ' + w.lo) + '"><span class="dn">' + w.day + '</span><span class="ic" style="background:' + w.c + '" aria-hidden="true"></span><span class="dh">' + w.hi + '</span><span class="dl">' + w.lo + '</span></div>';
       }).join('') + '</div><div class="pinned ' + (n <= 3 ? 'few' : 'many') + '">' + pins + '</div>' +
       '<button type="button" class="scroll-hint" data-action="scroll-stats">All stats ↓</button></div>' +
   '</section>' +
