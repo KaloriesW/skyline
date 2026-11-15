@@ -1,0 +1,21 @@
+{
+  "changes": [
+    "Hide stale scan overlays when a new area is proposed or running",
+    "Prevent late history and monitor responses replacing an active plan",
+    "Restore pending plan boundary on reload",
+    "Measured review briefs with coordinates, vegetation, slope and complete-scan road statistics",
+    "Common evidence questions answered from measured records, clearly labelled; other questions use local Qwen"
+  ],
+  "verification": {
+    "backend_tests": 82,
+    "backend_subtests": 3,
+    "javascript_tests": 13,
+    "browser_console_errors": 0,
+    "live_scan_center": [
+      24.383404,
+      121.2317965
+    ],
+    "boundary_only_test_cancelled_without_scanning": true,
+    "measured_area_105_answer_verified_in_browser": true
+  }
+}

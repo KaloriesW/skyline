@@ -7,6 +7,7 @@ map.attributionControl.addAttribution('Copernicus Sentinel data / DEM · Earth S
 L.control.zoom({position:'topright'}).addTo(map);
 const layers=L.control.layers({'OpenStreetMap':base},{},{collapsed:true}).addTo(map);
 L.control.scale({imperial:false}).addTo(map);
+const scanDisplay=ScanDisplay.create();
 let preferredModel=null;
 let watchInitialized=false;
 let evidenceLayers={};
@@ -79,8 +80,27 @@ function renderCandidates(){
   for(const b of document.querySelectorAll('.candidate-compare'))b.onclick=()=>startComparison(b.dataset.id);
 }
 $('candidate-order').onchange=renderCandidates;
+function clearDisplayedResult(){
+  stopComparison(false);map.closePopup();
+  for(const layer of [imagery,excluded,detections,markers,roadLayer,...Object.values(evidenceLayers)])drop(layer);
+  imagery=excluded=detections=markers=roadLayer=null;evidenceLayers={};currentResult=null;
+  document.querySelector('.map-bottom .legend').textContent='Study area';
+  $('result-drawer').hidden=true;$('downloads').hidden=true;$('weather-downloads').hidden=true;
+  $('count').textContent='—';$('usable').textContent='—';$('coverage').textContent='';$('acquired').textContent='—';
+  $('detections').innerHTML='<tr><td colspan="7" class="empty">Waiting for this scan. Previous results hidden.</td></tr>';
+  $('result-note').textContent='Previous results hidden while preparing this study area.';
+  $('result-weather').replaceChildren();$('refresh-result-weather').disabled=true;
+  $('evidence-view').innerHTML='<option value="after">After image</option>';
+  $('evidence-note').textContent='Evidence will appear when this scan finishes.';
+  $('roads-note').textContent='Road context will appear with the completed scan.';
+  $('check-roads').disabled=true;$('compare-images').disabled=true;
+  $('comparison-availability').textContent='Waiting for this scan.';
+  $('filter-summary').textContent='Waiting for this scan.';
+}
 function showResult(r){
+  if(!scanDisplay.allows(r.id))return;
   stopComparison(false);currentResult=r;
+  document.querySelector('.map-bottom .legend').innerHTML='<i></i> Suspected landslide';
   $('lat').value=r.center[0];$('lon').value=r.center[1];$('width').value=r.width_km;
   const preset=[...$('preset').options].find(o=>o.value!=='custom'&&o.value.split(',').map(Number).every((v,i)=>Math.abs(v-r.center[i])<.00001));
   $('preset').value=preset?preset.value:'custom';sceneArea=getArea();drawArea();
@@ -97,7 +117,7 @@ function showResult(r){
   $('result-note').textContent=`${r.model} · threshold ${r.confidence_threshold.toFixed(3)} · ${r.tiles_analyzed} tiles analyzed. ${r.count?'Review each candidate against the imagery.':'No candidates passed the threshold; this is not evidence that no landslides exist.'} Confidence is a model score, not a calibrated probability.`;
   $('mask-download').hidden=r.model_id!=='unet13';$('mask-download').href=`/results/${r.id}/segmentation.tif`;$('downloads').hidden=false;$('csv').href=`/results/${r.id}/coordinates.csv`;$('geojson').href=`/results/${r.id}/detections.geojson`;
 }
-async function loadHistory(id){error('');try{const j=await api('/api/scans/'+id);showResult(j.result);}catch(e){error(e.message);}}
+async function loadHistory(id){if(!scanDisplay.allows(id))return;const ticket=scanDisplay.ticket(id);error('');try{const j=await api('/api/scans/'+id);if(scanDisplay.accepts(ticket))showResult(j.result);}catch(e){if(scanDisplay.accepts(ticket))error(e.message);}}
 async function refreshHistory(loadLatest=false){try{const rows=await api('/api/history');$('history').innerHTML=rows.length?rows.map(r=>`<button class="history-item" data-id="${r.id}">${r.acquired.slice(0,10)} · ${esc(r.model)} · ${r.count} candidates</button>`).join(''):'No completed scans yet.';for(const b of document.querySelectorAll('.history-item'))b.onclick=()=>loadHistory(b.dataset.id);if(loadLatest&&!new URLSearchParams(location.search).has('selection')){const scan=new URLSearchParams(location.search).get('scan');if(scan&&/^[a-f0-9]{32}$/.test(scan))loadHistory(scan);else if(rows.length)loadHistory(rows[0].id);}}catch(e){console.warn(e);}}
 async function refreshWatch(){
   try{

@@ -36,9 +36,19 @@
       "sha256": "78852f5984efdd19d187642b89af80a89ad30e8c2a152dd86bb1bff8aaf531f4"
     },
     {
+      "path": "docs/qwen-evidence-fix.jpg",
+      "bytes": 119908,
+      "sha256": "f5f04f2d38ddb06893702863bdd5d9add7a6425ed2c57d0659f42a383f097609"
+    },
+    {
       "path": "docs/release-demo.jpg",
       "bytes": 100008,
       "sha256": "97674f594327573989b8dd1a127c784e98e5efd24cdb3918cce9f911fd584e15"
+    },
+    {
+      "path": "docs/scan-boundary-fix.jpg",
+      "bytes": 78230,
+      "sha256": "ed6aa6b248e84310f157dbb5708965978abe5d9fd34448845a9ea8679e2fc4d8"
     },
     {
       "path": "docs/training-source/README.md",
@@ -129,6 +139,11 @@
       "path": "evidence/region-and-threshold-audit.png",
       "bytes": 85979,
       "sha256": "3c91e875256c54233eb970417cc44a0cebd4a86166d1fccd5c520adb56b839a2"
+    },
+    {
+      "path": "evidence/scan-context-review-validation.json",
+      "bytes": 751,
+      "sha256": "bcaa435194bf0e351e6c849aa484339aa43a32d87d2dc4a56dbafb5d6053d717"
     },
     {
       "path": "evidence/unet-comparison.json",
@@ -227,8 +242,8 @@
     },
     {
       "path": "scan_assistant.py",
-      "bytes": 31416,
-      "sha256": "3a815cc4d8baf14abdb74e490f64a4537b50ad339ff0f7ef6bc55f53e7b2666b"
+      "bytes": 38410,
+      "sha256": "ed541d339d10a36dd7ecef52be9779545fa559059ed568c67c9d3b4e0ad7ec28"
     },
     {
       "path": "skyline/README.md",
@@ -667,18 +682,18 @@
     },
     {
       "path": "static/app.js",
-      "bytes": 19316,
-      "sha256": "860582378d60c184802d01476c98841b91fa0e25046285def2afff577e1f3a6e"
+      "bytes": 20928,
+      "sha256": "7429d0e21a95ffb0d229affe40a2f0fbb905a80cdcb4477f28cad04403ad9e56"
     },
     {
       "path": "static/assistant.js",
-      "bytes": 14218,
-      "sha256": "3d356502efc16f6b30c2ee17af0b69b266915d272df3c006daa5f2620dd15d12"
+      "bytes": 15542,
+      "sha256": "a619342db8d645a24344e7efd1a69d5e61588e7cf7c510e83bae9146de562989"
     },
     {
       "path": "static/index.html",
-      "bytes": 17608,
-      "sha256": "85831ae53f1f6800fc241a710b9b26da97c5faa2426aa6d822834c8f3c86d8db"
+      "bytes": 17653,
+      "sha256": "b4a50ec3195f1a449e06e5dd0e6fe9c6b0ee5985419956398d7033e95d5c772f"
     },
     {
       "path": "static/monitor-ui.js",
@@ -696,6 +711,11 @@
       "sha256": "d5028cc20442c577747b5ff991ae589c0e2443964ac235cf730a0e00ddd6887d"
     },
     {
+      "path": "static/scan_display.js",
+      "bytes": 778,
+      "sha256": "ec31b788df0d4bf40e3b6204ddc80a1321f21096491b2afd20d9a4cfff4a6bcb"
+    },
+    {
       "path": "static/skyline-theme.css",
       "bytes": 7889,
       "sha256": "70318a9d66b363559907ae1dad3c81aeb4a775ba59f48ca0b218abbbc9101289"
@@ -707,8 +727,8 @@
     },
     {
       "path": "static/style.css",
-      "bytes": 13702,
-      "sha256": "098249f06b125375ae88d0789ec15f54aeb31266ab775122fb35fc1cee42a1da"
+      "bytes": 13769,
+      "sha256": "0a743d09c360ebd2d0f28b6f642998722e063af2073fb586197b176177ed5273"
     },
     {
       "path": "static/vendor/LEAFLET-LICENSE.txt",
@@ -781,6 +801,11 @@
       "sha256": "b511d1c9eeaeaec5372631aa4653a2b986443eb85852f199bb9b0b2360dbd41e"
     },
     {
+      "path": "test_review_brief.py",
+      "bytes": 1895,
+      "sha256": "03be61b0f49b96912c0677962457d53c57e61f95316ec0f9d405973fe34375ab"
+    },
+    {
       "path": "test_review_filters.cjs",
       "bytes": 1211,
       "sha256": "54f33641c45655bc3c93aa7ca5e79e69279111a04296272a25773f56f8114c45"
@@ -789,6 +814,11 @@
       "path": "test_roads.py",
       "bytes": 3998,
       "sha256": "d35a88ed2892d04c173fd3824a2950fb914007767ecdc6b318544c22aa1fb761"
+    },
+    {
+      "path": "test_scan_display.cjs",
+      "bytes": 1302,
+      "sha256": "3e6992f0b83beec43f38cf8bf4c59118a97b12600fc1975e1959ed15128da1f2"
     },
     {
       "path": "test_skyline_update.py",
@@ -832,8 +862,8 @@
     },
     {
       "path": "workspace_assistant.py",
-      "bytes": 6384,
-      "sha256": "f03619dca742b4b4abf6419a0d65cefac2789cac43f66c763304a04e7435a8ba"
+      "bytes": 7465,
+      "sha256": "be214a608922db2f75dd028375e551797b6ba95f620ab8e849503d31419244d3"
     }
   ]
 }
