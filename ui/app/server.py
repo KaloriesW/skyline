@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 import os
 import sys
 import time
@@ -183,6 +184,8 @@ class Predict:
                 data = fresh()
                 if data is None:
                     data = await airmodel.fetch_upwind(self.http())
+                    if any(not math.isfinite(point.get(today, math.nan)) for point in data.values()):
+                        raise airmodel.UpstreamError("incomplete upwind data")  # never keep an unusable copy
                     self.upwind_cache = (time.time(), today, data)
         return data
 
