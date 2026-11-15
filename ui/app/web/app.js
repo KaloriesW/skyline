@@ -2325,23 +2325,30 @@ function aiProvider() {
 function probeSkyAI(force) {
   if (skyAI.promise && !force) return skyAI.promise;
   var done = function () { skyAIChanged(); return skyAI; };
-  if (!/^https?:$/.test(location.protocol)) { skyAI.state = 'off'; return (skyAI.promise = Promise.resolve().then(done)); }
-  var ctrl = new AbortController(), timer = setTimeout(function () { ctrl.abort(); }, 4000);
-  skyAI.promise = fetch('/api/ask/status', { signal: ctrl.signal, cache: 'no-store', headers: { Accept: 'application/json' } })
-    .then(function (r) { if (!r.ok) throw new Error('status ' + r.status); return r.json(); })
-    .then(function (j) {
-      skyAI.state = j && j.available === true ? 'ok' : 'off';
-      skyAI.model = j && typeof j.model === 'string' ? j.model : '';
-      skyAI.remaining = j && typeof j.remaining_usd === 'number' ? j.remaining_usd : null;
-    })
-    .catch(function () { skyAI.state = 'off'; })
-    .then(function () { clearTimeout(timer); return done(); });
+  if (!SAME_ORIGIN) { skyAI.state = 'off'; return (skyAI.promise = Promise.resolve().then(done)); }
+  // /api/health first: when it says this server has no Ask AI, the status request is skipped.
+  skyAI.promise = loadHealth().then(function () {
+    if (feat('ask') === false && !force) { skyAI.state = 'off'; return null; }
+    var ctrl = new AbortController(), timer = setTimeout(function () { ctrl.abort(); }, 4000);
+    return fetch('/api/ask/status', { signal: ctrl.signal, cache: 'no-store', headers: { Accept: 'application/json' } })
+      .then(function (r) { if (!r.ok) throw new Error('status ' + r.status); return r.json(); })
+      .then(function (j) {
+        skyAI.state = j && j.available === true ? 'ok' : 'off';
+        skyAI.model = j && typeof j.model === 'string' ? j.model : '';
+        skyAI.remaining = j && typeof j.remaining_usd === 'number' ? j.remaining_usd : null;
+      })
+      .catch(function () { skyAI.state = 'off'; })
+      .then(function () { clearTimeout(timer); });
+  }).then(done);
   return skyAI.promise;
 }
 // Refresh what is on screen after a probe, without rebuilding a form someone is typing in.
 function skyAIChanged() {
   var r = route();
-  if (r.page === 'ask') { var s = $('.ai-using strong'); if (s) s.textContent = aiLabel(); }
+  if (r.page === 'ask') {
+    var s = $('.ai-using strong'); if (s) s.textContent = aiLabel();
+    var nt = $('.ai-note'); if (nt) nt.hidden = aiProvider() !== 'builtin';
+  }
   if (r.page === 'settings') {
     var card = $('#ai-card'), a = document.activeElement, inside = !!(card && a && card.contains(a));
     if (!card || (inside && a.tagName === 'INPUT')) return;
