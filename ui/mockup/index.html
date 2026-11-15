@@ -104,6 +104,14 @@ main{min-height:100vh}
 .demo select{min-height:32px;border-radius:9px;border:0;padding:0 8px;background:rgba(255,255,255,.16);color:#fff}
 .demo select option{color:#0B1B3F}
 .skyline{position:relative;display:block;width:100%;height:clamp(120px,15vw,220px);margin-top:4px}
+.hilo{display:flex;gap:16px;font-size:clamp(17px,1.6vw,21px);font-weight:600;text-shadow:0 1px 3px rgba(0,0,0,.4),0 2px 14px rgba(0,0,0,.3)}
+.days{width:100%;max-width:1200px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.day{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:calc(var(--r) - 8px);background:var(--glass);border:1px solid var(--glass-line);font-size:14px}
+.day:first-child{background:rgba(255,255,255,.12)}
+.day .dn{font-weight:600}
+.day .ic{width:18px;height:18px;border-radius:50%}
+.day .dh{font-weight:700;font-size:17px}
+.day .dl{color:var(--muted)}
 .pinned-wrap{position:relative;z-index:1;background:var(--navy);padding:8px 40px 28px;display:flex;flex-direction:column;align-items:center;gap:14px}
 .pinned{width:100%;max-width:1200px;display:grid;gap:16px}
 .pinned.few{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -360,6 +368,8 @@ input[type=range].plain{width:100%;accent-color:#1E5BC6}
   .headline{font-size:20px}
   .demo{left:50%;right:auto;top:64px;transform:translateX(-50%);white-space:nowrap}
   .pinned-wrap{padding:4px 16px 20px}
+  .days{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:2px}
+  .day{flex:0 0 62px;scroll-snap-align:start;padding:8px 2px}
   .pinned{gap:10px}
   .pinned.few{grid-template-columns:repeat(3,minmax(0,1fr))}
   .pinned.many{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -1528,12 +1538,31 @@ function skylineSVG(city, b) {
 /* ============================================================
    Tile catalog (sample values)
    ============================================================ */
+// Sample daily lows/highs (°C) for today and the next six days
+var WEEK = [[21, 27, 'storm'], [20, 25, 'storm'], [19, 24, 'rain'], [20, 26, 'cloud'], [21, 28, 'sun'], [22, 29, 'sun'], [21, 27, 'cloud']];
+var WEEK_COL = { sun: '#FFC24B', cloud: '#E2E8F0', rain: '#7DD3FC', storm: '#A78BFA' };
+function dayNames() {
+  var out = ['Today'], d = new Date();
+  for (var i = 1; i < 7; i++) out.push(new Date(d.getFullYear(), d.getMonth(), d.getDate() + i).toLocaleDateString('en-US', { weekday: 'short' }));
+  return out;
+}
+// Today's high/low always brackets the current temperature
+function todayHL(L) {
+  var b = WEATHER[S.weather] || WEATHER['partly-cloudy'], off = tempOffset(L), now = b.temp + off;
+  return { hi: Math.max(WEEK[0][1] + off, now), lo: Math.min(WEEK[0][0] + off, now) };
+}
+function weekData(L) {
+  var off = tempOffset(L), names = dayNames(), hl = todayHL(L);
+  return WEEK.map(function (w, i) {
+    var lo = i ? w[0] + off : hl.lo, hi = i ? w[1] + off : hl.hi;
+    return { day: names[i], lo: fmtT(lo), hi: fmtT(hi), c: WEEK_COL[w[2]], l: ((lo - off - 17) / 14 * 100) + '%', r: ((31 - (hi - off)) / 14 * 100) + '%' };
+  });
+}
 function catalog(L) {
   var sun = '#FFC24B', cloud = '#E2E8F0', rainc = '#7DD3FC', storm = '#A78BFA';
   var src = nearestSource(L), off = tempOffset(L);
   var near = 'Nearest: ' + src.name;
   var hrs = [['Now', 24, sun, '0%'], ['3 PM', 26, sun, '5%'], ['4 PM', 26, cloud, '20%'], ['5 PM', 25, storm, '60%'], ['6 PM', 23, storm, '80%'], ['7 PM', 22, rainc, '55%'], ['8 PM', 22, cloud, '30%'], ['9 PM', 21, cloud, '10%'], ['10 PM', 21, cloud, '5%'], ['11 PM', 20, cloud, '5%']];
-  var wk = [['Today', 21, 27, storm], ['Sun', 20, 25, storm], ['Mon', 19, 24, rainc], ['Tue', 20, 26, cloud], ['Wed', 21, 28, sun], ['Thu', 22, 29, sun], ['Fri', 21, 27, cloud]];
   var grad = 'linear-gradient(90deg,' + pal().join(',') + ')';
   var all = [
     { id: 'hourly', title: 'Hourly', src: near, span: 4, rows: 1, kind: 'hourly', hours: hrs.map(function (h) { return { t: h[0], temp: fmtT(h[1] + off), c: h[2], rain: h[3] }; }) },
@@ -1543,7 +1572,7 @@ function catalog(L) {
     { id: 'typhoon', title: 'Typhoon watch', src: 'CWA typhoon warnings', span: 2, rows: 1, kind: 'typhoon', bg: '#123A5E' },
     { id: 'pm25', title: 'PM2.5', src: 'Team model · Windy CAMS', value: '18 µg/m³', sub: 'Moderate · peaks 9 PM', meter: '30%', meterBg: grad, span: 1, rows: 1, kind: 'stat' },
     { id: 'landslide', title: 'Landslide risk', src: 'Team model', value: 'Low', sub: 'Rises to Medium if rain tops 80 mm', span: 1, rows: 1, kind: 'stat', bg: '#FFF4E0', fg: '#5A2E00' },
-    { id: 'week', title: '7-day forecast', src: near, span: 2, rows: 2, kind: 'week', week: wk.map(function (w) { return { day: w[0], lo: fmtT(w[1] + off), hi: fmtT(w[2] + off), c: w[3], l: ((w[1] - 17) / 14 * 100) + '%', r: ((31 - w[2]) / 14 * 100) + '%' }; }) },
+    { id: 'week', title: '7-day forecast', src: near, span: 2, rows: 2, kind: 'week', week: weekData(L) },
     { id: 'wind', title: 'Wind & gusts', src: 'Windy · wind, windGust', value: '14 km/h', sub: 'Gusts 38 km/h · from NE', span: 1, rows: 1, kind: 'stat' },
     { id: 'rain', title: 'Rain today', src: 'Windy · precip', value: '32 mm', sub: 'Mostly convective, 4–7 PM', span: 1, rows: 1, kind: 'stat' },
     { id: 'clouds', title: 'Cloud layers', src: 'Windy · l/m/hclouds', value: '65%', sub: 'Low 40% · Mid 55% · High 70% · Base 900 m', span: 1, rows: 1, kind: 'stat' },
@@ -1655,12 +1684,15 @@ function homeView() {
       '</button>' +
       '<div class="temp" aria-label="Temperature ' + fmtT(b.temp + tempOffset(L)) + '">' + fmtT(b.temp + tempOffset(L)) + '</div>' +
       '<div class="headline">' + esc(b.headline) + '</div>' +
+      '<div class="hilo" aria-label="Today: high ' + fmtT(todayHL(L).hi) + ', low ' + fmtT(todayHL(L).lo) + '"><span>H:' + fmtT(todayHL(L).hi) + '</span><span>L:' + fmtT(todayHL(L).lo) + '</span></div>' +
       '<div class="chips"><span class="chip"><span class="dot" aria-hidden="true"></span>Live from nearest source: ' + esc(src.name) + (src.dist ? ' · ' + esc(src.dist) : '') + '</span>' +
       (tw ? '' : '<span class="chip warn">Outside Taiwan: PM2.5, landslide and Predictions cover Taiwan only</span>') + '</div>' +
     '</div>' +
     (S.skyline === 'city' ? skylineSVG(skylineFor(L), b) : '') +
     (live ? '<canvas class="wx-front" aria-hidden="true"></canvas>' : '') +
-    '<div class="pinned-wrap"><div class="pinned ' + (n <= 3 ? 'few' : 'many') + '">' + pins + '</div>' +
+    '<div class="pinned-wrap"><div class="days" role="list" aria-label="7-day forecast">' + weekData(L).map(function (w) {
+        return '<div class="day" role="listitem" aria-label="' + w.day + ': high ' + w.hi + ', low ' + w.lo + '"><span class="dn">' + w.day + '</span><span class="ic" style="background:' + w.c + '" aria-hidden="true"></span><span class="dh">' + w.hi + '</span><span class="dl">' + w.lo + '</span></div>';
+      }).join('') + '</div><div class="pinned ' + (n <= 3 ? 'few' : 'many') + '">' + pins + '</div>' +
       '<button type="button" class="scroll-hint" data-action="scroll-stats">All stats ↓</button></div>' +
   '</section>' +
   '<section id="stats" class="stats" aria-labelledby="stats-h">' + statsInner() + '</section>';
@@ -2029,10 +2061,11 @@ function skylineContext() {
   lines.push('Location: ' + L.name + (L.sub ? ' (' + L.sub + ')' : '') + ' at ' + fmtCoord(L.lat, L.lon) + (inTW(L.lat, L.lon) ? '' : ' — outside Taiwan: team models and prediction maps do not cover it'));
   lines.push('Nearest source for current conditions: ' + src.name + (src.dist ? ' (' + src.dist + ')' : ''));
   lines.push('Now: ' + fmtT(b.temp + off) + ', ' + b.label + '. Headline: ' + b.headline);
+  lines.push('Today: high ' + fmtT(todayHL(L).hi) + ', low ' + fmtT(todayHL(L).lo));
   cat.forEach(function (t) {
     if (t.kind === 'stat') lines.push('- ' + t.title + ': ' + t.value + ' — ' + t.sub + ' [source: ' + t.src + ']');
     if (t.kind === 'hourly') lines.push('- Hourly: ' + t.hours.map(function (h) { return h.t + ' ' + h.temp + ' rain ' + h.rain; }).join('; ') + ' [source: ' + t.src + ']');
-    if (t.kind === 'week') lines.push('- 7-day: ' + t.week.map(function (w) { return w.day + ' ' + w.lo + '–' + w.hi; }).join('; '));
+    if (t.kind === 'week') lines.push('- 7-day forecast (low–high): ' + t.week.map(function (w) { return w.day + ' ' + w.lo + '–' + w.hi; }).join('; '));
     if (t.kind === 'typhoon') lines.push('- Typhoon watch: sample storm TD-27, 860 km SE, moving NW at 18 km/h; sea warning possible in ~48h [source: CWA typhoon warnings]');
   });
   lines.push('Taiwan prediction maps (region levels now / +24h / +72h):');
@@ -2769,7 +2802,7 @@ var ZH = {
   'Warmer and wetter than normal (115% of normal rain)': '比常年暖且濕（雨量為常年 115%）',
   'TD-27 · 860 km SE': 'TD-27 · 東南方 860 公里',
   'Sample storm. Moving NW at 18 km/h. A sea warning is possible in about 48h.': '示範颱風。以每小時 18 公里向西北移動，約 48 小時後可能發布海上警報。',
-  'Open map': '開啟地圖', 'Now': '現在', 'Today': '今天', 'Sun': '週日', 'Mon': '週一', 'Tue': '週二', 'Wed': '週三', 'Thu': '週四', 'Fri': '週五',
+  'Open map': '開啟地圖', 'Now': '現在', 'Today': '今天', 'Sun': '週日', 'Mon': '週一', 'Tue': '週二', 'Wed': '週三', 'Thu': '週四', 'Fri': '週五', 'Sat': '週六',
   'Taiwan only': '僅限台灣',
   'Pick a dataset to open its map, then scrub back through the past or forward into the forecast.': '選擇資料集開啟地圖，再拖曳時間軸查看過去或未來的預測。',
   'By Skyline': 'Skyline 自製', 'Our own Taiwan models': '我們自己的台灣模型', 'Others': '其他來源', 'Pulled from Windy, CWA and other APIs': '來自 Windy、中央氣象署與其他 API',
@@ -2829,6 +2862,8 @@ var ZHP = [
   [/^(Observed \(past\)|Now|Prediction) · (.*)$/, function (m) { return zh(m[1]) + ' · ' + m[2]; }],
   [/^Postal (\d{3})$/, function (m) { return '郵遞區號 ' + m[1]; }],
   [/^No Taiwan district has postal code (\d{3})\.$/, function (m) { return '沒有行政區使用郵遞區號 ' + m[1] + '。'; }],
+  [/^H:(.+)$/, function (m) { return '高 ' + m[1]; }],
+  [/^L:(.+)$/, function (m) { return '低 ' + m[1]; }],
   [/^Dew point (.*)$/, function (m) { return '露點 ' + m[1]; }],
   [/^Nearest: (.*)$/, function (m) { return '最近：' + m[1]; }],
   [/^Nothing in the offline list matches “(.*)”\.$/, function (m) { return '離線清單中找不到「' + m[1] + '」。'; }],
