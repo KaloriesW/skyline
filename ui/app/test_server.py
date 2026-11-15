@@ -336,8 +336,11 @@ def test_predict_far_from_every_city_is_404(client, up, monkeypatch):
     assert body["nearest"]["distance_km"] > 25
     assert client.get("/api/predict?lat=35.68&lon=139.69").status_code == 404  # Tokyo
     assert meteo_calls(up) == 0  # nothing fetched for a point we won't answer
-    monkeypatch.setenv("PM25_MAX_KM", "500")
-    assert client.get("/api/predict?lat=23.47&lon=120.96").status_code == 200
+    r = client.get("/api/predict?lat=24.1477&lon=120.99")  # about 32 km east of Taichung's centre
+    assert r.status_code == 404 and r.json()["nearest"]["id"] == "taichung"
+    monkeypatch.setenv("PM25_MAX_KM", "40")  # the limit is a setting
+    r = client.get("/api/predict?lat=24.1477&lon=120.99")
+    assert r.status_code == 200 and 30 < r.json()["city"]["distance_km"] < 34
 
 
 @pytest.mark.parametrize("query", ["lat=24.1", "lon=120.6", "lat=abc&lon=120.6", "lat=24.1&lon=", "lat=91&lon=120",
