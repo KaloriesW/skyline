@@ -1166,13 +1166,14 @@ function nearestPlace(lat, lon) {
 // point is in that uncertain band: keep the nearest as the name but say which district it borders.
 function borderDistrict(np) {
   var p = np.place, s = np.second;
-  if (!p || !s || p.kind !== 'District' || !(np.d2 < 25) || np.d < 0.8 * np.d2 === false && false) return null;
+  if (!p || !s || p.kind !== 'District' || !(np.d2 < 25)) return null;
   return np.d >= 0.8 * np.d2 ? s : null;
 }
 // Location record for a point: "Nantun District · Taichung · 408 南屯區" in Taiwan, the city elsewhere.
 function autoLoc(lat, lon, kind, extraSub) {
   var np = nearestPlace(lat, lon), p = np.place, c = fmtCoord(lat, lon);
-  if (p && p.kind === 'District' && np.d < 25) return { name: p.locName, sub: p.locSub + (extraSub ? ' · ' + extraSub : ''), lat: lat, lon: lon, kind: kind };
+  var nb = borderDistrict(np);
+  if (p && p.kind === 'District' && np.d < 25) return { name: p.locName, sub: p.locSub + (nb ? ' · near ' + nb.locName + ' border' : '') + (extraSub ? ' · ' + extraSub : ''), lat: lat, lon: lon, kind: kind };
   if (p && p.kind === 'City' && np.d < 40) return { name: p.name, sub: (p.sub ? p.sub + ' · ' : '') + (extraSub || c), lat: lat, lon: lon, kind: kind };
   return { name: extraSub === 'Current location' ? 'My location' : c, sub: p && np.d < 150 ? 'Near ' + p.name : (extraSub || 'Coordinates'), lat: lat, lon: lon, kind: kind };
 }
