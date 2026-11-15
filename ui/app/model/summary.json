@@ -411,10 +411,107 @@
     "pm25: cross-validation chose blend (test-year MAE 4.379); ridge did better on the test year (4.323). The choice was not changed.",
     "pm10: cross-validation chose v1 (test-year MAE 4.864); blend did better on the test year (4.690). The choice was not changed."
    ]
+  },
+  {
+   "id": "tainan",
+   "name": "Tainan City",
+   "name_zh": "臺南市",
+   "lat": 22.9908,
+   "lon": 120.185,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "v1",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "v1",
+    "baseline_mae": 4.003,
+    "model_mae": 3.232,
+    "improvement_pct": 19.3,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 3.818,
+     "ridge": 3.894,
+     "boosted": 4.122,
+     "blend": 3.871,
+     "baseline": 4.532
+    },
+    "test_mae": {
+     "baseline": 4.003,
+     "v1": 3.232,
+     "ridge": 3.121,
+     "boosted": 3.082,
+     "blend": 2.933,
+     "blend_no_weather": 3.167
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 4.46,
+    "model_mae": 3.901,
+    "improvement_pct": 12.5,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.774,
+     "ridge": 6.144,
+     "boosted": 9.272,
+     "blend": 7.266,
+     "baseline": 4.93
+    },
+    "test_mae": {
+     "baseline": 4.46,
+     "v1": 3.901,
+     "ridge": 3.717,
+     "boosted": 4.08,
+     "blend": 3.537,
+     "blend_no_weather": 3.757
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 27.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 9,
+     "warned": 1,
+     "caught": 0,
+     "false_alarms": 1,
+     "missed": 9,
+     "precision": 0.0,
+     "recall": 0.0
+    },
+    "tuned": {
+     "threshold": 27.0,
+     "bad_days": 9,
+     "warned": 23,
+     "caught": 7,
+     "false_alarms": 16,
+     "missed": 2,
+     "precision": 0.304,
+     "recall": 0.778
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 9,
+     "warned": 9,
+     "caught": 3,
+     "false_alarms": 6,
+     "missed": 6,
+     "precision": 0.333,
+     "recall": 0.333
+    }
+   },
+   "notes": [
+    "pm25: cross-validation chose v1 (test-year MAE 3.232); blend did better on the test year (2.933). The choice was not changed.",
+    "pm10: cross-validation chose v1 (test-year MAE 3.901); blend did better on the test year (3.537). The choice was not changed."
+   ]
   }
  ],
  "missing": [
-  "tainan",
   "kaohsiung",
   "keelung",
   "hsinchu_city",
