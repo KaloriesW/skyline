@@ -1864,7 +1864,7 @@ var TILES = {
   typhoon: {
     title: 'Typhoon Watch', icon: 'cyclone', size: 'w', source: 'CWA', needs: 'none', desc: 'The active typhoon near Taiwan: its track, distance and strength, from CWA warnings.',
     available: function () { return S.sources.typhoon !== false; },
-    open: function () { if (tyStorm()) location.hash = 'predictions/typhoon'; },
+    open: function () { openMapPanel('wind', 'typhoon'); },
     na: function () { return factNA('typhoon'); },
     render: function () { return tyTileHTML(tyView()); }
   },
@@ -2121,13 +2121,20 @@ function syncCompact() {
 }
 // One scroll progress drives the whole collapse (CSS reads --p, --c, --bar, --y): the big title fades and
 // shrinks while the compact one in the top bar fades in at the same pace, then the bar's glass appears.
-var scrollQueued = false;
+var scrollQueued = false, homeY = 0, lastTile = null;
+// Opening or closing a side panel reflows the widgets; keep the one you clicked at the same place on screen
+function keepTile(mutate) {
+  var a = lastTile && document.contains(lastTile) ? lastTile : null, y0 = a ? a.getBoundingClientRect().top : 0;
+  mutate();
+  if (a) window.scrollBy({ top: a.getBoundingClientRect().top - y0, behavior: 'instant' });
+}
 function onScroll() {
   if (scrollQueued) return;
   scrollQueued = true;
   requestAnimationFrame(function () {
     scrollQueued = false;
     var y = Math.max(0, window.scrollY || 0), home = document.body.dataset.page === 'home';
+    if (home) homeY = y;
     var p = home ? clamp((y - 20) / 170, 0, 1) : 0, c = home ? clamp((p - 0.35) / 0.5, 0, 1) : 0;
     var r = document.documentElement.style;
     r.setProperty('--y', (reduced() ? 0 : y).toFixed(1) + 'px');
@@ -2159,6 +2166,7 @@ document.addEventListener('click', function (e) {
   if (e.target.closest('button,a,iframe')) return;
   var t = e.target.closest('.tile.clickable');
   if (!t) return;
+  lastTile = t;
   var row = e.target.closest('.day[data-date]');
   if (row && t.dataset.id === 'daily') { openDetail(t, row.dataset.date); return; }
   if (TILES[t.dataset.id].open) TILES[t.dataset.id].open(); else openDetail(t);
@@ -2214,13 +2222,13 @@ function openSheet(html, label) {
   if (bd.hidden) sheetFocus = document.activeElement;
   sh.innerHTML = html; sh.scrollTop = 0; sh.setAttribute('aria-label', label || 'Details');
   closePop(); closeMapPanel();
-  bd.hidden = false; document.body.classList.add('sheet-open');
+  bd.hidden = false; keepTile(function () { document.body.classList.add('sheet-open'); });
   requestAnimationFrame(function () { bd.classList.add('open'); sh.focus({ preventScroll: true }); });
 }
 function closeSheet() {
   var bd = $('#sheetBackdrop');
   if (bd.hidden) return false;
-  bd.classList.remove('open'); document.body.classList.remove('sheet-open');
+  bd.classList.remove('open'); keepTile(function () { document.body.classList.remove('sheet-open'); });
   sheetTimer = setTimeout(function () { bd.hidden = true; }, reduced() ? 0 : 320);
   if (sheetFocus && sheetFocus.focus && document.contains(sheetFocus)) sheetFocus.focus({ preventScroll: true });
   return true;
@@ -2587,7 +2595,12 @@ $('#pop').addEventListener('click', function (e) {
   else return;
   renderPop();
 });
-$('#popBackdrop').addEventListener('click', closePop);
+$('#popBackdrop').addEventListener('click', function (e) {
+  var was = POP && POP.el;
+  closePop();
+  var under = document.elementFromPoint(e.clientX, e.clientY), tile = under && under.closest && under.closest('#grid .tile');
+  if (under && !(tile && tile === was)) under.click();
+});
 window.addEventListener('scroll', function () { if (POP) placePop(); }, { passive: true });
 window.addEventListener('resize', function () { if (POP) placePop(); });
 
@@ -2606,25 +2619,31 @@ function mapSummary(layer, c) {
 }
 function mapPanelHTML() {
   var c = wctx(), lay = MAP_LAYERS.filter(function (o) { return o[0] === MAP_LAYER; })[0] || MAP_LAYERS[0];
-  return '<header class="mp-head"><div><h2>' + esc(S.loc.name) + '</h2><p>' + esc(mapSummary(lay[0], c)) + '</p></div>' +
+  var ty = PANEL_MODE === 'typhoon' ? tyView() : null;
+  var head = ty ? '<h2>Typhoon Watch</h2><p>' + esc(ty.state === 'active' ? ty.title + (ty.sub ? ' · ' + ty.sub : '') : ty.state === 'none' ? 'No tropical cyclone is being tracked near Taiwan right now.' : 'The CWA typhoon feed isn’t available right now.') + '</p>'
+    : '<h2>' + esc(S.loc.name) + '</h2><p>' + esc(mapSummary(lay[0], c)) + '</p>';
+  return '<header class="mp-head"><div>' + head + '</div>' +
     '<button type="button" class="mp-x" data-action="close-map" aria-label="Close map">×</button></header>' +
     '<div class="mp-chips" role="group" aria-label="Map layer">' + MAP_LAYERS.map(function (o) { return '<button type="button" data-maplayer="' + o[0] + '" class="' + (MAP_LAYER === o[0] ? 'on' : '') + '" aria-pressed="' + (MAP_LAYER === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div>' +
     '<div class="mp-map">' + windyFrame('Windy map of ' + S.loc.name, windyURL(lay[2], inTW(S.loc.lat, S.loc.lon) ? 8 : 6, 0, true)) + '</div>' +
-    '<p class="mp-src">Map: <a href="https://www.windy.com" target="_blank" rel="noopener">Windy.com</a> · ' + (lay[0] === 'pm2p5' ? 'Copernicus CAMS' : 'ECMWF') + '</p>';
+    '<p class="mp-src">Map: <a href="https://www.windy.com" target="_blank" rel="noopener">Windy.com</a> · ' + (lay[0] === 'pm2p5' ? 'Copernicus CAMS' : 'ECMWF') +
+    (ty ? ' · <a href="#predictions/typhoon">Open the full typhoon tracker</a>' : '') + '</p>';
 }
-function openMapPanel(layer) {
+var PANEL_MODE = 'map';
+function openMapPanel(layer, mode) {
   if (layer) MAP_LAYER = layer;
+  PANEL_MODE = mode || 'map';
   closePop(); closeSheet();
   var p = $('#mapPanel');
   p.innerHTML = mapPanelHTML(); p.hidden = false;
-  document.body.classList.add('map-open');
+  keepTile(function () { document.body.classList.add('map-open'); });
   requestAnimationFrame(function () { p.classList.add('open'); });
   rerenderTile('map');
 }
 function closeMapPanel() {
   var p = $('#mapPanel');
   if (p.hidden) return false;
-  p.classList.remove('open'); document.body.classList.remove('map-open');
+  p.classList.remove('open'); keepTile(function () { document.body.classList.remove('map-open'); });
   setTimeout(function () { if (!document.body.classList.contains('map-open')) { p.hidden = true; p.innerHTML = ''; } }, reduced() ? 0 : 420);
   return true;
 }
@@ -3579,8 +3598,14 @@ function route() {
   if (['home', 'predictions', 'ask', 'settings'].indexOf(page) < 0) page = 'home';
   return { page: page, sub: parts[1] || '', stats: parts[0] === 'stats' };
 }
+var homeAnchor = null;   // the widget you were looking at when you left Home, and where it was on screen
 function render() {
   var r = route(), key = r.page + '/' + r.sub, app = $('#app');
+  if (lastRoute.indexOf('home/') === 0 && r.page !== 'home') {
+    var seen = (lastTile && document.contains(lastTile) && lastTile.getBoundingClientRect().bottom > 0 ? [lastTile] : []).concat(Array.prototype.slice.call(document.querySelectorAll('#grid .tile')))
+      .filter(function (el) { return el.getBoundingClientRect().bottom > 70; })[0];
+    homeAnchor = seen ? { id: seen.dataset.id, top: seen.getBoundingClientRect().top } : null;
+  }
   document.body.dataset.page = r.page;
   destroyLive();
   loadLive(r.page); applyLiveSets();
@@ -3601,7 +3626,11 @@ function render() {
   document.title = { home: S.loc.name + ' · Skyline', predictions: 'Predictions · Skyline', ask: 'Ask AI · Skyline', settings: 'Settings · Skyline' }[r.page];
   if (key !== lastRoute) {
     if (r.stats) { var st = $('#grid'); if (st) st.scrollIntoView(); }
-    else window.scrollTo(0, 0);
+    else {
+      window.scrollTo({ top: r.page === 'home' ? homeY : 0, behavior: 'instant' });
+      var back = r.page === 'home' && homeAnchor && document.querySelector('#grid [data-id="' + homeAnchor.id + '"]');
+      if (back) window.scrollBy({ top: back.getBoundingClientRect().top - homeAnchor.top, behavior: 'instant' });
+    }
   }
   lastRoute = key;
   onScroll();

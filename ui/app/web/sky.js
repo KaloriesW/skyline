@@ -18,7 +18,7 @@
   const has = (...m) => m.includes(cfg.mood);
 
   function resize() {
-    DPR = Math.min(window.devicePixelRatio || 1, 1.5);
+    DPR = 1;   // soft clouds and thin rain don't need retina pixels, and every pixel is re-blurred under the glass widgets
     W = innerWidth; H = innerHeight;
     canvas.width = W * DPR; canvas.height = H * DPR;
     canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
@@ -102,6 +102,8 @@
   }
 
   function frame(t) {
+    // 30 fps is plenty for drifting clouds and rain, and halves the work for the blurred widgets on top
+    if (last && t - last < 30 && !still()) { raf = requestAnimationFrame(frame); return; }
     const dt = Math.min(0.05, (t - (last || t)) / 1000);
     last = t;
     ctx.clearRect(0, 0, W, H);

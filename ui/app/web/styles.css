@@ -180,7 +180,7 @@ body.hero-gone .hero-main { visibility: hidden; }
   background: linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.02) 55%), var(--tile);
   border: 1px solid rgba(255,255,255,.14);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 10px 30px rgba(0,0,0,.10);
-  backdrop-filter: blur(28px) saturate(160%); -webkit-backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%);
   display: flex; flex-direction: column; min-width: 0;
   animation: rise .7s var(--ease) both; animation-delay: calc(var(--i, 0) * 35ms);
   transition: transform .35s var(--spring), background .25s, border-color .25s, box-shadow .3s;
@@ -700,7 +700,6 @@ body.editing .map-hit { display: none; }
 .mp-map iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .mp-src { margin: 0; padding: 8px 20px 12px; font-size: 11.5px; color: var(--faint); }
 .mp-src a { color: inherit; }
-main { transition: padding-right .5s var(--ease); }
 @media (min-width: 761px) {
   body.map-open main, body.sheet-open main { padding-right: calc(50vw + 7px); }
   body.map-open .grid, body.sheet-open .grid { grid-template-columns: repeat(2, 1fr); }
@@ -725,6 +724,51 @@ main { transition: padding-right .5s var(--ease); }
   .map-panel { inset: 0; width: auto; z-index: 58; border-radius: 0; transform: translateY(40px); }
   .mp-head { padding-top: calc(16px + env(safe-area-inset-top, 0px)); }
   .mp-src { padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* ---------- panels and popovers: really hidden when hidden, and they scroll on their own ---------- */
+.map-panel[hidden], .pop[hidden], .pop-backdrop[hidden] { display: none !important; }
+.sheet, .pop-scroll, .map-panel { overscroll-behavior: contain; }
+
+/* ---------- more room in every detail view ---------- */
+.pop { width: 368px; }
+.pop-scroll { padding: 18px 20px 22px; }
+.pop-head { padding-bottom: 16px; font-size: 14px; }
+.pop-head h3 { font-size: 14px; }
+.pop-date { margin: 12px 0 6px; }
+.pop-seg { margin: 14px 0 4px; }
+.pop-main { margin-top: 16px; }
+.pop-big { margin-bottom: 6px; }
+.pop-big b { font-size: 34px; }
+.pop-icons { margin-top: 16px; }
+.pop-chart { margin-top: 10px; }
+.pop-note { margin-top: 12px; font-size: 13px; line-height: 1.5; }
+.pop-sec { margin-top: 18px; padding-top: 16px; }
+.pop-sec h4 { font-size: 14px; margin-bottom: 6px; }
+.pop-sec p { font-size: 13.5px; line-height: 1.55; }
+.pop-rows { margin-top: 16px; }
+.pop-row { padding: 11px 0; font-size: 13.5px; }
+.pop-btn { margin-top: 18px; padding: 11px 14px; }
+@media (min-width: 761px) {
+  .sheet { padding: 0 32px 36px; }
+  .sheet-head { top: 0; z-index: 2; margin: 0 -32px 14px; padding: 22px 32px 16px; border-bottom: 1px solid rgba(255,255,255,.1); background: rgba(26, 32, 50, .94); }
+  .sheet h2 { font-size: 22px; line-height: 1.25; }
+  .sheet h3 { margin: 34px 0 14px; font-size: 12.5px; letter-spacing: .08em; }
+  .sheet p { font-size: 14.5px; line-height: 1.65; margin: 10px 0; }
+  .sheet p.fine { font-size: 13px; line-height: 1.55; }
+  .sheet .kpis { gap: 14px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+  .sheet .kpi { padding: 16px 18px; border-radius: 18px; }
+  .sheet .kpi b { font-size: 30px; margin-bottom: 4px; }
+  .sheet .kpi span { font-size: 12.5px; line-height: 1.4; }
+  .sheet .bigchart { height: 260px; margin-top: 18px; }
+  .sheet .legend { margin-top: 10px; gap: 16px; font-size: 12px; }
+  .sheet table.metrics { font-size: 14px; }
+  .sheet table.metrics th, .sheet table.metrics td { padding: 12px 12px; }
+  .sheet .mrows { gap: 10px; }
+  .sheet .fails { gap: 10px; }
+  .sheet .fail { padding: 12px 16px; font-size: 13.5px; line-height: 1.5; }
+  .sheet .gallery { gap: 14px; }
+  .sheet .gcard { padding: 14px 16px; }
 }
 
 /* ---------- reduce motion (the Settings switch and the system setting) ---------- */

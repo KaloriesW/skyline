@@ -244,10 +244,14 @@
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     canvas.parentNode.style.setProperty('--ground', b.ground);
     loop.stop();
+    var lastT = -1e9;
     function draw(t) {
       if (!canvas.isConnected) return;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
-      ctx.drawImage(b.img, 0, 0, W, H); b.frame(ctx, t);
+      if (t - lastT >= 120 && canvas.getBoundingClientRect().bottom > 0) {
+        lastT = t;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+        ctx.drawImage(b.img, 0, 0, W, H); b.frame(ctx, t);
+      }
       if (!o.reduce && !document.hidden) loop.raf = requestAnimationFrame(draw);
     }
     draw(0);
