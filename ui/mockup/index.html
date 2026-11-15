@@ -2002,7 +2002,7 @@ var WINDY_LINES =
    'M-10,280 C60,260 150,300 230,270 S300,250 320,270', 'M-10,360 C70,340 150,380 230,350 S300,330 320,350', 'M-10,440 C60,420 150,460 230,430 S300,410 320,430']
     .map(function (d) { return '<path class="sk-flow" d="' + d + '"/>'; }).join('') + '</g>';
 
-function lvlAt(d, i, t) { if (d.lv && d.lv[t]) return d.lv[t][i]; returnMath.max(0, Math.min(3, d.base[i] + Math.round(d.trend[i] * (t - NOW) / 4))); }
+function lvlAt(d, i, t) { if (d.lv && d.lv[t]) return d.lv[t][i]; return Math.max(0, Math.min(3, d.base[i] + Math.round(d.trend[i] * (t - NOW) / 4))); }
 function baseFor(d) {
   if (S.predBase[d.id]) return S.predBase[d.id];
   if (S.mapBase === 'sat' || S.mapBase === 'windy') return S.mapBase;
