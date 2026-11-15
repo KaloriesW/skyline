@@ -705,10 +705,106 @@
     "pm25: cross-validation chose boosted (test-year MAE 4.090); blend did better on the test year (3.984). The choice was not changed.",
     "pm10: cross-validation chose v1 (test-year MAE 5.469); blend did better on the test year (4.851). The choice was not changed."
    ]
+  },
+  {
+   "id": "hsinchu_city",
+   "name": "Hsinchu City",
+   "name_zh": "新竹市",
+   "lat": 24.8066,
+   "lon": 120.9686,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 4.937,
+    "model_mae": 3.369,
+    "improvement_pct": 31.8,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.511,
+     "ridge": 5.454,
+     "boosted": 5.33,
+     "blend": 5.011,
+     "baseline": 7.1
+    },
+    "test_mae": {
+     "baseline": 4.937,
+     "v1": 3.812,
+     "ridge": 3.702,
+     "boosted": 3.637,
+     "blend": 3.369,
+     "blend_no_weather": 4.008
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 5.855,
+    "model_mae": 5.032,
+    "improvement_pct": 14.0,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 7.475,
+     "ridge": 7.753,
+     "boosted": 10.719,
+     "blend": 8.496,
+     "baseline": 7.667
+    },
+    "test_mae": {
+     "baseline": 5.855,
+     "v1": 5.032,
+     "ridge": 5.0,
+     "boosted": 5.22,
+     "blend": 4.72,
+     "blend_no_weather": 5.162
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 26.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 11,
+     "warned": 8,
+     "caught": 6,
+     "false_alarms": 2,
+     "missed": 5,
+     "precision": 0.75,
+     "recall": 0.545
+    },
+    "tuned": {
+     "threshold": 26.0,
+     "bad_days": 11,
+     "warned": 57,
+     "caught": 10,
+     "false_alarms": 47,
+     "missed": 1,
+     "precision": 0.175,
+     "recall": 0.909
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 11,
+     "warned": 11,
+     "caught": 2,
+     "false_alarms": 9,
+     "missed": 9,
+     "precision": 0.182,
+     "recall": 0.182
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose v1 (test-year MAE 5.032); blend did better on the test year (4.720). The choice was not changed."
+   ]
   }
  ],
  "missing": [
-  "hsinchu_city",
   "chiayi_city",
   "hsinchu_county",
   "miaoli",
