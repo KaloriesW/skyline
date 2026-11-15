@@ -1966,10 +1966,106 @@
    "notes": [
     "pm10: cross-validation chose v1 (test-year MAE 3.796); ridge did better on the test year (3.781). The choice was not changed."
    ]
+  },
+  {
+   "id": "kinmen",
+   "name": "Kinmen County",
+   "name_zh": "金門縣",
+   "lat": 24.4369,
+   "lon": 118.3186,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 6.316,
+    "model_mae": 4.235,
+    "improvement_pct": 32.9,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 6.015,
+     "ridge": 6.086,
+     "boosted": 5.487,
+     "blend": 5.325,
+     "baseline": 7.383
+    },
+    "test_mae": {
+     "baseline": 6.316,
+     "v1": 5.001,
+     "ridge": 4.892,
+     "boosted": 4.424,
+     "blend": 4.235,
+     "blend_no_weather": 5.088
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 7.037,
+    "model_mae": 6.269,
+    "improvement_pct": 10.9,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 9.172,
+     "ridge": 9.233,
+     "boosted": 12.335,
+     "blend": 9.935,
+     "baseline": 7.703
+    },
+    "test_mae": {
+     "baseline": 7.037,
+     "v1": 6.269,
+     "ridge": 6.156,
+     "boosted": 6.314,
+     "blend": 5.636,
+     "blend_no_weather": 6.15
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 27.5,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 26,
+     "warned": 32,
+     "caught": 18,
+     "false_alarms": 14,
+     "missed": 8,
+     "precision": 0.562,
+     "recall": 0.692
+    },
+    "tuned": {
+     "threshold": 27.5,
+     "bad_days": 26,
+     "warned": 76,
+     "caught": 21,
+     "false_alarms": 55,
+     "missed": 5,
+     "precision": 0.276,
+     "recall": 0.808
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 26,
+     "warned": 26,
+     "caught": 7,
+     "false_alarms": 19,
+     "missed": 19,
+     "precision": 0.269,
+     "recall": 0.269
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose v1 (test-year MAE 6.269); blend did better on the test year (5.636). The choice was not changed."
+   ]
   }
  ],
  "missing": [
-  "kinmen",
   "lienchiang"
  ]
 }
