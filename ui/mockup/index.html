@@ -1690,7 +1690,7 @@ var I18N_ORIG = new WeakMap(), I18N_ATTRS = ['placeholder', 'aria-label'];
 function translateTree(root) {
   var toZh = S.lang === 'zh';
   var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-    acceptNode: function (n) { var p = n.parentNode && n.parentNode.nodeName; return p === 'SCRIPT' || p === 'STYLE' ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT; }
+    acceptNode: function (n) { var pe = n.parentNode, p = pe && pe.nodeName; return p === 'SCRIPT' || p === 'STYLE' || (pe && pe.closest && pe.closest('.msg.ai')) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT; }
   });
   var n;
   while ((n = w.nextNode())) {
