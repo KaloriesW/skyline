@@ -1648,7 +1648,7 @@ function catalog(L) {
     stat('uv', 'UV index', OM),
     stat('climate', 'Seasonal outlook', 'ECMWF SEAS5 · Open-Meteo', { span: 2 })
   ];
-  var off = { pm25: !S.sources.pm25, landslide: !S.sources.landslide, typhoon: !S.sources.typhoon, map: !S.sources.windyMap };
+  var off = { landslide: !S.sources.landslide, typhoon: !S.sources.typhoon, map: !S.sources.windyMap };
   liveTiles(all, L);
   return all.filter(function (t) { return !off[t.id]; });
 }
