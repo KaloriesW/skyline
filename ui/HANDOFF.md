@@ -21,7 +21,7 @@ The app combines two pieces of work: our UI (search for any location, Prediction
 ```
 ui/
   app/server.py        FastAPI app: serves web/, /api/health, /api/predict, /api/model
-  app/web/             the frontend: index.html, styles.css, sky.js, icons.js, app.js (no build step)
+  app/web/             the frontend: index.html, styles.css, sky.js, horizon.js (skyline art), icons.js, app.js (no build step)
   app/model/           train.py (offline), predict.py (serving, plain Python), cities.json,
                        models/ and metrics/ (one JSON per city), summary.json
   app/run.sh           creates app/.venv and starts the server

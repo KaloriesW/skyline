@@ -536,35 +536,15 @@ var COAST = [
   ['Hualien', 23.98, 121.63], ['Su’ao', 24.60, 121.87], ['Toucheng', 24.86, 121.84], ['Fulong', 25.02, 121.95]
 ];
 
-var SKYLINES = (function () {
-  var mk = function (hs, x0, w) { return hs.map(function (h, i) { return { x: x0 + i * (w + 6), y: 220 - h, w: w, h: h }; }); };
-  return {
-    Taipei: { lat: 25.0330, lon: 121.5654, label: 'Taipei skyline: Taipei 101 between city blocks, with Elephant Mountain and Yangmingshan behind',
-      mtnFar: 'M0,220 L0,120 Q140,60 300,100 Q420,40 560,90 Q640,70 700,110 L1200,140 L1200,220 Z', mtnNear: 'M820,220 L820,170 Q900,120 980,150 Q1060,110 1200,160 L1200,220 Z',
-      blds: mk([60, 90, 70, 110, 80, 50, 95, 120, 70], 420, 30).concat(mk([70, 100, 60, 85, 55], 860, 34)),
-      landmark: 'M752,220 V160 H744 L752,142 H746 L754,124 H748 L756,106 H750 L758,88 H752 L760,70 H756 V44 H760 V14 H764 V44 H768 V70 H764 L772,88 H766 L774,106 H768 L776,124 H770 L778,142 H772 L780,160 H772 V220 Z' },
-    Taichung: { lat: 24.1477, lon: 120.6736, label: 'Taichung skyline: the National Taichung Theater, a box cut by curved openings, in front of the Dakeng hills',
-      mtnFar: 'M0,220 L0,140 L160,80 L260,120 L380,60 L520,110 L660,70 L800,120 L960,80 L1200,120 L1200,220 Z', mtnNear: 'M0,220 L0,180 Q200,140 400,170 Q600,150 800,175 Q1000,150 1200,180 L1200,220 Z',
-      blds: mk([50, 80, 65, 95, 70, 55], 270, 34).concat(mk([60, 85, 75, 50], 840, 34)),
-      landmark: 'M520,220 V108 H780 V220 Z M536,108 a7,7 0 0 1 14,0 Z M578,108 a5,5 0 0 1 10,0 Z M630,108 a9,9 0 0 1 18,0 Z M690,108 a6,6 0 0 1 12,0 Z M742,108 a8,8 0 0 1 16,0 Z',
-      glass: 'M505,111 L535,111 C550,117.3 550,139.7 535,146 L505,146 C490,139.7 490,117.3 505,111 Z M569,111 L599,111 C614,117.3 614,139.7 599,146 L569,146 C554,139.7 554,117.3 569,111 Z M633,111 L663,111 C678,117.3 678,139.7 663,146 L633,146 C618,139.7 618,117.3 633,111 Z M697,111 L727,111 C742,117.3 742,139.7 727,146 L697,146 C682,139.7 682,117.3 697,111 Z M761,111 L791,111 C806,117.3 806,139.7 791,146 L761,146 C746,139.7 746,117.3 761,111 Z M537,147 L567,147 C582,153.5 582,176.5 567,183 L537,183 C522,176.5 522,153.5 537,147 Z M601,147 L631,147 C646,153.5 646,176.5 631,183 L601,183 C586,176.5 586,153.5 601,147 Z M665,147 L695,147 C710,153.5 710,176.5 695,183 L665,183 C650,176.5 650,153.5 665,147 Z M729,147 L759,147 C774,153.5 774,176.5 759,183 L729,183 C714,176.5 714,153.5 729,147 Z M505,184 L535,184 C550,190.5 550,213.5 535,220 L505,220 C490,213.5 490,190.5 505,184 Z M569,184 L599,184 C614,190.5 614,213.5 599,220 L569,220 C554,213.5 554,190.5 569,184 Z M633,184 L663,184 C678,190.5 678,213.5 663,220 L633,220 C618,213.5 618,190.5 633,184 Z M697,184 L727,184 C742,190.5 742,213.5 727,220 L697,220 C682,213.5 682,190.5 697,184 Z M761,184 L791,184 C806,190.5 806,213.5 791,220 L761,220 C746,213.5 746,190.5 761,184 Z', glassClip: [520, 108, 260, 112] },
-    Tainan: { lat: 22.9999, lon: 120.2270, label: 'Tainan skyline: a temple roof with upturned eaves among low old-town houses',
-      mtnFar: 'M0,220 L0,170 Q300,140 600,165 Q900,145 1200,170 L1200,220 Z', mtnNear: 'M0,220 L1200,220 L1200,219 L0,219 Z',
-      blds: mk([40, 55, 45, 60, 50, 42], 300, 40).concat(mk([45, 58, 40, 52, 48], 820, 40)),
-      landmark: 'M590,220 V170 H556 Q584,164 600,138 H720 Q736,164 764,170 H730 V220 Z M612,138 Q640,126 660,108 Q680,126 708,138 Z' },
-    Kaohsiung: { lat: 22.6273, lon: 120.3014, label: 'Kaohsiung skyline: the 85 Sky Tower with Shoushan behind',
-      mtnFar: 'M0,220 L0,130 Q120,70 260,110 Q320,130 380,160 L1200,175 L1200,220 Z', mtnNear: 'M0,220 L0,205 Q300,198 600,206 Q900,198 1200,206 L1200,220 Z',
-      blds: mk([60, 95, 70, 110, 80], 420, 34).concat(mk([90, 65, 100, 75, 55], 820, 34)),
-      landmark: 'M640,220 V100 H660 V70 H680 V30 H686 V4 H690 V30 H696 V70 H716 V100 H736 V220 H706 V150 H670 V220 Z' },
-    Hualien: { lat: 23.9769, lon: 121.6044, label: 'Hualien: the steep Central Range dropping to Pacific waves',
-      mtnFar: 'M0,220 L0,110 L110,30 L200,100 L320,10 L430,90 L560,20 L690,100 L820,40 L960,110 L1080,50 L1200,100 L1200,220 Z', mtnNear: 'M0,220 L0,150 L160,80 L300,150 L460,90 L620,160 L800,110 L1000,170 L1200,140 L1200,220 Z',
-      blds: mk([30, 40, 34, 45, 30, 38, 42], 380, 36),
-      landmark: 'M0,220 V206 Q30,196 60,206 Q90,196 120,206 Q150,196 180,206 Q210,196 240,206 L240,220 Z M900,220 V206 Q930,196 960,206 Q990,196 1020,206 Q1050,196 1080,206 Q1110,196 1140,206 Q1170,196 1200,206 V220 Z' },
-    World: { label: 'A generic city skyline. City art is drawn for Taiwan locations.',
-      mtnFar: 'M0,220 L0,170 Q300,130 600,160 Q900,130 1200,165 L1200,220 Z', mtnNear: 'M0,220 L1200,220 L1200,219 L0,219 Z',
-      blds: mk([50, 80, 60, 100, 70, 55, 90], 380, 40).concat(mk([60, 75, 50], 820, 40)), landmark: '' }
-  };
-})();
+// Where each skyline is centred, and its alt text. The art itself is drawn in horizon.js.
+var SKYLINES = {
+  Taipei: { lat: 25.0330, lon: 121.5654, label: 'Taipei skyline with Taipei 101' },
+  Taichung: { lat: 24.1477, lon: 120.6736, label: 'Taichung skyline with the National Taichung Theater' },
+  Tainan: { lat: 22.9999, lon: 120.2270, label: 'Tainan skyline with Chihkan Tower' },
+  Kaohsiung: { lat: 22.6273, lon: 120.3014, label: 'Kaohsiung skyline with the 85 Sky Tower' },
+  Hualien: { lat: 23.9769, lon: 121.6044, label: 'Hualien: the Central Range dropping to the Pacific' },
+  World: { label: 'A generic city skyline. City art is drawn for Taiwan locations.' }
+};
 
 var MAP_PLACES = [
   { name: 'Taipei', x: 205, y: 55 }, { name: 'Taichung', x: 125, y: 190 }, { name: 'Nantou', x: 165, y: 230 },
@@ -688,13 +668,13 @@ function autoLoc(lat, lon, kind, extraSub) {
   return { name: extraSub === 'Current location' ? 'My location' : c, sub: p && np.d < 150 ? 'Near ' + p.name : (extraSub || 'Coordinates'), lat: lat, lon: lon, kind: kind };
 }
 function skylineFor(L) {
-  if (!inTW(L.lat, L.lon)) return SKYLINES.World;
+  if (!inTW(L.lat, L.lon)) return { key: 'World', label: SKYLINES.World.label };
   var best = 'Taipei', bd = Infinity;
   ['Taipei', 'Taichung', 'Tainan', 'Kaohsiung', 'Hualien'].forEach(function (n) {
     var d = km(L.lat, L.lon, SKYLINES[n].lat, SKYLINES[n].lon);
     if (d < bd) { bd = d; best = n; }
   });
-  return SKYLINES[best];
+  return { key: best, label: SKYLINES[best].label };
 }
 function project(L) { return { x: 205 + (L.lon - 121.5654) * 69, y: 55 + (25.033 - L.lat) * 137.5 }; }
 function toast(msg) {
@@ -742,11 +722,11 @@ function liveMood(wx) {
 }
 // What the sky shows now: a preview pick (Settings) wins, then live weather, else neutral.
 function skyState() {
-  if (previewOn()) return { mood: S.weather, day: !NIGHT_MOODS[S.weather], wind: 6, haze: 0 };
+  if (previewOn()) return { mood: S.weather, day: !NIGHT_MOODS[S.weather], wind: 6, haze: 0, pm: 12 };
   var wx = S.bgMode === 'live' ? liveWx() : null;
-  if (!wx) return { mood: 'neutral', day: true, wind: 0, haze: 0 };
+  if (!wx) return { mood: 'neutral', day: true, wind: 0, haze: 0, pm: 12 };
   var c = wx.current, air = liveAir(), pm = air && isNum(air.current.pm2_5) ? air.current.pm2_5 : 12;
-  return { mood: liveMood(wx), day: !!c.is_day, haze: Math.max(0, Math.min(0.6, (pm - 12) / 70)),
+  return { mood: liveMood(wx), day: !!c.is_day, pm: pm, haze: Math.max(0, Math.min(0.6, (pm - 12) / 70)),
     wind: -(c.wind_speed_10m || 0) * Math.sin((c.wind_direction_10m || 0) * Math.PI / 180) };
 }
 function applySky() {
@@ -756,35 +736,27 @@ function applySky() {
   if (window.Sky) Sky.start({ mood: s.mood, wind: s.wind, haze: s.haze, reduce: !!S.reduceMotion });
 }
 
-// ----- city silhouettes (ours), drawn over the sky at the foot of the Home hero -----
-var MTN_TINT = { 'clear-day': '#FFFFFF', 'partly-day': '#FFFFFF', 'cloudy-day': '#DDE3EC', rain: '#9AA6B8', storm: '#6B7486', fog: '#EEF1F4',
-  'clear-night': '#3A4C80', 'partly-night': '#3A4C80', 'cloudy-night': '#55607A', dawn: '#6B4E7A', dusk: '#5A3A6A', neutral: '#9FB4DA' };
+// ----- city skyline: the canvas is drawn by horizon.js after the hero HTML is in place -----
 // Share of windows that are lit: most at night and in storms, none on a clear day
 function litShare(mood, day) {
   if (mood === 'rain') return day ? 0.24 : 0.4;
   return { 'clear-night': 0.42, 'partly-night': 0.42, 'cloudy-night': 0.4, dusk: 0.34, storm: 0.38, dawn: 0.16, fog: 0.18, 'cloudy-day': 0.1 }[mood] || 0;
 }
-function seededRandom(seed) {
-  return function () { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
+// A 270° gauge for an AQI value (full scale 200), drawn in the category colour
+function aqiRing(v, color) {
+  var size = 74, st = 7, r = (size - st) / 2, c = 2 * Math.PI * r, arc = c * 0.75;
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" style="transform:rotate(135deg)" aria-hidden="true">' +
+    '<circle cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="' + st + '" stroke-linecap="round" stroke-dasharray="' + arc + ' ' + c + '"/>' +
+    '<circle cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="' + st + '" stroke-linecap="round" stroke-dasharray="' + (arc * clamp(v / 200, 0.02, 1)).toFixed(1) + ' ' + c + '"/></svg>';
 }
-function litWindows(city, share) {
-  if (!share) return '';
-  var R = seededRandom(7), w = '';
-  city.blds.forEach(function (r) {
-    for (var y = r.y + 7; y < 210; y += 9) for (var x = r.x + 5; x <= r.x + r.w - 8; x += 7) if (R() < share) w += '<rect x="' + x + '" y="' + y + '" width="3" height="4"/>';
-  });
-  return '<g fill="#FFD58A" fill-opacity="0.78">' + w + '</g>';
+function skylineHTML(city) {
+  var s = skyState();
+  return '<div class="skyline-wrap" data-city="' + city.key + '" data-pm="' + Math.round(s.pm) + '" data-lit="' + litShare(s.mood, s.day) + '" data-day="' + (s.day ? 1 : 0) +
+    '" data-mood="' + s.mood + '" data-label="' + esc(city.label) + '"></div>';
 }
-function skylineSVG(city) {
-  var s = skyState(), share = litShare(s.mood, s.day), lit = share >= 0.24;
-  var blds = city.blds.map(function (r) { return '<rect x="' + r.x + '" y="' + r.y + '" width="' + r.w + '" height="' + r.h + '" rx="2"/>'; }).join('');
-  return '<div class="skyline-wrap"><svg class="skyline" viewBox="0 0 1200 220" preserveAspectRatio="xMidYMax slice" role="img" aria-label="' + esc(city.label) + '">' +
-    '<path d="' + city.mtnFar + '" fill="' + (MTN_TINT[s.mood] || MTN_TINT.neutral) + '" fill-opacity="0.3"/>' +
-    '<path class="sil" d="' + city.mtnNear + '" fill-opacity="0.42"/>' +
-    '<g class="sil" fill-opacity="0.84">' + blds + '</g>' + litWindows(city, share) +
-    (city.landmark ? '<path class="sil" d="' + city.landmark + '" fill-opacity="0.96"/>' : '') +
-    (city.glass ? '<clipPath id="lm-clip"><rect x="' + city.glassClip[0] + '" y="' + city.glassClip[1] + '" width="' + city.glassClip[2] + '" height="' + city.glassClip[3] + '"/></clipPath><path clip-path="url(#lm-clip)" d="' + city.glass + '" fill="' + (lit ? '#FFD58A' : '#C7D6EE') + '" fill-opacity="' + (lit ? 0.62 : 0.42) + '"/>' : '') +
-    '<rect class="sil" x="0" y="214" width="1200" height="8"/></svg></div>';
+function mountSkyline(root) {
+  var el = root.querySelector('.skyline-wrap');
+  if (el && window.Horizon) Horizon.mount(el, { city: el.dataset.city, pm: +el.dataset.pm, lit: +el.dataset.lit, day: el.dataset.day === '1', label: el.dataset.label, reduce: reduced() });
 }
 
 /* ============================================================
@@ -1608,8 +1580,9 @@ var TILES = {
       var note = t.kind === 'model'
         ? niceDate(p.date) + ' · ' + cityName(t.city) + (better != null ? tx(' · ' + better + '% more accurate than “same as today”', ' · 比「和今天一樣」準 ' + better + '%') : '') + tx(' · tap for details', ' · 點一下看細節')
         : niceDate(p.date) + tx(' · CAMS forecast via Open-Meteo, not a Skyline model', ' · CAMS 預報（經 Open-Meteo），不是 Skyline 模型');
-      return '<div class="tm"><div class="aqibig"><span data-count="' + p.aqi + '">' + p.aqi + '</span><small style="color:' + p.color + '">AQI · ' + tx(shortCat(p.category), zh(shortCat(p.category))) + '</small></div>' +
-        '<div class="vals"><div><b data-count="' + p.pm25 + '" data-dec="1">' + p.pm25 + '</b>µg/m³ PM2.5 ' + trend +
+      return '<div class="tm"><div class="aqring">' + aqiRing(p.aqi, p.color) + '<div class="aqibig"><span data-count="' + p.aqi + '">' + p.aqi + '</span><small>AQI</small></div></div>' +
+        '<div class="vals"><div class="cat"><span style="color:' + p.color + '">' + tx(shortCat(p.category), zh(shortCat(p.category))) + '</span> ' + trend + '</div>' +
+        '<div><b data-count="' + p.pm25 + '" data-dec="1">' + p.pm25 + '</b>µg/m³ PM2.5' +
         (p.pm25_range ? '<br><span class="rng">' + tx('likely ', '可能範圍 ') + p.pm25_range[0] + '–' + p.pm25_range[1] + '</span>' : '') + '</div>' +
         '<div><b data-count="' + p.pm10 + '" data-dec="1">' + p.pm10 + '</b>µg/m³ PM10</div></div></div>' +
         '<div class="note dim">' + note + '</div>';
@@ -2077,7 +2050,7 @@ function heroHTML(first) {
     '<div class="cond">' + cond + '</div>' +
     '<div class="hl"' + (hl ? ' aria-label="Today: high ' + fmtT(hl.hi) + ', low ' + fmtT(hl.lo) + '"><span>H:' + fmtT(hl.hi) + '</span><span>L:' + fmtT(hl.lo) + '</span>' : '>&nbsp;') + '</div>' +
     pill + '<div class="chips">' + chips + '</div>' +
-    (S.skyline === 'city' ? skylineSVG(skylineFor(L)) : '');
+    (S.skyline === 'city' ? skylineHTML(skylineFor(L)) : '');
 }
 function footHTML() {
   var pm = pmData(), m = modelMetrics();
@@ -2100,6 +2073,7 @@ function homeUpdate(first) {
   if (hero._h !== h) {
     var anim = first || (hero._na && wxNow().live);
     hero.innerHTML = anim ? heroHTML(true) : h; hero._h = h; hero._na = !wxNow().live;
+    mountSkyline(hero);
     if (anim) countUp(hero);
   }
   if (first) renderGrid(true); else syncGrid();
