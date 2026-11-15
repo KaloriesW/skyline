@@ -1653,7 +1653,7 @@ function catalog(L) {
   return all.filter(function (t) { return !off[t.id]; });
 }
 function activeSets() {
-  return DATASETS.filter(function (d) { return !((d.id === 'pm25' && !S.sources.pm25) || (d.id === 'landslide' && !S.sources.landslide) || (d.id === 'typhoon' && !S.sources.typhoon)); });
+  return DATASETS.filter(function (d) { return !((d.id === 'landslide' && !S.sources.landslide) || (d.id === 'typhoon' && !S.sources.typhoon)); });
 }
 function currentOrder(cat) {
   var ids = cat.map(function (t) { return t.id; });
@@ -1661,65 +1661,11 @@ function currentOrder(cat) {
   ids.forEach(function (id) { if (o.indexOf(id) < 0) o.push(id); });
   return o;
 }
-
-/* ============================================================
-   Maps
-   ============================================================ */
-var SAT_BASE =
-  '<rect x="-200" y="-20" width="700" height="540" fill="url(#sk-ocean)"/>' +
-  '<path d="' + ISL + '" fill="none" stroke="#2E6E86" stroke-width="16" stroke-opacity="0.6" filter="url(#sk-b8)"/>' +
-  '<path d="' + ISL + '" fill="#41693A"/>' +
-  '<g clip-path="url(#sk-isl)">' +
-    '<rect x="60" y="0" width="220" height="500" fill="#000" filter="url(#sk-tex)"/>' +
-    '<path d="M175,60 L155,100 L130,150 L110,200 L95,250 L90,300 L100,350 L118,395 L140,440" fill="none" stroke="#8E9A5C" stroke-width="30" stroke-opacity="0.75" filter="url(#sk-b8)"/>' +
-    '<path d="M206,70 L198,110 L192,150 L184,195 L176,240 L170,285 L166,330 L160,380 L154,430" fill="none" stroke="#24401F" stroke-width="50" filter="url(#sk-b8)"/>' +
-    '<path d="M206,70 L198,110 L192,150 L184,195 L176,240 L170,285 L166,330 L160,380 L154,430" fill="none" stroke="#7D7862" stroke-width="7" stroke-opacity="0.8" filter="url(#sk-b3)"/>' +
-    '<circle cx="205" cy="55" r="11" fill="#A6A49C" fill-opacity="0.8" filter="url(#sk-b3)"/>' +
-    '<circle cx="125" cy="190" r="9" fill="#A6A49C" fill-opacity="0.75" filter="url(#sk-b3)"/>' +
-    '<circle cx="112" cy="340" r="7" fill="#A6A49C" fill-opacity="0.7" filter="url(#sk-b3)"/>' +
-    '<circle cx="118" cy="385" r="10" fill="#A6A49C" fill-opacity="0.8" filter="url(#sk-b3)"/>' +
-  '</g>' +
-  '<ellipse cx="260" cy="150" rx="40" ry="12" fill="#fff" fill-opacity="0.22" filter="url(#sk-b8)"/>' +
-  '<ellipse cx="60" cy="260" rx="34" ry="10" fill="#fff" fill-opacity="0.18" filter="url(#sk-b8)"/>';
-var WINDY_BG = '<rect x="-200" y="-20" width="700" height="540" fill="url(#sk-windy)"/>';
-var WINDY_LINES =
-  '<path d="' + ISL + '" fill="none" stroke="#fff" stroke-opacity="0.85" stroke-width="1.4"/>' +
-  '<g fill="none" stroke="#fff" stroke-opacity="0.5" stroke-width="1.1" stroke-linecap="round" stroke-dasharray="10 14">' +
-  ['M-10,40 C60,20 140,60 220,30 S300,10 320,30', 'M-10,120 C60,100 130,140 210,110 S300,90 320,110', 'M-10,200 C70,180 140,220 220,190 S300,170 320,190',
-   'M-10,280 C60,260 150,300 230,270 S300,250 320,270', 'M-10,360 C70,340 150,380 230,350 S300,330 320,350', 'M-10,440 C60,420 150,460 230,430 S300,410 320,430']
-    .map(function (d) { return '<path class="sk-flow" d="' + d + '"/>'; }).join('') + '</g>';
-
-function lvlAt(d, i, t) { if (d.lv && d.lv[t]) return d.lv[t][i]; return Math.max(0, Math.min(3, d.base[i] + Math.round(d.trend[i] * (t - NOW) / 4))); }
+// Which base map a dataset opens on
 function baseFor(d) {
   if (S.predBase[d.id]) return S.predBase[d.id];
   if (S.mapBase === 'sat' || S.mapBase === 'windy') return S.mapBase;
   return d.group === 'By Skyline' ? 'sat' : 'windy';
-}
-function mapSVG(d, t, base, o) {
-  o = o || {};
-  var isSat = base === 'sat', P = pal();
-  var s = '<svg viewBox="0 0 300 500" preserveAspectRatio="xMidYMid ' + (o.slice ? 'slice' : 'meet') + '" role="img" aria-label="' + esc(o.label || 'Map of Taiwan') + '">';
-  s += isSat ? SAT_BASE : WINDY_BG;
-  if (d) MAP_PLACES.forEach(function (p, i) {
-    var l = lvlAt(d, i, t);
-    s += '<circle cx="' + p.x + '" cy="' + p.y + '" r="' + ((o.thumb ? 18 : 22) + l * (o.thumb ? 10 : 9)) + '" fill="' + P[l] + '" fill-opacity="' + (isSat ? 0.62 : 0.8) + '" filter="url(#sk-b16)"/>';
-  });
-  if (!isSat) s += WINDY_LINES;
-  if (d && d.id === 'typhoon') {
-    var k = t / 11, sx = Math.round(300 - k * 100), sy = Math.round(470 - k * 320), sr = Math.round(18 + k * 14);
-    s += '<path d="M300,470 Q270,420 262,360 T236,250 T200,150" fill="none" stroke="#FFC24B" stroke-width="2.5" stroke-dasharray="6 6"/>' +
-      '<circle cx="' + sx + '" cy="' + sy + '" r="' + sr + '" fill="#EF4444" fill-opacity="0.25" stroke="#fff" stroke-width="2"/><circle cx="' + sx + '" cy="' + sy + '" r="5" fill="#fff"/>';
-  }
-  if (o.labels) MAP_PLACES.forEach(function (p) {
-    s += '<circle cx="' + p.x + '" cy="' + p.y + '" r="3.5" fill="#fff" stroke="#05172E" stroke-width="1"/>' +
-      '<text x="' + (p.x + 8) + '" y="' + p.y + '" fill="#fff" font-size="11" font-weight="600" font-family="Inter,sans-serif" dominant-baseline="middle" stroke="#05172E" stroke-width="2.5" paint-order="stroke">' + p.name + '</text>';
-  });
-  if (o.you && inTW(S.loc.lat, S.loc.lon)) {
-    var y = project(S.loc);
-    s += '<circle class="sk-pulse" cx="' + y.x + '" cy="' + y.y + '" r="6" fill="none" stroke="var(--accent)" stroke-width="2"/>' +
-      '<circle cx="' + y.x + '" cy="' + y.y + '" r="6" fill="var(--accent)" stroke="#fff" stroke-width="2"/>';
-  }
-  return s + '</svg>';
 }
 
 /* ============================================================
