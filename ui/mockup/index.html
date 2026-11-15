@@ -1803,12 +1803,20 @@ function loadLeaflet() {
   });
   return leafletReady;
 }
-function windyURL(layer, zoom) {
+// Slider steps as hours from now (same order as TIMES).
+var TIME_HOURS = [-72, -48, -24, -12, 0, 6, 12, 24, 48, 72, 120, 168];
+// Forecast offset the Windy embed can open at. Its script (embed2.js) reads `calendar` and
+// `forecast` for type=map: calendar=12|24, or calendar=in + forecast=<hours>, sets its timeline to
+// now + that many hours, clamped to its own range (today's midnight … end of the free forecast).
+// It cannot open in the past, so past steps keep the map at "now".
+function windyHours(t) { var h = TIME_HOURS[t] || 0; return h > 0 ? h : 0; }
+function windyURL(layer, zoom, hours) {
   var L = S.loc, tw = inTW(L.lat, L.lon);
   var c = tw ? [L.lat, L.lon] : [23.75, 120.95];
   var p = { lat: c[0].toFixed(3), lon: c[1].toFixed(3), detailLat: c[0].toFixed(3), detailLon: c[1].toFixed(3), zoom: String(zoom || 7),
     level: 'surface', overlay: layer[0], product: layer[1], menu: '', message: 'true', marker: tw ? 'true' : '', calendar: 'now',
     pressure: '', type: 'map', location: 'coordinates', detail: '', metricWind: 'km/h', metricTemp: S.units === 'F' ? '°F' : '°C', radarRange: '-1' };
+  if (hours > 0) { p.calendar = 'in'; p.forecast = String(hours); }
   return 'https://embed.windy.com/embed2.html?' + new URLSearchParams(p).toString();
 }
 function windyFrame(title, src) {
@@ -1817,15 +1825,28 @@ function windyFrame(title, src) {
 function destroyLive() {
   // stop any zoom animation first; removing a map mid-animation throws inside Leaflet
   if (live && live.map) { try { live.map.stop(); live.map.off(); live.map.remove(); } catch (e) {} }
+  clearTimeout(windyTimer);
   live = null;
 }
+var windyTimer = 0;
 
 function renderLive(d, t, base) {
   var host = $('#pm-live'); if (!host) return;
   if (base === 'windy') {
-    var src = windyURL(WINDY_LAYER[d.id] || ['wind', 'ecmwf'], 7);
-    if (!live || live.mode !== 'windy') { destroyLive(); host.innerHTML = windyFrame('Windy map: ' + d.title, src); live = { mode: 'windy', src: src }; }
-    else if (live.src !== src) { host.querySelector('iframe').src = src; live.src = src; }
+    var src = windyURL(WINDY_LAYER[d.id] || ['wind', 'ecmwf'], 7, windyHours(t));
+    if (!live || live.mode !== 'windy') { destroyLive(); host.innerHTML = windyFrame('Windy map: ' + d.title, src); live = { mode: 'windy', src: src, shown: src }; }
+    else if (live.src !== src) {
+      // Debounced: wait until the slider settles, then swap in a fresh frame (replacing the
+      // element, not its src, keeps the browser's Back button out of the iframe's history).
+      live.src = src;
+      var token = live, title = 'Windy map: ' + d.title;
+      clearTimeout(windyTimer);
+      windyTimer = setTimeout(function () {
+        var h2 = $('#pm-live');
+        if (!h2 || live !== token || token.shown === token.src) return;
+        h2.innerHTML = windyFrame(title, token.src); token.shown = token.src;
+      }, 700);
+    }
     return;
   }
   if (live && live.mode === 'sat') { if (live.map) drawSat(d, t); return; }
@@ -1936,8 +1957,11 @@ function updatePred() {
   var mode = t < NOW ? ['Observed (past)', '#5B6F99', '#fff'] : t === NOW ? ['Now', '#fff', '#0B1B3F'] : ['Prediction', 'var(--accent)', 'var(--accent-ink)'];
   renderLive(d, t, base);
   $('#pm-note').textContent = base === 'windy'
-    ? 'Live Windy map (' + (WINDY_LAYER[d.id] || ['wind'])[0] + ' layer). Drag and zoom it; Windy’s own timeline at the bottom plays the forecast. The slider sets the region values on the right.'
-    : 'Satellite imagery from Esri. Drag and zoom it; the colored overlay and labels follow the slider.';
+    ? 'Live Windy map (' + (WINDY_LAYER[d.id] || ['wind'])[0] + ' layer). ' + (
+        t > NOW ? 'The slider opened it at ' + TIMES[t] + ' (as far as Windy’s free forecast reaches); Windy’s own timeline at the bottom can move it from there. The region values on the right follow the slider.'
+        : t < NOW ? 'Windy’s embed can’t open in the past, so the map stays at now. At ' + TIMES[t] + ' the slider only changes the region values on the right.'
+        : 'Drag and zoom it. Move the slider into the forecast to reopen Windy at that time; the region values on the right follow the slider.')
+    :'Satellite imagery from Esri. Drag and zoom it; the colored overlay and labels follow the slider.';
   var m = $('#pm-mode'); m.textContent = mode[0]; m.style.background = mode[1]; m.style.color = mode[2];
   $('#pm-time').textContent = TIMES[t];
   $('#pm-k').textContent = mode[0] + ' · ' + TIMES[t];
