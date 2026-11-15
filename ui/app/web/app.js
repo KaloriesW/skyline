@@ -1075,16 +1075,18 @@ function skylineSVG(city, b) {
 /* ============================================================
    Live data
    - Open-Meteo (no key) gives current conditions, the hourly and 7-day forecast, air
-     quality (CAMS) and waves for S.loc, plus hourly values at the seven map cities
-     for Predictions.
+     quality (CAMS), waves (Marine) and the ECMWF seasonal outlook for S.loc, plus hourly
+     values at the seven map cities for Predictions.
    - The team PM2.5 model (/api/predict) and the typhoon feed (/api/typhoon) are on the
-     same origin, so they are missing when the page runs off the box.
-   Nothing here blocks rendering: screens draw sample values first and redraw when a feed
-   arrives. Whatever has no live feed is labelled "Sample". Only coordinates are sent out.
+     same origin. /api/health says which of them this server has.
+   Nothing is invented. Until a feed arrives screens show a loading placeholder; when a
+   refresh fails they keep the last good data and say how old it is, or show "Unavailable"
+   with Retry; anything with no source says "Not connected yet". Only coordinates are sent out.
    ============================================================ */
-var LIVE_TTL = 10 * 60 * 1000, FEEDS = {}, liveTimer = 0;
+var LIVE_TTL = 10 * 60 * 1000, RETRY_GAP = 2 * 60 * 1000, FEEDS = {}, liveTimer = 0;
 var OM_WX = 'https://api.open-meteo.com/v1/forecast', OM_AIR = 'https://air-quality-api.open-meteo.com/v1/air-quality', OM_SEA = 'https://marine-api.open-meteo.com/v1/marine';
-var OM_LIVE = 'Open-Meteo · live';
+var OM_SEASON = 'https://seasonal-api.open-meteo.com/v1/seasonal';
+var SAME_ORIGIN = /^https?:$/.test(location.protocol);
 var STEP_H = [-72, -48, -24, -12, 0, 6, 12, 24, 48, 72, 120, 168]; // hours from now for each TIMES step
 var COMPASS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
 var WMO_TEXT = { 0: 'Clear', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast', 45: 'Fog', 48: 'Freezing fog', 51: 'Light drizzle', 53: 'Drizzle', 55: 'Heavy drizzle',
@@ -1095,29 +1097,118 @@ function getJSON(url) {
   var ac = window.AbortController ? new AbortController() : null;
   var tm = setTimeout(function () { if (ac) ac.abort(); }, 15000);
   return fetch(url, ac ? { signal: ac.signal } : {}).then(function (r) {
-    if (!r.ok) throw new Error('HTTP ' + r.status);
+    if (!r.ok) { var e = new Error('HTTP ' + r.status); e.status = r.status; throw e; }
     return r.json();
   }).then(function (d) { clearTimeout(tm); return d; }, function (e) { clearTimeout(tm); throw e; });
 }
-// One cached feed per name. Fresh for LIVE_TTL, kept (and still shown) for an hour if refreshes fail.
-function feed(name, url, ok) {
-  var f = FEEDS[name] || (FEEDS[name] = { t: 0, tried: 0, d: null, busy: false }), now = Date.now();
-  if (f.busy || now - f.t < LIVE_TTL || now - f.tried < 2 * 60 * 1000) return;
+// One cached feed per name. Fresh for its ttl (LIVE_TTL unless given). A failed refresh keeps the
+// last good data (err is set, so screens can say how old it is) and is retried after RETRY_GAP.
+function feed(name, url, ok, ttl) {
+  var f = FEEDS[name] || (FEEDS[name] = { t: 0, tried: 0, d: null, busy: false, err: false, code: 0 }), now = Date.now();
+  if (f.busy || now - f.t < (ttl || LIVE_TTL) || now - f.tried < RETRY_GAP) return;
   f.busy = true; f.tried = now;
   getJSON(url).then(function (d) {
     f.busy = false;
-    if (ok(d)) { f.d = d; f.t = Date.now(); }
+    if (ok(d)) { f.d = d; f.t = Date.now(); f.err = false; f.code = 200; }
+    else { f.err = true; f.code = 0; }
     liveArrived();
-  }, function () { f.busy = false; liveArrived(); });
+  }, function (e) { f.busy = false; f.err = true; f.code = (e && e.status) || 0; liveArrived(); });
 }
-function feedData(name) { var f = FEEDS[name]; return f && f.d && Date.now() - f.t < 6 * LIVE_TTL ? f.d : null; }
+// The last good data of a feed, however old (feedState says whether it is current)
+function feedData(name) { var f = FEEDS[name]; return f && f.d ? f.d : null; }
+// loading | ok | stale (old data, the refresh failed) | error (no data, the request failed) | gone (no such endpoint)
+function feedState(name) {
+  var f = FEEDS[name];
+  if (!f) return 'loading';
+  if (f.d) return f.err ? 'stale' : 'ok';
+  if (f.busy || !f.tried) return 'loading';
+  return f.code === 404 || f.code === 405 || f.code === 501 || f.code === 503 ? 'gone' : 'error';
+}
+function fmtAge(t) {
+  var m = Math.max(1, Math.round((Date.now() - t) / 60000));
+  return m < 60 ? m + ' min ago' : m < 2880 ? Math.round(m / 60) + ' h ago' : Math.round(m / 1440) + ' days ago';
+}
+// Suffix for a source name: " · live" for current data, the age of the data when a refresh failed
+function liveTag(name) { var f = FEEDS[name]; return f && f.d && f.err ? ' · ' + fmtAge(f.t) : ' · live'; }
+function offline() { return typeof navigator !== 'undefined' && navigator.onLine === false; }
 function liveOn() { return S.sources.openMeteo !== false; }
 function ptKey(L) { return L.lat.toFixed(3) + ',' + L.lon.toFixed(3); }
 function liveWx() { return liveOn() ? feedData('wx@' + ptKey(S.loc)) : null; }
 function liveAir() { return liveOn() ? feedData('air@' + ptKey(S.loc)) : null; }
-function liveSea() { return liveOn() ? feedData('sea@' + ptKey(S.loc)) : null; }
-function liveLoading() { var f = FEEDS['wx@' + ptKey(S.loc)]; return liveOn() && !!f && f.busy; }
+function omState(prefix) { return liveOn() ? feedState(prefix + '@' + ptKey(S.loc)) : 'off'; }
+function wxState() { return omState('wx'); }
 function isNum(v) { return typeof v === 'number' && isFinite(v); }
+
+// ----- server features -----
+// /api/health lists what this server has, so a missing feature shows "Not connected yet" at once
+// instead of after a failed request. When /api/health itself is missing (a plain static host),
+// features stays null and each endpoint is simply tried.
+var HEALTH = { state: 'checking', features: null, promise: null };   // state: checking | ok | missing
+function loadHealth() {
+  if (HEALTH.promise) return HEALTH.promise;
+  if (!SAME_ORIGIN) { HEALTH.state = 'missing'; return (HEALTH.promise = Promise.resolve(HEALTH)); }
+  var ctrl = window.AbortController ? new AbortController() : null, timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 4000);
+  HEALTH.promise = fetch('/api/health', { signal: ctrl ? ctrl.signal : undefined, cache: 'no-store', headers: { Accept: 'application/json' } })
+    .then(function (r) { if (!r.ok) throw new Error('status ' + r.status); return r.json(); })
+    .then(function (j) { if (j && j.features && typeof j.features === 'object') { HEALTH.features = j.features; HEALTH.state = 'ok'; } })
+    .catch(function () {})
+    .then(function () { clearTimeout(timer); if (HEALTH.state === 'checking') HEALTH.state = 'missing'; return HEALTH; });
+  return HEALTH.promise;
+}
+// true or false when the server said so, null when it did not
+function feat(name) { return HEALTH.features && typeof HEALTH.features[name] === 'boolean' ? HEALTH.features[name] : null; }
+// State of a same-origin feed: off (switched off in Settings) | gone (not on this server) | loading | ok | stale | error
+function apiState(feature, feedName) {
+  if (S.sources[feature] === false) return 'off';
+  if (!SAME_ORIGIN || feat(feature) === false) return 'gone';
+  if (HEALTH.state === 'checking') return 'loading';
+  return feedState(feedName);
+}
+function tyState() { return apiState('typhoon', 'ty'); }
+function pmData() { return S.sources.pm25 && feat('pm25') !== false ? feedData('pm') : null; }
+
+// ----- waves -----
+// Nearest COAST point to a place: [name, lat, lon, km away]
+function nearestCoast(lat, lon) {
+  var best = null, bd = Infinity;
+  COAST.forEach(function (c) { var d = km(lat, lon, c[1], c[2]); if (d < bd) { bd = d; best = c; } });
+  return [best[0], best[1], best[2], bd];
+}
+function seaURL(lat, lon, rest) { return OM_SEA + '?latitude=' + lat + '&longitude=' + lon + '&timezone=auto&cell_selection=sea' + rest; }
+function isSea(d) { return !!(d && d.current && 'wave_height' in d.current); }
+// Waves for S.loc: the sea point Open-Meteo finds at the location, else (in Taiwan) the nearest coast point.
+function liveSea() {
+  if (!liveOn()) return null;
+  var L = S.loc, d = feedData('sea@' + ptKey(L));
+  if (d && isNum(d.current.wave_height)) return { cur: d.current, coast: null, feed: 'sea@' + ptKey(L) };
+  if (!d || !inTW(L.lat, L.lon)) return null;
+  var cp = nearestCoast(L.lat, L.lon), d2 = feedData('coast@' + cp[0]);
+  return d2 && isNum(d2.current.wave_height) ? { cur: d2.current, coast: cp, feed: 'coast@' + cp[0] } : null;
+}
+// As feedState, plus 'none': the wave model has no sea point for this location
+function seaState() {
+  if (!liveOn()) return 'off';
+  var L = S.loc, st = feedState('sea@' + ptKey(L)), d = feedData('sea@' + ptKey(L));
+  if (!d || isNum(d.current.wave_height)) return st;
+  return inTW(L.lat, L.lon) ? feedState('coast@' + nearestCoast(L.lat, L.lon)[0]) : 'none';
+}
+// The coast point each map city reads waves from, or null when the coast is more than 50 km away (Nantou)
+function regCoast() {
+  return MAP_PLACES.map(function (p) { var ll = PLACE_LL[p.name], c = nearestCoast(ll[0], ll[1]); return c[3] <= 50 ? c : null; });
+}
+
+// ----- seasonal outlook -----
+function isSeason(r) { return !!(r && r.monthly && Array.isArray(r.monthly.time) && Array.isArray(r.monthly.temperature_2m_anomaly)); }
+function liveSeason() { return liveOn() ? feedData('season@' + ptKey(S.loc)) : null; }
+// Index of the first whole month ahead that has a value, or -1
+function seasonPick(m) {
+  var n = new Date(), cur = n.getFullYear() + '-' + ('0' + (n.getMonth() + 1)).slice(-2) + '-01';
+  for (var i = 0; i < m.time.length; i++) if (String(m.time[i]) > cur && isNum(m.temperature_2m_anomaly[i])) return i;
+  return -1;
+}
+function monthName(iso) { return new Date(String(iso).slice(0, 10) + 'T12:00:00').toLocaleDateString('en-US', { month: 'long' }); }
+// A temperature difference (given in °C) in the chosen unit, signed: "+1.3°"
+function fmtAnom(k) { var v = S.units === 'F' ? k * 1.8 : k; return (v > 0.04 ? '+' : v < -0.04 ? '−' : '') + Math.abs(v).toFixed(1) + '°'; }
 
 function loadLive(page) {
   if (liveOn()) {
@@ -1129,28 +1220,47 @@ function loadLive(page) {
       function (d) { return !!(d && d.current && isNum(d.current.temperature_2m) && d.hourly && Array.isArray(d.hourly.time) && d.daily && Array.isArray(d.daily.time) && d.daily.time.length); });
     feed('air@' + k, OM_AIR + q + '&forecast_hours=24&current=pm2_5,pm10,us_aqi&hourly=pm2_5',
       function (d) { return !!(d && d.current && isNum(d.current.pm2_5)); });
-    feed('sea@' + k, OM_SEA + q + '&current=wave_height,wave_direction,swell_wave_height',
-      function (d) { return !!(d && d.current && isNum(d.current.wave_height)); });
+    var seaVars = '&current=wave_height,wave_direction,swell_wave_height';
+    feed('sea@' + k, seaURL(L.lat.toFixed(3), L.lon.toFixed(3), seaVars), isSea);
+    // No sea point at the location itself (inland): read the nearest point on Taiwan's coast instead
+    var sea = feedData('sea@' + k);
+    if (sea && !isNum(sea.current.wave_height) && inTW(L.lat, L.lon)) { var cp = nearestCoast(L.lat, L.lon); feed('coast@' + cp[0], seaURL(cp[1], cp[2], seaVars), isSea); }
+    feed('season@' + k, OM_SEASON + '?latitude=' + L.lat.toFixed(3) + '&longitude=' + L.lon.toFixed(3) + '&monthly=temperature_2m_anomaly,precipitation_anomaly', isSeason, 6 * 3600000);
     if (page === 'predictions' || page === 'ask') {
       var lat = MAP_PLACES.map(function (p) { return PLACE_LL[p.name][0]; }).join(','), lon = MAP_PLACES.map(function (p) { return PLACE_LL[p.name][1]; }).join(',');
       var rq = '?latitude=' + lat + '&longitude=' + lon + '&timezone=auto&past_days=3', isReg = function (d) { return Array.isArray(d) && d.length === MAP_PLACES.length && !!d[0].hourly && Array.isArray(d[0].hourly.time); };
       feed('reg', OM_WX + rq + '&forecast_days=8&hourly=precipitation,cape,wind_gusts_10m', isReg);
       feed('regAir', OM_AIR + rq + '&forecast_days=7&hourly=pm2_5', isReg);
+      var cs = regCoast().filter(function (c) { return c; });
+      feed('regSea', seaURL(cs.map(function (c) { return c[1]; }).join(','), cs.map(function (c) { return c[2]; }).join(','), '&past_days=3&forecast_days=8&hourly=wave_height'),
+        function (d) { return Array.isArray(d) && d.length === cs.length && !!d[0].hourly && Array.isArray(d[0].hourly.wave_height); });
+      feed('regSeason', OM_SEASON + '?latitude=' + lat + '&longitude=' + lon + '&monthly=temperature_2m_anomaly',
+        function (d) { return Array.isArray(d) && d.length === MAP_PLACES.length && isSeason(d[0]); }, 6 * 3600000);
     }
   }
-  if (S.sources.pm25) feed('pm', '/api/predict', function (d) { return !!(d && isNum(d.pm25)); });
-  if (S.sources.typhoon) feed('ty', '/api/typhoon', function (d) { return !!(d && typeof d.active === 'boolean'); });
+  // Same-origin feeds wait for /api/health, then skip whatever the server says it does not have
+  if (HEALTH.state === 'checking') { loadHealth().then(function () { loadLive(route().page); liveArrived(); }); return; }
+  if (!SAME_ORIGIN) return;
+  if (S.sources.pm25 && feat('pm25') !== false) feed('pm', '/api/predict', function (d) { return !!(d && isNum(d.pm25)); });
+  if (S.sources.typhoon && feat('typhoon') !== false) feed('ty', '/api/typhoon', function (d) { return !!(d && typeof d.active === 'boolean'); });
 }
 // A feed arrived (or failed): redraw once things settle, without interrupting a drag or an open picker.
 function liveArrived() {
   clearTimeout(liveTimer);
   liveTimer = setTimeout(function () {
     var ae = document.activeElement, r = route();
-    if (dragId || (ae && ae.id === 'demo-weather' && r.page === 'home')) { liveArrived(); return; }
+    if (dragId || (ae && ae.id === 'demo-weather')) { liveArrived(); return; }
+    loadLive(r.page);   // starts any follow-up request (the coast point for an inland location)
     var ch = applyLiveSets();
     if (r.page === 'home') rerender();
     else if (r.page === 'predictions' && (r.sub ? ch[r.sub] : Object.keys(ch).length)) rerender();
   }, 250);
+}
+// Retry now: forget the back-off on every failed feed and ask again.
+function retryLive() {
+  Object.keys(FEEDS).forEach(function (k) { var f = FEEDS[k]; if (f.err && !f.busy) f.tried = 0; });
+  loadLive(route().page);
+  rerender();
 }
 
 // ----- current conditions -----
