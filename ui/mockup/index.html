@@ -245,6 +245,24 @@ body[data-page=ask], body[data-page=settings]{background:var(--light-bg);color:v
 .suggest button:hover{border-color:#1E5BC6}
 .ask-form{position:sticky;bottom:16px;max-width:860px;display:flex;gap:8px;padding:6px;border-radius:18px;background:#fff;box-shadow:0 4px 20px rgba(11,27,63,.12)}
 .ask-form input{flex:1;min-width:0;min-height:48px;padding:0 12px;border:0;outline:none;background:transparent;color:#0B1B3F;font-size:16px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field .lbl{font-size:14px;font-weight:600}
+.field .lbl small{font-weight:400;color:var(--light-muted)}
+.field input[type=text],.field input[type=url],.field input[type=password]{min-height:44px;padding:0 12px;border-radius:12px;border:1px solid #C5D2EC;background:#fff;color:#0B1B3F;font-size:15px;width:100%}
+.row-in{display:flex;gap:8px}
+.row-in input{flex:1;min-width:0}
+.chips-row{display:flex;flex-wrap:wrap;gap:6px}
+.chip-btn{min-height:36px;padding:0 12px;border-radius:999px;border:1px solid #C5D2EC;background:#fff;color:#0B1B3F;font-size:13px;font-weight:600}
+.chip-btn[aria-pressed=true]{background:#0B1B3F;color:#fff;border-color:#0B1B3F}
+.ai-status:empty{display:none}
+.ai-status{padding:10px 12px;border-radius:10px;background:#EEF3FC;color:#0B1B3F}
+.code{position:relative}
+.code pre{margin:0;padding:12px 14px;padding-right:84px;border-radius:12px;background:#0B1B3F;color:#E3EAF8;font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-all}
+.code .light-btn{position:absolute;right:8px;top:8px;min-height:32px;padding:0 10px;font-size:13px}
+.msg .err{color:#B42318}
+.msg .thinking{color:var(--light-muted);font-style:italic}
+.msg code{font:13px ui-monospace,Menlo,monospace;background:#EEF3FC;padding:1px 5px;border-radius:5px}
+.ai-using{margin-top:2px;font-size:14px}
 .ask-form button{min-height:48px;padding:0 20px;border-radius:12px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:700}
 .settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
 .set-row{display:flex;justify-content:space-between;align-items:center;gap:16px;min-height:52px;border-top:1px solid var(--light-line);font-size:15px}
@@ -1055,7 +1073,8 @@ var DEFAULTS = {
   accent: '#FFC24B', risk: 'default', bgMode: 'live', tiles: 'glass', fonts: 'default', radius: 24, skyline: 'city', mapBase: 'auto',
   reduceMotion: false, units: 'C', lang: 'en',
   sources: { cwa: true, windyPoint: true, windyMap: true, pm25: true, landslide: true, typhoon: true },
-  recents: [], predBase: {}, predT: NOW
+  recents: [], predBase: {}, predT: NOW,
+  ai: { provider: 'demo', oaBase: 'https://openrouter.ai/api/v1', oaModel: '', claudeModel: 'claude-opus-5-5', remember: false }
 };
 var THEME_KEYS = ['accent', 'risk', 'bgMode', 'tiles', 'fonts', 'radius', 'skyline', 'mapBase'];
 function clone(o) { return JSON.parse(JSON.stringify(o)); }
@@ -1065,6 +1084,7 @@ try {
   if (saved && typeof saved === 'object') {
     for (var k in saved) if (k in DEFAULTS) S[k] = saved[k];
     S.sources = Object.assign(clone(DEFAULTS.sources), saved.sources || {});
+    S.ai = Object.assign(clone(DEFAULTS.ai), saved.ai || {});
   }
 } catch (e) { /* storage unavailable: run with defaults */ }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
@@ -1789,6 +1809,10 @@ function seedChat() {
 }
 function msgHTML(m) {
   if (m.me) return '<div class="msg me">' + esc(m.text) + '</div>';
+  if (m.llm) return '<div class="msg ai' + (m.live ? ' live' : '') + '">' +
+    (m.error ? '<p class="err">' + esc(m.error) + ' <a class="link" href="#settings">Check settings</a></p>'
+             : '<p class="body">' + (m.plain ? mdLite(m.plain) : (m.live ? '<span class="thinking">Thinking…</span>' : '')) + '</p>') +
+    '<div class="srcs">' + m.src.map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('') + '</div></div>';
   if (m.typing) return '<div class="msg ai typing">Checking the nearest sources…</div>';
   return '<div class="msg ai"><p>' + m.text + '</p>' + (m.bars ? bars(m.bars[0], m.bars[1]) : '') +
     '<div class="srcs">' + m.src.map(function (s) { return s.charAt(0) === '★' ? '<span class="own">' + esc(s.slice(1)) + '</span>' : '<span>' + esc(s) + '</span>'; }).join('') + '</div></div>';
@@ -1797,13 +1821,20 @@ function askView() {
   if (!chat) chat = seedChat();
   var sugg = ['PM2.5 tonight?', 'Typhoon outlook', 'Will it storm this afternoon?', 'Do I need an umbrella?', 'Landslide risk on Highway 8'];
   return '<div class="page light"><header><div class="eyebrow">RAG + MCP over our data</div><h1>Ask Skyline</h1>' +
-    '<p class="lede">Answers are grounded in CWA stations, Windy and the team’s PM2.5 and landslide models, for ' + esc(S.loc.name) + '. In this mockup the answers are canned.</p></header>' +
+    '<p class="lede">Answers are grounded in CWA stations, Windy and the team’s PM2.5 and landslide models, for ' + esc(S.loc.name) + '.</p>' +
+    '<p class="lede ai-using">Answering with: <strong>' + esc(aiLabel()) + '</strong> · <a class="link" href="#settings">Change</a></p></header>' +
     '<div class="chat" id="chat" aria-live="polite">' + chat.map(msgHTML).join('') + '</div>' +
     '<div class="suggest">' + sugg.map(function (s) { return '<button type="button" data-action="ask" data-q="' + esc(s) + '">' + esc(s) + '</button>'; }).join('') + '</div>' +
-    '<form class="ask-form" id="ask-form"><label for="ask-input" class="sr-only">Ask a question</label><input id="ask-input" type="text" placeholder="Ask about Taiwan weather…" autocomplete="off"><button type="submit">Ask</button></form></div>';
+    '<form class="ask-form" id="ask-form"><label for="ask-input" class="sr-only">Ask a question</label><input id="ask-input" type="text" placeholder="Ask about Taiwan weather…" autocomplete="off"><button type="submit" id="ask-btn">' + (aiAbort ? 'Stop' : 'Ask') + '</button></form></div>';
 }
 function ask(q) {
   q = q.trim(); if (!q) return;
+  if (aiAbort) return;
+  if (S.ai.provider !== 'demo') {
+    var btn = $('#ask-btn'); if (btn) btn.textContent = 'Stop';
+    llmAsk(q).then(function () { var b2 = $('#ask-btn'); if (b2) b2.textContent = 'Ask'; });
+    return;
+  }
   chat.push({ me: true, text: q }, { typing: true });
   renderChat();
   setTimeout(function () {
@@ -1817,7 +1848,254 @@ function renderChat() {
   var last = c.lastElementChild; if (last) last.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 
+/* ============================================================
+   Bring-your-own AI for Ask Skyline.
+   - Demo: canned answers (no network).
+   - OpenAI-compatible: any /v1/chat/completions server (OpenAI, OpenRouter,
+     Ollama, LM Studio, vLLM...), streamed with fetch + SSE.
+   - Claude: the official Anthropic TypeScript SDK, loaded from a CDN on first use.
+   Keys live only in this browser (memory, or localStorage if "Remember" is on)
+   and are sent only to the provider the user picked.
+   ============================================================ */
+var AI_KEYS_STORE = 'skyline-ai-keys-v1';
+var AI_KEYS = { openai: '', claude: '' };
+try { var savedKeys = JSON.parse(localStorage.getItem(AI_KEYS_STORE) || 'null'); if (savedKeys) { AI_KEYS.openai = savedKeys.openai || ''; AI_KEYS.claude = savedKeys.claude || ''; } } catch (e) {}
+function saveKeys() {
+  try {
+    if (S.ai.remember) localStorage.setItem(AI_KEYS_STORE, JSON.stringify(AI_KEYS));
+    else localStorage.removeItem(AI_KEYS_STORE);
+  } catch (e) {}
+}
+var OA_PRESETS = [
+  ['OpenAI', 'https://api.openai.com/v1'],
+  ['OpenRouter', 'https://openrouter.ai/api/v1'],
+  ['Ollama (local)', 'http://localhost:11434/v1'],
+  ['LM Studio (local)', 'http://localhost:1234/v1']
+];
+var CLAUDE_SDK_URL = 'https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@1.3.0/+esm';
+// Models that accept server-side refusal fallbacks ("default" routing by refusal category)
+var CLAUDE_FALLBACK_MODELS = ['claude-opus-5-5', 'claude-opus-5', 'claude-sonnet-5-5', 'claude-fable-5-2', 'claude-fable-5-1'];
+var AnthropicSDK = null, aiAbort = null, aiModels = [];
+
+function aiLabel() {
+  if (S.ai.provider === 'openai') return (S.ai.oaModel || 'no model set') + ' via ' + hostOf(S.ai.oaBase);
+  if (S.ai.provider === 'claude') return 'Claude · ' + (S.ai.claudeModel || 'claude-opus-5-5');
+  return 'Demo answers';
+}
+function hostOf(u) { try { return new URL(u).host; } catch (e) { return u || 'no URL set'; } }
+
+// Everything the model may use: the same (sample) data the screens show, for the current location.
+function skylineContext() {
+  var L = S.loc, src = nearestSource(L), b = WEATHER[S.weather] || WEATHER['partly-cloudy'], off = tempOffset(L);
+  var cat = catalog(L), lines = [];
+  lines.push('Location: ' + L.name + (L.sub ? ' (' + L.sub + ')' : '') + ' at ' + fmtCoord(L.lat, L.lon) + (inTW(L.lat, L.lon) ? '' : ' — outside Taiwan: team models and prediction maps do not cover it'));
+  lines.push('Nearest source for current conditions: ' + src.name + (src.dist ? ' (' + src.dist + ')' : ''));
+  lines.push('Now: ' + fmtT(b.temp + off) + ', ' + b.label + '. Headline: ' + b.headline);
+  cat.forEach(function (t) {
+    if (t.kind === 'stat') lines.push('- ' + t.title + ': ' + t.value + ' — ' + t.sub + ' [source: ' + t.src + ']');
+    if (t.kind === 'hourly') lines.push('- Hourly: ' + t.hours.map(function (h) { return h.t + ' ' + h.temp + ' rain ' + h.rain; }).join('; ') + ' [source: ' + t.src + ']');
+    if (t.kind === 'week') lines.push('- 7-day: ' + t.week.map(function (w) { return w.day + ' ' + w.lo + '–' + w.hi; }).join('; '));
+    if (t.kind === 'typhoon') lines.push('- Typhoon watch: sample storm TD-27, 860 km SE, moving NW at 18 km/h; sea warning possible in ~48h [source: CWA typhoon warnings]');
+  });
+  lines.push('Taiwan prediction maps (region levels now / +24h / +72h):');
+  activeSets().forEach(function (d) {
+    var at = function (t) { return MAP_PLACES.map(function (p, i) { return p.name + ' ' + d.labels[lvlAt(d, i, t)]; }).join(', '); };
+    lines.push('- ' + d.title + ' [' + d.src + ']: now: ' + at(NOW) + ' | +24h: ' + at(7) + ' | +72h: ' + at(9) + '. Note: ' + d.note);
+  });
+  return 'You are Skyline, a weather assistant for Taiwan inside a hackathon app. Answer using only the data in <skyline_data>. ' +
+    'If the data does not cover the question, say so plainly instead of guessing. Name the source for each fact (for example "CWA station", "Windy", "team PM2.5 model"). ' +
+    'Keep answers short and practical: two to five sentences, plain text, no headings. Reply in the language the user writes in (English or Traditional Chinese). ' +
+    'Temperatures are in °' + S.units + '. This is a mockup, so every value is sample data; mention that only if the user asks how reliable the numbers are.\n\n' +
+    '<skyline_data>\n' + lines.join('\n') + '\n</skyline_data>';
+}
+
+// Conversation so far, as alternating user/assistant text (skips failed turns).
+function chatHistory() {
+  var out = [];
+  for (var i = 0; i < chat.length; i++) {
+    var m = chat[i];
+    if (m.typing || m.error || m.live) continue;
+    var text = m.me ? m.text : (m.plain || stripHTML(m.text));
+    if (!text) continue;
+    var role = m.me ? 'user' : 'assistant';
+    if (out.length && out[out.length - 1].role === role) out[out.length - 1].content += '\n\n' + text;
+    else out.push({ role: role, content: text });
+  }
+  while (out.length && out[0].role !== 'user') out.shift();
+  return out.slice(-12);
+}
+function stripHTML(h) { var d = document.createElement('div'); d.innerHTML = h || ''; return d.textContent || ''; }
+
+// Minimal, safe markdown: escape first, then **bold**, `code`, line breaks and "- " bullets.
+function mdLite(t) {
+  return esc(t).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/^[-•] (.*)$/gm, '• $1').replace(/\n/g, '<br>');
+}
+
+async function streamOpenAI(messages, system, onDelta, signal) {
+  var base = (S.ai.oaBase || '').replace(/\/+$/, '');
+  if (!base) throw new Error('Set a base URL in Settings → AI assistant.');
+  if (!S.ai.oaModel) throw new Error('Pick a model in Settings → AI assistant.');
+  var headers = { 'Content-Type': 'application/json' };
+  if (AI_KEYS.openai) headers.Authorization = 'Bearer ' + AI_KEYS.openai;
+  var res;
+  try {
+    res = await fetch(base + '/chat/completions', { method: 'POST', headers: headers, signal: signal,
+      body: JSON.stringify({ model: S.ai.oaModel, stream: true, messages: [{ role: 'system', content: system }].concat(messages) }) });
+  } catch (e) {
+    if (e.name === 'AbortError') throw e;
+    throw new Error('Couldn’t reach ' + hostOf(base) + '. A local server (Ollama, LM Studio) has to allow this page’s origin, e.g. OLLAMA_ORIGINS=' + location.origin + '. Some providers also block requests made straight from a browser.');
+  }
+  if (!res.ok) {
+    var body = ''; try { body = await res.text(); } catch (e2) {}
+    var msg = body; try { var j = JSON.parse(body); msg = (j.error && (j.error.message || j.error)) || j.message || body; } catch (e3) {}
+    var known = { 401: 'The API key was rejected', 403: 'Access denied', 404: 'Not found (check the base URL and model)', 429: 'Rate limited or out of credit' }[res.status];
+    throw new Error((known || 'Error ' + res.status) + ': ' + String(msg).slice(0, 200));
+  }
+  var reader = res.body.getReader(), dec = new TextDecoder(), buf = '';
+  for (;;) {
+    var r = await reader.read();
+    if (r.done) break;
+    buf += dec.decode(r.value, { stream: true });
+    var lines = buf.split('\n'); buf = lines.pop();
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim();
+      if (line.indexOf('data:') !== 0) continue;
+      var data = line.slice(5).trim();
+      if (data === '[DONE]') return;
+      var j2; try { j2 = JSON.parse(data); } catch (e4) { continue; }
+      if (j2.error) throw new Error(j2.error.message || 'The provider returned an error.');
+      var c = j2.choices && j2.choices[0] && j2.choices[0].delta && j2.choices[0].delta.content;
+      if (c) onDelta(c);
+    }
+  }
+}
+
+async function claudeClient() {
+  if (!AI_KEYS.claude) throw new Error('Add your Anthropic API key in Settings → AI assistant.');
+  if (!AnthropicSDK) {
+    try { AnthropicSDK = (await import(CLAUDE_SDK_URL)).default; }
+    catch (e) { throw new Error('Couldn’t load the Anthropic SDK from the CDN (offline?).'); }
+  }
+  return new AnthropicSDK({ apiKey: AI_KEYS.claude, dangerouslyAllowBrowser: true });
+}
+function claudeError(e) {
+  var A = AnthropicSDK;
+  if (!A || !(e instanceof A.APIError)) return e;
+  if (e instanceof A.AuthenticationError) return new Error('Anthropic rejected the API key.');
+  if (e instanceof A.PermissionDeniedError) return new Error('This key can’t use that model.');
+  if (e instanceof A.NotFoundError) return new Error('Model not found. Pick one with “Load models”.');
+  if (e instanceof A.RateLimitError) return new Error('Rate limited. Try again in a moment.');
+  if (e instanceof A.BadRequestError) return new Error('Request rejected: ' + e.message);
+  if (e instanceof A.APIConnectionError) return new Error('Couldn’t reach the Anthropic API.');
+  return new Error('Anthropic API error ' + (e.status || '') + ': ' + e.message);
+}
+async function streamClaude(messages, system, onDelta, signal) {
+  var client = await claudeClient();
+  var model = S.ai.claudeModel || 'claude-opus-5-5';
+  var params = { model: model, max_tokens: 64000, system: system, messages: messages };
+  var stream;
+  try {
+    if (CLAUDE_FALLBACK_MODELS.indexOf(model) >= 0) {
+      // Server-side refusal fallback: if a safety classifier declines, the API retries on a suitable model.
+      params.betas = ['server-side-fallback-2026-07-01']; params.fallbacks = 'default';
+      stream = client.beta.messages.stream(params, { signal: signal });
+    } else {
+      stream = client.messages.stream(params, { signal: signal });
+    }
+    stream.on('text', function (delta) { onDelta(delta); });
+    var final = await stream.finalMessage();
+    if (final.stop_reason === 'refusal') throw new Error('Claude declined to answer that' + (final.stop_details && final.stop_details.category ? ' (' + final.stop_details.category + ')' : '') + '.');
+    if (final.stop_reason === 'max_tokens') onDelta('\n\n(The answer was cut off.)');
+  } catch (e) { throw claudeError(e); }
+}
+
+async function listModels() {
+  if (S.ai.provider === 'claude') {
+    var client = await claudeClient(), ids = [];
+    try { for await (var m of client.models.list()) ids.push(m.id); } catch (e) { throw claudeError(e); }
+    return ids;
+  }
+  var base = (S.ai.oaBase || '').replace(/\/+$/, ''), headers = {};
+  if (AI_KEYS.openai) headers.Authorization = 'Bearer ' + AI_KEYS.openai;
+  var res;
+  try { res = await fetch(base + '/models', { headers: headers }); }
+  catch (e) { throw new Error('Couldn’t reach ' + hostOf(base) + ' (offline, wrong URL, or the server blocks browser requests).'); }
+  if (!res.ok) throw new Error(res.status === 401 ? 'The API key was rejected.' : 'Error ' + res.status + ' listing models.');
+  var j = await res.json();
+  return (j.data || j.models || []).map(function (m) { return m.id || m.name; }).filter(Boolean).sort();
+}
+
+async function llmAsk(q) {
+  var msg = { me: false, llm: true, live: true, plain: '', src: [aiLabel(), 'Skyline data for ' + S.loc.name] };
+  chat.push({ me: true, text: q }, msg);
+  var history = chatHistory();
+  renderChat();
+  var ctrl = new AbortController(); aiAbort = ctrl;
+  var pending = false;
+  var paint = function () {
+    pending = false;
+    var el = document.querySelector('#chat .msg.ai.live .body');
+    if (el) el.innerHTML = mdLite(msg.plain);
+  };
+  var onDelta = function (d) { msg.plain += d; if (!pending) { pending = true; requestAnimationFrame(paint); } };
+  try {
+    var system = skylineContext();
+    if (S.ai.provider === 'claude') await streamClaude(history, system, onDelta, ctrl.signal);
+    else await streamOpenAI(history, system, onDelta, ctrl.signal);
+    if (!msg.plain.trim()) msg.plain = '(No answer came back.)';
+  } catch (e) {
+    if (e && e.name === 'AbortError') msg.plain += (msg.plain ? '\n\n' : '') + '(Stopped.)';
+    else { msg.error = (e && e.message) || String(e); }
+  }
+  msg.live = false; aiAbort = null;
+  renderChat();
+}
+
 /* ---------- Settings ---------- */
+function aiSettingsHTML() {
+  var p = S.ai.provider;
+  var segH = '<div class="seg" role="group" aria-label="AI provider">' + [['demo', 'Demo'], ['openai', 'OpenAI-compatible'], ['claude', 'Claude']].map(function (o) {
+    return '<button type="button" data-action="ai-provider" data-val="' + o[0] + '" aria-pressed="' + (p === o[0]) + '">' + o[1] + '</button>';
+  }).join('') + '</div>';
+  var body = '';
+  if (p === 'openai') {
+    body = '<div class="field"><span class="lbl">Preset</span><div class="chips-row">' + OA_PRESETS.map(function (x) {
+        return '<button type="button" class="chip-btn" data-action="ai-preset" data-base="' + esc(x[1]) + '" aria-pressed="' + (S.ai.oaBase === x[1]) + '">' + esc(x[0]) + '</button>';
+      }).join('') + '</div></div>' +
+      aiField('ai-base', 'Base URL', '<input id="ai-base" type="url" data-input="ai.oaBase" value="' + esc(S.ai.oaBase) + '" placeholder="https://…/v1" autocomplete="off" spellcheck="false">') +
+      aiField('ai-key-oa', 'API key <small>(leave empty for local servers)</small>', '<input id="ai-key-oa" type="password" data-input="key.openai" value="' + esc(AI_KEYS.openai) + '" autocomplete="off" spellcheck="false" placeholder="sk-…">') +
+      modelField('ai-model-oa', 'ai.oaModel', S.ai.oaModel, 'e.g. deepseek/deepseek-v4.1-flash');
+  } else if (p === 'claude') {
+    body = aiField('ai-key-claude', 'Anthropic API key', '<input id="ai-key-claude" type="password" data-input="key.claude" value="' + esc(AI_KEYS.claude) + '" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">') +
+      modelField('ai-model-claude', 'ai.claudeModel', S.ai.claudeModel, 'claude-opus-5-5');
+  } else {
+    body = '<p class="hint">Canned answers with no network. Pick a provider to use a real model.</p>';
+  }
+  if (p !== 'demo') {
+    body += setRow('Remember the key on this device', 'Otherwise it’s forgotten when you close the tab', '<button type="button" class="switch" role="switch" aria-checked="' + !!S.ai.remember + '" aria-label="Remember the key on this device" data-action="ai-remember"></button>') +
+      '<p class="hint">The key stays in this browser and is sent only to ' + (p === 'claude' ? 'api.anthropic.com' : esc(hostOf(S.ai.oaBase))) + '. Don’t save it on a shared computer.</p>' +
+      '<p class="hint ai-status" id="ai-status" role="status"></p>';
+  }
+  return '<section class="card" aria-labelledby="st-ai"><h2 id="st-ai">AI assistant</h2><p class="hint">Ask AI can answer with your own model. It gets the same Skyline data the screens show for your location.</p>' + segH + body + '</section>';
+}
+function aiField(id, label, input) { return '<div class="field"><label for="' + id + '" class="lbl">' + label + '</label>' + input + '</div>'; }
+function modelField(id, key, val, ph) {
+  return '<div class="field"><label for="' + id + '" class="lbl">Model</label><div class="row-in"><input id="' + id + '" type="text" list="ai-model-list" data-input="' + key + '" value="' + esc(val) + '" placeholder="' + esc(ph) + '" autocomplete="off" spellcheck="false">' +
+    '<button type="button" class="light-btn" data-action="ai-models">Load models</button></div><datalist id="ai-model-list">' + aiModels.map(function (m) { return '<option value="' + esc(m) + '">'; }).join('') + '</datalist></div>';
+}
+function mcpSettingsHTML() {
+  var path = '/path/to/special-octo-enigma/ui/mcp/skyline_mcp.py';
+  var cfg = JSON.stringify({ mcpServers: { skyline: { command: 'python3', args: [path] } } }, null, 2);
+  return '<section class="card" aria-labelledby="st-mcp"><h2 id="st-mcp">Use Skyline in your own assistant (MCP)</h2>' +
+    '<p class="hint">Skyline also runs as an MCP server, so Claude, ChatGPT, Cursor, VS Code or any other MCP client can use its tools: find a place (postal code, district, airport, coordinates), live weather, air quality, thunderstorm risk and the team’s PM2.5 forecast.</p>' +
+    '<div class="field"><span class="lbl">Claude Code</span>' + codeBlock('mcp-cc', 'claude mcp add skyline -- python3 ' + path) + '</div>' +
+    '<div class="field"><span class="lbl">Claude Desktop, Cursor and other clients (JSON config)</span>' + codeBlock('mcp-json', cfg) + '</div>' +
+    '<div class="field"><span class="lbl">Over HTTP, for clients that connect to a URL</span>' + codeBlock('mcp-http', 'python3 ui/mcp/skyline_mcp.py --http --port 8790\n# then add http://localhost:8790/mcp in your client') + '</div>' +
+    '<p class="hint">Setup steps are in ui/mcp/README.md in the repo.</p></section>';
+}
+function codeBlock(id, text) { return '<div class="code"><pre id="' + id + '">' + esc(text) + '</pre><button type="button" class="light-btn" data-action="copy" data-target="' + id + '">Copy</button></div>'; }
+
 function seg(key, label, options) {
   return '<div class="seg" role="group" aria-label="' + label + '">' + options.map(function (o) {
     return '<button type="button" data-action="set" data-key="' + key + '" data-val="' + o[0] + '" aria-pressed="' + (String(S[key]) === String(o[0])) + '">' + o[1] + '</button>';
@@ -1884,6 +2162,7 @@ function settingsView() {
     '<button type="button" class="light-btn" data-action="reset-theme"' + (themeIsDefault() ? ' disabled' : '') + '>Reset theme to default</button>' +
   '</section>' +
 
+  aiSettingsHTML() + mcpSettingsHTML() +
   '<section class="card" aria-labelledby="st-look"><h2 id="st-look">Motion</h2>' +
     setRow('Reduce motion', 'Stops drifting clouds, rain, lightning and map flow', sw('reduceMotion', 'Reduce motion')) +
   '</section>' +
@@ -1984,9 +2263,25 @@ var ACTIONS = {
   'pin-up': function (el) { S.pins = moveIn(S.pins, el.dataset.id, -1); save(); rerender(); },
   'pin-down': function (el) { S.pins = moveIn(S.pins, el.dataset.id, 1); save(); rerender(); },
   'reset-theme': function () { THEME_KEYS.forEach(function (k) { S[k] = DEFAULTS[k]; }); save(); applyTheme(); render(); toast('Theme reset to default'); },
+  'ai-provider': function (el) { S.ai.provider = el.dataset.val; aiModels = []; save(); rerender(); },
+  'ai-preset': function (el) { S.ai.oaBase = el.dataset.base; aiModels = []; save(); rerender(); },
+  'ai-remember': function () { S.ai.remember = !S.ai.remember; save(); saveKeys(); rerender(); },
+  'ai-models': function () {
+    var st = $('#ai-status'); if (st) st.textContent = 'Loading models…';
+    listModels().then(function (ids) {
+      aiModels = ids;
+      var dl = $('#ai-model-list'); if (dl) dl.innerHTML = ids.map(function (m) { return '<option value="' + esc(m) + '">'; }).join('');
+      if (st) st.textContent = ids.length ? 'Connected. ' + ids.length + ' models available: start typing in the Model box to pick one.' : 'Connected, but the provider listed no models.';
+    }).catch(function (e) { if (st) st.textContent = e.message || String(e); });
+  },
+  'copy': function (el) {
+    var t = $('#' + el.dataset.target); if (!t) return;
+    var done = function () { toast('Copied'); };
+    if (navigator.clipboard) navigator.clipboard.writeText(t.textContent).then(done, function () { toast('Copy failed: select the text instead'); });
+  },
   'reset-all': function () {
-    var keepLoc = S.loc, keepRecents = S.recents;
-    S = clone(DEFAULTS); S.loc = keepLoc; S.recents = keepRecents;
+    var keepLoc = S.loc, keepRecents = S.recents, keepAI = S.ai;
+    S = clone(DEFAULTS); S.loc = keepLoc; S.recents = keepRecents; S.ai = keepAI;
     save(); applyTheme(); render(); toast('Everything reset to default (location kept)');
   },
   'pick': function (el) { pickResult(+el.dataset.i); },
@@ -2021,6 +2316,8 @@ document.addEventListener('input', function (e) {
   else if (k === 'pinCount') { var p = $('#pin-out'); if (p) p.textContent = el.value; }
   else if (k === 'accent') { S.accent = el.value; applyTheme(); }
   else if (k === 'q') runSearch();
+  else if (k.indexOf('ai.') === 0) { S.ai[k.slice(3)] = el.value.trim(); save(); }
+  else if (k.indexOf('key.') === 0) { AI_KEYS[k.slice(4)] = el.value.trim(); saveKeys(); }
 });
 document.addEventListener('change', function (e) {
   var el = e.target, k = el.dataset && el.dataset.input;
@@ -2030,7 +2327,7 @@ document.addEventListener('change', function (e) {
   else if (k === 'weather') { S.weather = el.value; save(); rerender(); }
 });
 document.addEventListener('submit', function (e) {
-  if (e.target.id === 'ask-form') { e.preventDefault(); var i = $('#ask-input'); ask(i.value); i.value = ''; }
+  if (e.target.id === 'ask-form') { e.preventDefault(); if (aiAbort) { aiAbort.abort(); return; } var i = $('#ask-input'); ask(i.value); i.value = ''; }
 });
 
 // Drag and drop for the stats grid
