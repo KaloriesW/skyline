@@ -3413,7 +3413,19 @@ var ZH = {
   'City, district, postal code, 25.03, 121.56, TPE, or a university': '城市、行政區、郵遞區號、25.03, 121.56、TPE 或大學', 'Place, coordinates, airport code or university': '地點、座標、機場代碼或大學',
   'Try': '試試', 'Recent': '最近', 'Use my location': '使用我的位置', 'Locations': '地點', 'Searching worldwide…': '全球搜尋中…',
   'Coordinates': '座標', 'District': '行政區', 'Postal code': '郵遞區號', 'University': '大學', 'City': '城市', 'Landmark': '地標', 'Airport': '機場', 'Place': '地點', 'DMS': '度分秒', '中文': '中文',
-'Current weather': '目前天氣', 'Region values': '各地區數值', 'Map': '地圖', 'Main': '主選單'
+'Current weather': '目前天氣', 'Region values': '各地區數值', 'Map': '地圖', 'Main': '主選單',
+  // Ask AI: Skyline (no setup) provider, Demo answers
+  'Skyline (no setup)': 'Skyline（免設定）', 'Demo answers': '示範回答', 'Thinking…': '思考中…', 'Check settings': '檢查設定', 'Check again': '重新檢查', 'Checking…': '檢查中…',
+  'Skyline (no setup) isn’t available on this server. Demo or your own provider still work.': '這台伺服器沒有提供 Skyline（免設定）。仍可使用示範回答或你自己的供應商。',
+  'No key and nothing to set up. Your question and the Skyline data shown for your location go to the Skyline server, which asks a shared model for you.': '不需要金鑰，也不用設定。你的問題與目前位置顯示的 Skyline 資料會送到 Skyline 伺服器，由它代你詢問共用模型。',
+  'Checking whether Skyline AI is available…': '正在確認 Skyline AI 是否可用…', 'Model:': '模型：', 'Shared budget left:': '剩餘共用額度：',
+  'Ask AI can answer with Skyline’s shared model or your own. It gets the same Skyline data the screens show for your location.': '「問 AI」可以用 Skyline 的共用模型或你自己的模型回答，並會取得畫面上為你的位置顯示的同一份 Skyline 資料。',
+  'The shared Skyline AI budget is used up for now. Demo answers still work, or add your own key in Settings.': 'Skyline AI 的共用額度暫時用完了。仍可使用示範回答，或在設定中加入你自己的金鑰。',
+  'Skyline AI is busy: too many questions in a short time. Wait a moment and ask again.': 'Skyline AI 忙碌中：短時間內的提問太多。請稍候再問一次。',
+  'Skyline AI isn’t available on this server. Pick Demo or your own provider in Settings.': '這台伺服器沒有提供 Skyline AI。請在設定中改用示範回答或你自己的供應商。',
+  'Skyline AI had a problem answering. Try again in a moment.': 'Skyline AI 回答時發生問題，請稍後再試。',
+  'Couldn’t reach the Skyline server. Check your connection and try again.': '無法連上 Skyline 伺服器。請檢查網路連線後再試一次。',
+  'Demo AI answers follow this too': '示範 AI 回答也會跟著切換'
 };
 // District names in 中文 come straight from the postal table
 PLACES.forEach(function (p) { if (p.kind === 'District' && !ZH[p.locName]) ZH[p.locName] = p.zh; });
@@ -3435,7 +3447,11 @@ var ZHP = [
   [/^No airport with (IATA|ICAO) code (\w+) in the offline list\. Try searching worldwide below\.$/, function (m) { return '離線清單中沒有 ' + m[1] + ' 代碼 ' + m[2] + ' 的機場，請試試下方的全球搜尋。'; }],
   [/^Answers are grounded in .* for (.*)\. In this mockup the answers are canned\.$/, function (m) { return '回答依據中央氣象署測站、Windy 與團隊的 PM2.5、山崩模型，地點：' + zh(m[1]) + '。示範版的回答為預設內容（英文）。'; }],
   [/^Move (.*) (earlier|later|up|down)$/, function (m) { return '移動' + zh(m[1]) + ({ earlier: '往前', later: '往後', up: '上移', down: '下移' })[m[2]]; }],
-  [/^Location: (.*)\. Change location$/, function (m) { return '位置：' + m[1] + '。變更位置'; }]
+  [/^Location: (.*)\. Change location$/, function (m) { return '位置：' + m[1] + '。變更位置'; }],
+  [/^(· )?([A-Za-z' ]+) · (\d{3}) (\S+) · near (.+) border$/, function (m) { return (m[1] || '') + zh(m[2]) + ' · ' + m[3] + ' ' + m[4] + ' · 靠近' + zh(m[5]) + '邊界'; }],
+  [/^Live Windy map \((.*) layer\)\. The slider opened it at (.*) \(as far as Windy’s free forecast reaches\); .*$/, function (m) { return '即時 Windy 地圖（' + m[1] + ' 圖層）。時間軸已讓地圖從 ' + m[2] + ' 開啟（以 Windy 免費預報的範圍為限）；之後可用地圖底部 Windy 自己的時間軸繼續調整。右側的各地區數值會跟著時間軸變化。'; }],
+  [/^Live Windy map \((.*) layer\)\. Windy’s embed can’t open in the past, so the map stays at now\. At (.*) the slider only .*$/, function (m) { return '即時 Windy 地圖（' + m[1] + ' 圖層）。Windy 嵌入地圖無法從過去的時間開啟，所以地圖停在現在。在 ' + m[2] + ' 時，時間軸只會改變右側的各地區數值。'; }],
+  [/^Live Windy map \((.*) layer\)\. Drag and zoom it\. Move the slider into the forecast .*$/, function (m) { return '即時 Windy 地圖（' + m[1] + ' 圖層）。可以拖曳與縮放。把時間軸移到預測時段，Windy 會從該時間重新開啟；右側的各地區數值會跟著時間軸變化。'; }]
 ];
 function zh(t) {
   if (Object.prototype.hasOwnProperty.call(ZH, t)) return ZH[t];
