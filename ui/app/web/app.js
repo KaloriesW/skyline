@@ -1749,16 +1749,22 @@ function statsInner() {
       '</article>';
   }).join('');
   var hidden = order.filter(function (id) { return S.hidden[id]; });
-  return '<div class="stats-head"><div><h2 id="stats-h">All stats</h2><p>Each reading uses the source nearest ' + esc(L.name) + '.</p></div>' +
+  return '<div class="stats-head"><div><h2 id="stats-h">All stats</h2><p>Live readings for ' + esc(L.name) + '. Each tile names its source.</p></div>' +
     '<div class="row">' + (editing ? '<button type="button" class="btn ghost" data-action="reset-grid">Reset layout</button>' : '') +
     '<button type="button" class="btn' + (editing ? ' accent' : '') + '" data-action="toggle-edit" aria-pressed="' + editing + '">' + (editing ? 'Done' : 'Customize') + '</button></div></div>' +
     (editing ? '<p class="edit-tip">Drag a tile to move it, or use its buttons. Make tiles bigger or smaller, or hide the ones you don’t need. Hidden tiles wait below so you can bring them back.</p>' : '') +
     '<div class="grid' + (editing ? ' editing' : '') + '" id="grid">' + tiles + '</div>' +
     (hidden.length ? '<div class="hidden-row"><span>Hidden:</span>' + hidden.map(function (id) { return '<button type="button" data-action="tile-restore" data-id="' + id + '">+ ' + byId[id].title + '</button>'; }).join('') + '</div>' : '') +
-    '<p class="foot">Readings marked “live” come from Open-Meteo at your coordinates, the team PM2.5 model or the typhoon feed. Anything marked “Sample” is a placeholder, not a measurement.</p>';
+    '<p class="foot">Every reading is live: weather, air quality, waves and the seasonal outlook come from Open-Meteo at your coordinates, PM2.5 near Taichung also uses the team model, and typhoons come from the CWA feed. A tile whose source isn’t connected or can’t be reached says so and shows no number.</p>';
 }
 
+// Body of a tile that has no value: what is going on, and Retry when retrying can help
+function naHTML(na) {
+  return '<div class="na-body"><div class="val na-h">' + na.h + '</div><p class="sub">' + na.msg + '</p>' +
+    (na.retry ? '<button type="button" class="tile-retry" data-action="retry-live">Retry</button>' : '') + '</div>';
+}
 function tileBody(t) {
+  if (t.na) return naHTML(t.na);
   if (t.kind === 'stat') {
     return '<div class="val">' + t.value + '</div><p class="sub">' + t.sub + '</p>' +
       (t.meter ? '<div class="meter" style="background:' + t.meterBg + '" aria-hidden="true"><span style="left:' + t.meter + '"></span></div>' : '');
@@ -1779,14 +1785,7 @@ function tileBody(t) {
       '<a class="btn accent open" href="#predictions/wind">Open map</a></div>';
   }
   if (t.kind === 'typhoon') {
-    var tv = tyView();
-    if (tv.state !== 'sample') return tyTileHTML(tv);
-    return '<div style="display:flex;gap:16px;align-items:center;flex:1">' +
-      '<svg width="120" height="96" viewBox="0 0 300 240" aria-hidden="true" style="flex:none;border-radius:14px;background:#0A2A48">' +
-        '<g transform="translate(40,10) scale(0.42)"><path d="' + ISL + '" fill="#2F5A49"/></g>' +
-        '<path d="M290,230 Q250,190 230,150 T160,90" fill="none" stroke="#FFC24B" stroke-width="5" stroke-dasharray="12 10"/>' +
-        '<circle cx="246" cy="178" r="26" fill="#EF4444" fill-opacity="0.3" stroke="#fff" stroke-width="3"/><circle cx="246" cy="178" r="7" fill="#fff"/></svg>' +
-      '<div><div class="val" style="font-size:26px">TD-27 · 860 km SE</div><p class="sub">Sample storm. Moving NW at 18 km/h. A sea warning is possible in about 48h.</p></div></div>';
+    return tyTileHTML(tyView());   // only reached with a feed: an active storm or "No active typhoon"
   }
   return '';
 }
