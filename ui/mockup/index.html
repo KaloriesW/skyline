@@ -80,6 +80,8 @@ main{min-height:100vh}
 .streak{position:absolute;width:1400px;height:4px;margin:-2px 0 0 -700px;background:linear-gradient(90deg,rgba(180,220,255,0),rgba(200,230,255,.55) 45%,rgba(255,255,255,.8) 50%,rgba(200,230,255,.55) 55%,rgba(180,220,255,0));filter:blur(1.5px)}
 .flare-ghost,.cloud{position:absolute;border-radius:50%}
 .cloud{border-radius:0}
+.wx-back{position:absolute;inset:0;width:100%;height:100%}
+.wx-front{position:absolute;left:0;top:0;width:100%;z-index:2;pointer-events:none}
 .rain-wrap{position:absolute;inset:0;transform:rotate(10deg) scale(1.2)}
 .rain1,.rain2{position:absolute;left:0;right:0;top:-100%;height:200%}
 .rain1{animation-duration:.9s;background-image:repeating-linear-gradient(90deg,rgba(200,220,255,0) 0 17px,rgba(200,220,255,.35) 17px 18px,rgba(200,220,255,0) 18px 41px);-webkit-mask-image:repeating-linear-gradient(180deg,#000 0 46px,transparent 46px 130px);mask-image:repeating-linear-gradient(180deg,#000 0 46px,transparent 46px 130px)}
@@ -760,6 +762,301 @@ function themeIsDefault() { return THEME_KEYS.every(function (k) { return S[k] =
 function cloudBg(c, under) {
   return 'radial-gradient(ellipse 34% 46% at 28% 58%, ' + c + ' 0%, rgba(0,0,0,0) 70%), radial-gradient(ellipse 30% 54% at 50% 42%, ' + c + ' 0%, rgba(0,0,0,0) 70%), radial-gradient(ellipse 26% 42% at 72% 55%, ' + c + ' 0%, rgba(0,0,0,0) 70%), radial-gradient(ellipse 58% 26% at 50% 78%, ' + under + ' 0%, rgba(0,0,0,0) 75%)';
 }
+/* ============================================================
+   Sky effects (canvas): layered clouds, rain, lightning.
+   Back canvas (behind the skyline): clouds, cloud lighting, bolts.
+   Front canvas (in front of skyline and text): rain, splashes, haze.
+   Flashes are capped at 2 per strike with ≥3.5 s between strikes
+   (under the 3-flashes-per-second photosensitivity limit), and
+   Reduce motion draws a single still frame with no lightning.
+   ============================================================ */
+var SkyFX = (function () {
+  var FX = {
+    'clear-day':     { cu: 2, size: [220, 340], light: [255, 255, 255, 0.82], shade: [170, 190, 215, 0.45], drift: 5 },
+    'partly-cloudy': { cu: 6, size: [280, 560], light: [255, 255, 255, 0.97], shade: [146, 164, 194, 0.72], drift: 7 },
+    'cloudy':        { deck: 1, cu: 5, size: [380, 700], light: [228, 233, 241, 0.98], shade: [112, 124, 145, 0.9], drift: 9, haze: 0.14 },
+    'rain':          { deck: 1, cu: 4, size: [420, 760], light: [146, 156, 172, 0.98], shade: [48, 57, 72, 0.96], drift: 14, rain: 1, wind: 0.12, haze: 0.32 },
+    'thunderstorm':  { deck: 1, cu: 4, size: [460, 820], light: [96, 104, 120, 0.99], shade: [12, 15, 23, 0.98], drift: 22, rain: 1.7, wind: 0.24, haze: 0.4, lightning: 1 },
+    'clear-night':   { cu: 2, size: [240, 400], light: [118, 132, 168, 0.42], shade: [24, 30, 56, 0.55], drift: 4 },
+    'dawn':          { cu: 4, size: [260, 500], light: [255, 204, 194, 0.95], shade: [116, 82, 126, 0.8], drift: 5, hl: -1 },
+    'dusk':          { cu: 4, size: [260, 500], light: [255, 176, 130, 0.95], shade: [96, 56, 94, 0.86], drift: 5, hl: 1 }
+  };
+  var st = null;
+
+  function rng(seed) {
+    return function () {
+      seed = (seed + 0x6D2B79F5) | 0;
+      var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function rgba(c, a) { return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + (a == null ? c[3] : a).toFixed(3) + ')'; }
+
+  // One cloud, drawn once to an offscreen canvas: many soft puffs, lit from the sun side,
+  // shaded underneath, with a flat fading base (cumulus) or a ragged sheet (deck).
+  function sprite(w, h, f, seed, flat, dpr) {
+    var c = document.createElement('canvas');
+    c.width = Math.ceil(w * dpr); c.height = Math.ceil(h * dpr);
+    var g = c.getContext('2d'); g.scale(dpr, dpr);
+    var R = rng(seed), base = h * (flat ? 0.86 : 0.8), n = Math.round(w / (flat ? 8 : 11)), hl = f.hl || 0;
+    for (var i = 0; i < n; i++) {
+      var x = w * (0.07 + 0.86 * R()), d = Math.abs(x / w - 0.5) * 2;
+      var hf = flat ? 0.6 + 0.4 * R() : Math.max(0.06, 1 - Math.pow(d, 1.5));
+      var r = flat ? h * (0.13 + 0.15 * R()) : h * (0.12 + 0.17 * R()) * (0.5 + 0.5 * hf);
+      var y = flat ? h * (0.22 + 0.55 * R()) : base - r * 0.5 - R() * h * 0.52 * hf;
+      var gr = g.createRadialGradient(x + hl * r * 0.45, y - r * 0.5, r * 0.04, x, y, r);
+      gr.addColorStop(0, rgba(f.light, f.light[3]));
+      gr.addColorStop(0.55, rgba(f.light, f.light[3] * 0.8));
+      gr.addColorStop(1, rgba(f.light, 0));
+      g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+    }
+    g.globalCompositeOperation = 'source-atop';
+    // inner billows: darker pockets give the cloud body texture
+    for (var k = 0; k < n * 0.6; k++) {
+      var bx = w * (0.1 + 0.8 * R()), by = h * (0.35 + 0.5 * R()), br = h * (0.06 + 0.12 * R());
+      var bg = g.createRadialGradient(bx, by, 0, bx, by, br);
+      bg.addColorStop(0, rgba(f.shade, f.shade[3] * 0.35)); bg.addColorStop(1, rgba(f.shade, 0));
+      g.fillStyle = bg; g.fillRect(bx - br, by - br, br * 2, br * 2);
+    }
+    // underside shading
+    var lg = g.createLinearGradient(0, h * (flat ? 0.15 : 0.3), 0, base);
+    lg.addColorStop(0, rgba(f.shade, 0)); lg.addColorStop(1, rgba(f.shade, f.shade[3]));
+    g.fillStyle = lg; g.fillRect(0, 0, w, h);
+    // flat, softly fading base
+    g.globalCompositeOperation = 'destination-out';
+    var fb = g.createLinearGradient(0, base - h * 0.04, 0, base + h * (flat ? 0.14 : 0.1));
+    fb.addColorStop(0, 'rgba(0,0,0,0)'); fb.addColorStop(1, 'rgba(0,0,0,1)');
+    g.fillStyle = fb; g.fillRect(0, base - h * 0.04, w, h);
+    return c;
+  }
+
+  function layoutClouds(s) {
+    var f = s.f, W = s.W, H = s.H, R = rng(11), out = [];
+    if (f.deck) {
+      // overlapping sheets make a full overcast deck
+      for (var row = 0; row < 3; row++) {
+        for (var col = 0; col < 3; col++) {
+          var w = W * (0.55 + 0.2 * R()), h = H * (0.2 + 0.08 * R());
+          out.push({ img: sprite(w, h, f, 100 + row * 7 + col, true, s.dpr), w: w, h: h,
+            x: col * W * 0.42 - W * 0.12 + R() * 60, y: -H * 0.08 + row * H * 0.1, v: f.drift * (0.6 + row * 0.25) });
+        }
+      }
+    }
+    for (var i = 0; i < f.cu; i++) {
+      var cw = Math.min(W * 0.75, f.size[0] + R() * (f.size[1] - f.size[0])), ch = cw * (0.5 + 0.12 * R());
+      out.push({ img: sprite(cw, ch, f, 300 + i * 13, false, s.dpr), w: cw, h: ch,
+        x: R() * (W + cw) - cw, y: H * (f.deck ? 0.12 + 0.24 * R() : 0.02 + 0.34 * R()), v: f.drift * (0.8 + 0.8 * R()) });
+    }
+    out.sort(function (a, b) { return a.y - b.y; });
+    s.clouds = out;
+  }
+
+  function size(s) {
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    var bw = s.back.clientWidth, bh = s.back.clientHeight;
+    var pin = s.hero.querySelector('.pinned-wrap');
+    var fh = pin ? pin.offsetTop : s.hero.clientHeight;
+    s.front.style.height = fh + 'px';
+    [[s.back, bw, bh], [s.front, bw, fh]].forEach(function (a) { a[0].width = Math.round(a[1] * dpr); a[0].height = Math.round(a[2] * dpr); });
+    s.dpr = dpr; s.W = bw; s.H = bh; s.FH = fh;
+    s.bctx.setTransform(dpr, 0, 0, dpr, 0, 0); s.fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    layoutClouds(s);
+    if (s.f.rain) seedRain(s);
+  }
+
+  function seedRain(s) {
+    var R = Math.random, n = Math.min(1500, Math.round(s.f.rain * 420 * (s.W * s.FH) / (1280 * 700)));
+    s.drops = [];
+    for (var i = 0; i < n; i++) { var d = { z: i % 10 < 5 ? 0.3 : i % 10 < 8 ? 0.6 : 1 }; respawn(s, d, true); s.drops.push(d); }
+    s.splash = [];
+    s.curtains = [0, 1, 2].map(function (i) { return { x: R() * s.W, w: 140 + R() * 260, a: 0.04 + R() * 0.05 }; });
+  }
+  function respawn(s, d, anywhere) {
+    var wind = s.f.wind || 0;
+    d.y = anywhere ? Math.random() * s.FH : -Math.random() * s.FH * 0.25;
+    d.x = Math.random() * (s.W + s.FH * wind) - s.FH * wind;
+    d.v = (680 + 1150 * d.z) * (s.f.lightning ? 1.1 : 1);
+    d.len = (12 + 36 * d.z) * (s.f.lightning ? 1.15 : 1);
+    d.gy = d.z >= 0.6 ? s.FH * (0.8 + 0.2 * Math.random()) : Infinity;
+  }
+
+  // Lightning: midpoint-displacement bolt with branches
+  function boltPath(x0, y0, x1, y1, R) {
+    var pts = [[x0, y0], [x1, y1]], disp = Math.hypot(x1 - x0, y1 - y0) * 0.2;
+    for (var k = 0; k < 7; k++) {
+      var np = [pts[0]];
+      for (var i = 1; i < pts.length; i++) {
+        var a = pts[i - 1], b = pts[i], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1, off = (R() - 0.5) * disp;
+        np.push([(a[0] + b[0]) / 2 - dy / L * off, (a[1] + b[1]) / 2 + dx / L * off], b);
+      }
+      pts = np; disp *= 0.52;
+    }
+    return pts;
+  }
+  function makeStrike(s) {
+    var R = Math.random, W = s.W, H = s.H, now = performance.now();
+    var cloudToGround = R() < 0.55;
+    var x0 = W * (0.12 + 0.76 * R()), y0 = H * (0.16 + 0.08 * R());
+    var ev = { t0: now, x: x0, y: y0, paths: [], peaks: [[0, 1]] };
+    if (R() < 0.7) ev.peaks.push([140 + R() * 120, 0.55 + R() * 0.4]);   // a second return stroke
+    if (cloudToGround) {
+      var x1 = x0 + (R() - 0.5) * W * 0.25, y1 = H * 1.05;
+      var main = boltPath(x0, y0, x1, y1, R);
+      ev.paths.push({ pts: main, w: 2.2 });
+      var nb = 3 + Math.floor(R() * 4);
+      for (var b = 0; b < nb; b++) {
+        var i = Math.floor(R() * main.length * 0.7), p = main[i];
+        var ang = Math.atan2(y1 - y0, x1 - x0) + (R() < 0.5 ? -1 : 1) * (0.35 + R() * 0.6);
+        var len = (0.12 + R() * 0.3) * (y1 - y0);
+        var br = boltPath(p[0], p[1], p[0] + Math.cos(ang) * len, p[1] + Math.sin(ang) * len, R);
+        ev.paths.push({ pts: br, w: 0.9 });
+        if (R() < 0.4) {
+          var q = br[Math.floor(br.length * (0.3 + R() * 0.4))], a2 = ang + (R() - 0.5) * 1.2;
+          ev.paths.push({ pts: boltPath(q[0], q[1], q[0] + Math.cos(a2) * len * 0.45, q[1] + Math.sin(a2) * len * 0.45, R), w: 0.5 });
+        }
+      }
+    } else {
+      // in-cloud flash: sometimes a faint horizontal spider bolt inside the base
+      ev.y = H * (0.06 + 0.2 * R());
+      if (R() < 0.5) ev.paths.push({ pts: boltPath(x0 - W * 0.12, ev.y + 20, x0 + W * 0.12, ev.y + 10 + R() * 30, R), w: 0.7, faint: true });
+    }
+    s.strike = ev;
+    s.nextStrike = now + 3500 + R() * 7000;
+  }
+  function flashLevel(ev, now) {
+    var t = now - ev.t0, I = 0;
+    ev.peaks.forEach(function (p) { if (t >= p[0]) I = Math.max(I, p[1] * Math.exp(-(t - p[0]) / 75)); });
+    return t > 1000 ? 0 : I;
+  }
+  function strokePath(g, pts) { g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (var i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]); g.stroke(); }
+
+  function drawBack(s, now, dt) {
+    var g = s.bctx, W = s.W, H = s.H, f = s.f;
+    g.globalCompositeOperation = 'source-over';
+    g.clearRect(0, 0, W, H);
+    if (f.deck) {
+      var tg = g.createLinearGradient(0, 0, 0, H * 0.6);
+      tg.addColorStop(0, rgba(f.shade, 0.75)); tg.addColorStop(1, rgba(f.shade, 0));
+      g.fillStyle = tg; g.fillRect(0, 0, W, H * 0.6);
+    }
+    s.clouds.forEach(function (c) {
+      c.x += c.v * dt;
+      if (c.x > W) c.x = -c.w;
+      g.drawImage(c.img, c.x, c.y, c.w, c.h);
+    });
+    var ev = s.strike, I = ev ? flashLevel(ev, now) : 0;
+    s.flash = I;
+    if (I > 0.01) {
+      // light the clouds from inside, around the strike
+      g.globalCompositeOperation = 'source-atop';
+      var rg = g.createRadialGradient(ev.x, ev.y, 0, ev.x, ev.y, W * 0.5);
+      rg.addColorStop(0, 'rgba(232,236,255,' + (0.85 * I).toFixed(3) + ')');
+      rg.addColorStop(0.4, 'rgba(190,200,240,' + (0.35 * I).toFixed(3) + ')');
+      rg.addColorStop(1, 'rgba(190,200,240,0)');
+      g.fillStyle = rg; g.fillRect(0, 0, W, H);
+      // and the air behind them, a little
+      g.globalCompositeOperation = 'source-over';
+      g.fillStyle = 'rgba(200,210,255,' + (0.16 * I).toFixed(3) + ')'; g.fillRect(0, 0, W, H);
+      if (ev.paths.length) {
+        g.globalCompositeOperation = 'lighter'; g.lineJoin = 'round'; g.lineCap = 'round';
+        [[12, '120,140,255', 0.08], [5, '170,190,255', 0.3], [2, '220,228,255', 0.7], [0.9, '255,255,255', 1]].forEach(function (pass) {
+          ev.paths.forEach(function (p) {
+            g.lineWidth = p.w * pass[0];
+            g.strokeStyle = 'rgba(' + pass[1] + ',' + (pass[2] * I * (p.faint ? 0.45 : 1)).toFixed(3) + ')';
+            strokePath(g, p.pts);
+          });
+        });
+      }
+      g.globalCompositeOperation = 'source-over';
+    } else if (ev && now - ev.t0 > 1000) s.strike = null;
+  }
+
+  function drawFront(s, now, dt, still) {
+    var g = s.fctx, W = s.W, H = s.FH, f = s.f;
+    g.clearRect(0, 0, W, H);
+    if (!f.rain && !f.haze) return;
+    var wind = f.wind || 0;
+    if (f.rain) {
+      // drifting rain curtains
+      s.curtains.forEach(function (c) {
+        c.x += (40 + wind * 300) * dt; if (c.x - c.w > W + H * wind) c.x = -c.w - H * wind;
+        g.save(); g.setTransform(s.dpr, 0, wind * s.dpr, s.dpr, c.x * s.dpr, 0);
+        var cg = g.createLinearGradient(-c.w / 2, 0, c.w / 2, 0);
+        cg.addColorStop(0, 'rgba(190,200,215,0)'); cg.addColorStop(0.5, 'rgba(190,200,215,' + (c.a * f.rain).toFixed(3) + ')'); cg.addColorStop(1, 'rgba(190,200,215,0)');
+        g.fillStyle = cg; g.fillRect(-c.w / 2, 0, c.w, H); g.restore();
+      });
+    }
+    if (f.haze) {
+      var hz = g.createLinearGradient(0, H * 0.5, 0, H);
+      var hc = s.flash > 0.01 ? [175 + 60 * s.flash, 185 + 55 * s.flash, 205 + 50 * s.flash] : [150, 160, 176];
+      hz.addColorStop(0, 'rgba(' + hc.map(Math.round).join(',') + ',0)');
+      hz.addColorStop(1, 'rgba(' + hc.map(Math.round).join(',') + ',' + f.haze.toFixed(3) + ')');
+      g.fillStyle = hz; g.fillRect(0, H * 0.5, W, H * 0.5);
+    }
+    if (!f.rain) return;
+    var lit = s.flash || 0;
+    [0.3, 0.6, 1].forEach(function (z) {
+      g.beginPath();
+      s.drops.forEach(function (d) {
+        if (d.z !== z) return;
+        if (!still) {
+          d.y += d.v * dt; d.x += d.v * wind * dt;
+          if (d.y >= d.gy) { addSplash(s, d.x, d.gy); respawn(s, d, false); return; }
+          if (d.y - d.len > H) { respawn(s, d, false); return; }
+        }
+        g.moveTo(d.x, d.y); g.lineTo(d.x - wind * d.len, d.y - d.len);
+      });
+      var a = (0.09 + 0.3 * z) * (still ? 0.6 : 1) + lit * 0.35 * z;
+      g.strokeStyle = 'rgba(' + (205 + 50 * lit | 0) + ',' + (216 + 39 * lit | 0) + ',235,' + Math.min(0.9, a).toFixed(3) + ')';
+      g.lineWidth = 0.6 + 0.9 * z; g.lineCap = 'round'; g.stroke();
+    });
+    if (still) return;
+    g.fillStyle = 'rgba(215,225,240,0.55)';
+    for (var i = s.splash.length - 1; i >= 0; i--) {
+      var p = s.splash[i]; p.life -= dt;
+      if (p.life <= 0) { s.splash.splice(i, 1); continue; }
+      p.vy += 900 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+      g.globalAlpha = Math.min(1, p.life / 0.25); g.fillRect(p.x, p.y, 1.4, 1.4);
+    }
+    g.globalAlpha = 1;
+  }
+  function addSplash(s, x, y) {
+    if (s.splash.length > 400) return;
+    for (var k = 0; k < 2 + (Math.random() * 2 | 0); k++) s.splash.push({ x: x, y: y, vx: (Math.random() - 0.5) * 120, vy: -60 - Math.random() * 110, life: 0.22 + Math.random() * 0.18 });
+  }
+
+  function frame(now) {
+    var s = st; if (!s) return;
+    var dt = Math.min(0.05, (now - (s.last || now)) / 1000); s.last = now;
+    if (s.f.lightning && !s.strike && now >= s.nextStrike) makeStrike(s);
+    drawBack(s, now, dt);
+    drawFront(s, now, dt, false);
+    s.raf = requestAnimationFrame(frame);
+  }
+
+  function start(hero, weather, still) {
+    stop();
+    var back = hero && hero.querySelector('.wx-back'), front = hero && hero.querySelector('.wx-front');
+    if (!back || !front) return;
+    var s = st = { hero: hero, back: back, front: front, bctx: back.getContext('2d'), fctx: front.getContext('2d'),
+      f: FX[weather] || FX['partly-cloudy'], clouds: [], drops: [], splash: [], strike: null, flash: 0,
+      nextStrike: performance.now() + 1500 + Math.random() * 2500 };
+    size(s);
+    s.ro = new ResizeObserver(function () { if (st === s) { size(s); if (still) paintStill(s); } });
+    s.ro.observe(hero);
+    if (still) paintStill(s); else s.raf = requestAnimationFrame(frame);
+  }
+  function paintStill(s) { drawBack(s, performance.now(), 0); drawFront(s, 0, 0, true); }
+  function stop() {
+    if (!st) return;
+    cancelAnimationFrame(st.raf);
+    if (st.ro) st.ro.disconnect();
+    st = null;
+  }
+  return { start: start, stop: stop, rng: rng };
+})();
+
 function skyLayers(b) {
   var h = '<div class="sky" aria-hidden="true">';
   if (b.stars) h += '<div class="stars sk-stars"></div>';
@@ -778,21 +1075,24 @@ function skyLayers(b) {
       h += '<div class="flare-ghost" style="left:' + gx + '%;top:' + gy + '%;width:' + s + 'px;height:' + s + 'px;margin:' + (-s / 2) + 'px 0 0 ' + (-s / 2) + 'px;background:radial-gradient(circle,' + cols[i] + ' 0%,rgba(255,255,255,0) 72%);' + (i === 3 ? 'border:1px solid rgba(200,230,255,0.18)' : '') + '"></div>';
     });
   }
-  var c = b.clouds, xs = [4, 52, 22, 70, 38, 84, 10, 60, 30], ys = [40, 90, 150, 60, 210, 130, 260, 300, 20];
-  for (var i = 0; i < c[0]; i++) {
-    var w = 420 + (i % 3) * 160;
-    h += '<div class="cloud sk-cloud" style="left:' + (xs[i] - 10) + '%;top:' + Math.min(ys[i], c[4]) + 'px;width:' + w + 'px;height:' + Math.round(w * 0.42) + 'px;opacity:' + c[3] + ';filter:blur(' + (6 + (i % 2) * 6) + 'px);animation-duration:' + (70 + i * 17) + 's;background:' + cloudBg(c[1], c[2]) + '"></div>';
-  }
-  if (b.rain) h += '<div class="rain-wrap"><div class="rain1 sk-rain"></div><div class="rain2 sk-rain"></div></div>';
-  if (b.storm) h += '<div class="flash sk-flash"></div><svg class="bolt sk-flash" width="160" height="420" viewBox="0 0 160 420"><path d="M90,0 L70,120 L96,128 L52,260 L80,266 L30,420" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="bevel"/><path d="M70,120 L40,180 M52,260 L18,300" fill="none" stroke="#fff" stroke-width="2"/></svg>';
+  h += '<canvas class="wx-back" aria-hidden="true"></canvas>';
   return h + '</div>';
+}
+function litWindows(city) {
+  var share = { 'clear-night': 0.42, 'dusk': 0.34, 'thunderstorm': 0.38, 'rain': 0.28, 'dawn': 0.16, 'cloudy': 0.1 }[S.weather] || 0;
+  if (!share) return '';
+  var R = SkyFX.rng(7), w = '';
+  city.blds.forEach(function (r) {
+    for (var y = r.y + 7; y < 210; y += 9) for (var x = r.x + 5; x <= r.x + r.w - 8; x += 7) if (R() < share) w += '<rect x="' + x + '" y="' + y + '" width="3" height="4"/>';
+  });
+  return '<g fill="#FFD58A" fill-opacity="0.72">' + w + '</g>';
 }
 function skylineSVG(city, b) {
   var blds = city.blds.map(function (r) { return '<rect x="' + r.x + '" y="' + r.y + '" width="' + r.w + '" height="' + r.h + '" rx="2"/>'; }).join('');
   return '<svg class="skyline" viewBox="0 0 1200 220" preserveAspectRatio="xMidYMax slice" role="img" aria-label="' + esc(city.label) + '">' +
     '<path d="' + city.mtnFar + '" fill="' + b.mtn + '" fill-opacity="0.35"/>' +
     '<path d="' + city.mtnNear + '" fill="#0B1B3F" fill-opacity="0.4"/>' +
-    '<g fill="#0B1B3F" fill-opacity="0.82">' + blds + '</g>' +
+    '<g fill="#0B1B3F" fill-opacity="0.82">' + blds + '</g>' + litWindows(city) +
     (city.landmark ? '<path d="' + city.landmark + '" fill="#0B1B3F" fill-opacity="0.95"/>' : '') +
     '<rect x="0" y="214" width="1200" height="8" fill="#0B1B3F"/></svg>';
 }
@@ -931,6 +1231,7 @@ function homeView() {
       (tw ? '' : '<span class="chip warn">Outside Taiwan: PM2.5, landslide and Predictions cover Taiwan only</span>') + '</div>' +
     '</div>' +
     (S.skyline === 'city' ? skylineSVG(skylineFor(L), b) : '') +
+    (live ? '<canvas class="wx-front" aria-hidden="true"></canvas>' : '') +
     '<div class="pinned-wrap"><div class="pinned ' + (n <= 3 ? 'few' : 'many') + '">' + pins + '</div>' +
       '<button type="button" class="scroll-hint" data-action="scroll-stats">All stats ↓</button></div>' +
   '</section>' +
@@ -1217,6 +1518,8 @@ function render() {
   document.querySelectorAll('[data-nav]').forEach(function (a) {
     if (a.dataset.nav === r.page) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
   });
+  if (r.page === 'home' && S.bgMode === 'live') SkyFX.start($('.hero'), S.weather, !!S.reduceMotion || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches));
+  else SkyFX.stop();
   if (r.page === 'predictions' && r.sub) updatePred();
   if (r.page === 'ask' && pendingAsk) { var pq = pendingAsk; pendingAsk = null; ask(pq); }
   document.documentElement.lang = S.lang === 'zh' ? 'zh-Hant-TW' : 'en';
