@@ -1191,10 +1191,106 @@
     "pm25: cross-validation chose boosted (test-year MAE 4.050); blend did better on the test year (3.790). The choice was not changed.",
     "pm10: cross-validation chose v1 (test-year MAE 4.747); blend did better on the test year (4.485). The choice was not changed."
    ]
+  },
+  {
+   "id": "nantou",
+   "name": "Nantou County",
+   "name_zh": "南投縣",
+   "lat": 23.9027,
+   "lon": 120.6905,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 5.906,
+    "model_mae": 4.386,
+    "improvement_pct": 25.7,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.133,
+     "ridge": 4.854,
+     "boosted": 4.935,
+     "blend": 4.688,
+     "baseline": 6.481
+    },
+    "test_mae": {
+     "baseline": 5.906,
+     "v1": 4.518,
+     "ridge": 4.451,
+     "boosted": 4.666,
+     "blend": 4.386,
+     "blend_no_weather": 5.066
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 6.042,
+    "model_mae": 4.719,
+    "improvement_pct": 21.9,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.415,
+     "ridge": 5.766,
+     "boosted": 8.024,
+     "blend": 6.435,
+     "baseline": 6.66
+    },
+    "test_mae": {
+     "baseline": 6.042,
+     "v1": 4.719,
+     "ridge": 4.654,
+     "boosted": 4.973,
+     "blend": 4.466,
+     "blend_no_weather": 5.149
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 29.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 143,
+     "warned": 107,
+     "caught": 94,
+     "false_alarms": 13,
+     "missed": 49,
+     "precision": 0.879,
+     "recall": 0.657
+    },
+    "tuned": {
+     "threshold": 29.0,
+     "bad_days": 143,
+     "warned": 221,
+     "caught": 140,
+     "false_alarms": 81,
+     "missed": 3,
+     "precision": 0.633,
+     "recall": 0.979
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 143,
+     "warned": 143,
+     "caught": 109,
+     "false_alarms": 34,
+     "missed": 34,
+     "precision": 0.762,
+     "recall": 0.762
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose v1 (test-year MAE 4.719); blend did better on the test year (4.466). The choice was not changed."
+   ]
   }
  ],
  "missing": [
-  "nantou",
   "yunlin",
   "chiayi_county",
   "pingtung",
