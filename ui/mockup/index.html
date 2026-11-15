@@ -200,7 +200,6 @@ main{min-height:100vh}
 .map-bar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
 .map-note{margin:-6px 0 0;font-size:13px;color:var(--muted);line-height:1.45}
 .map-loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:14px}
-.data-pane{opacity:.8}
 .data-pane svg{filter:blur(14px)}
 .leaflet-container{background:#05172E;font-family:var(--body)}
 .leaflet-tooltip.map-label{background:rgba(5,23,46,.82);color:#fff;border:0;border-radius:8px;box-shadow:none;font-weight:600;font-size:12px;padding:3px 7px}
@@ -1796,6 +1795,9 @@ function buildSat(L, token) {
   map.createPane('data'); map.getPane('data').style.zIndex = 420; map.getPane('data').classList.add('data-pane');
   map.createPane('labels'); map.getPane('labels').style.zIndex = 640; map.getPane('labels').style.pointerEvents = 'none';
   L.tileLayer(ESRI_LABELS, { maxZoom: 18, pane: 'labels', opacity: 0.85 }).addTo(map);
+  // Fade the overlay as you zoom in so the imagery underneath stays readable
+  var fade = function () { var z = map.getZoom(); map.getPane('data').style.opacity = z <= 7 ? 0.8 : z <= 9 ? 0.6 : z <= 11 ? 0.42 : 0.3; };
+  map.on('zoomend', fade); fade();
   token.L = L; token.map = map;
   token.data = L.layerGroup().addTo(map);
   token.marks = L.layerGroup().addTo(map);
