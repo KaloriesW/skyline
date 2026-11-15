@@ -1579,10 +1579,106 @@
    "notes": [
     "pm10: cross-validation chose ridge (test-year MAE 5.186); blend did better on the test year (4.776). The choice was not changed."
    ]
+  },
+  {
+   "id": "yilan",
+   "name": "Yilan County",
+   "name_zh": "宜蘭縣",
+   "lat": 24.7307,
+   "lon": 121.7631,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "ridge"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 5.494,
+    "model_mae": 3.965,
+    "improvement_pct": 27.8,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 4.222,
+     "ridge": 4.227,
+     "boosted": 4.055,
+     "blend": 3.963,
+     "baseline": 5.393
+    },
+    "test_mae": {
+     "baseline": 5.494,
+     "v1": 4.11,
+     "ridge": 4.195,
+     "boosted": 4.04,
+     "blend": 3.965,
+     "blend_no_weather": 4.581
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "ridge",
+    "baseline_mae": 6.024,
+    "model_mae": 4.952,
+    "improvement_pct": 17.8,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.269,
+     "ridge": 5.241,
+     "boosted": 6.303,
+     "blend": 5.375,
+     "baseline": 5.823
+    },
+    "test_mae": {
+     "baseline": 6.024,
+     "v1": 4.888,
+     "ridge": 4.952,
+     "boosted": 4.963,
+     "blend": 4.712,
+     "blend_no_weather": 5.157
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 25.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 15,
+     "warned": 0,
+     "caught": 0,
+     "false_alarms": 0,
+     "missed": 15,
+     "precision": null,
+     "recall": 0.0
+    },
+    "tuned": {
+     "threshold": 25.0,
+     "bad_days": 15,
+     "warned": 45,
+     "caught": 9,
+     "false_alarms": 36,
+     "missed": 6,
+     "precision": 0.2,
+     "recall": 0.6
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 15,
+     "warned": 15,
+     "caught": 7,
+     "false_alarms": 8,
+     "missed": 8,
+     "precision": 0.467,
+     "recall": 0.467
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose ridge (test-year MAE 4.952); blend did better on the test year (4.712). The choice was not changed."
+   ]
   }
  ],
  "missing": [
-  "yilan",
   "hualien",
   "taitung",
   "penghu",
