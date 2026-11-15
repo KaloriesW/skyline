@@ -1794,16 +1794,21 @@ function tyView() {
     title: ty.name + ' · ' + fmtKm(km(L.lat, L.lon, c.ll[0], c.ll[1])) + ' ' + compass(bearing(L.lat, L.lon, c.ll[0], c.ll[1])) };
 }
 function tyTileHTML(tv) {
-  var X = function (ll) { return (40 + 0.42 * (205 + (ll[1] - 121.5654) * 69)).toFixed(1); }, Y = function (ll) { return (10 + 0.42 * (55 + (25.033 - ll[0]) * 137.5)).toFixed(1); };
-  var art = '';
+  var X = function (ll) { return 40 + 0.42 * (205 + (ll[1] - 121.5654) * 69); }, Y = function (ll) { return 10 + 0.42 * (55 + (25.033 - ll[0]) * 137.5); };
+  var art = '', fit = '';
   if (tv.state === 'active') {
-    var c = tv.ty.cur.ll;
-    art = '<polyline points="' + tv.ty.pts.map(function (p) { return X(p.ll) + ',' + Y(p.ll); }).join(' ') + '" fill="none" stroke="#FFC24B" stroke-width="5" stroke-dasharray="12 10"/>' +
-      '<circle cx="' + X(c) + '" cy="' + Y(c) + '" r="26" fill="#EF4444" fill-opacity="0.3" stroke="#fff" stroke-width="3"/><circle cx="' + X(c) + '" cy="' + Y(c) + '" r="7" fill="#fff"/>';
+    // Zoom out just enough to keep the island and the whole track in frame
+    var c = tv.ty.cur.ll, x0 = 40, x1 = 170, y0 = 10, y1 = 220;
+    tv.ty.pts.forEach(function (p) { x0 = Math.min(x0, X(p.ll)); x1 = Math.max(x1, X(p.ll)); y0 = Math.min(y0, Y(p.ll)); y1 = Math.max(y1, Y(p.ll)); });
+    x0 -= 30; x1 += 30; y0 -= 30; y1 += 30;
+    var k = Math.min(1, 300 / (x1 - x0), 240 / (y1 - y0)), u = function (v) { return (v / k).toFixed(1); };
+    fit = ' transform="translate(' + ((300 - (x1 - x0) * k) / 2 - x0 * k).toFixed(1) + ',' + ((240 - (y1 - y0) * k) / 2 - y0 * k).toFixed(1) + ') scale(' + k.toFixed(3) + ')"';
+    art = '<polyline points="' + tv.ty.pts.map(function (p) { return X(p.ll).toFixed(1) + ',' + Y(p.ll).toFixed(1); }).join(' ') + '" fill="none" stroke="#FFC24B" stroke-width="' + u(5) + '" stroke-dasharray="' + u(12) + ' ' + u(10) + '"/>' +
+      '<circle cx="' + X(c).toFixed(1) + '" cy="' + Y(c).toFixed(1) + '" r="' + u(26) + '" fill="#EF4444" fill-opacity="0.3" stroke="#fff" stroke-width="' + u(3) + '"/><circle cx="' + X(c).toFixed(1) + '" cy="' + Y(c).toFixed(1) + '" r="' + u(7) + '" fill="#fff"/>';
   }
   return '<div style="display:flex;gap:16px;align-items:center;flex:1">' +
     '<svg width="120" height="96" viewBox="0 0 300 240" aria-hidden="true" style="flex:none;border-radius:14px;background:#0A2A48">' +
-      '<g transform="translate(40,10) scale(0.42)"><path d="' + ISL + '" fill="#2F5A49"/></g>' + art + '</svg>' +
+      '<g' + fit + '><g transform="translate(40,10) scale(0.42)"><path d="' + ISL + '" fill="#2F5A49"/></g>' + art + '</g></svg>' +
     (tv.state === 'active'
       ? '<div><div class="val" style="font-size:26px">' + esc(tv.title) + '</div><p class="sub">' + esc(tv.sub) + '</p></div></div>'
       : '<div><div class="val" style="font-size:26px">No active typhoon</div><p class="sub">No tropical cyclone is being tracked near Taiwan right now.</p></div></div>');
