@@ -1665,7 +1665,8 @@ function currentOrder(cat) {
 function baseFor(d) {
   if (S.predBase[d.id]) return S.predBase[d.id];
   if (S.mapBase === 'sat' || S.mapBase === 'windy') return S.mapBase;
-  return d.group === 'By Skyline' ? 'sat' : 'windy';
+  // Windy has no seasonal-outlook layer, so that dataset opens on the satellite map with our overlay
+  return d.group === 'By Skyline' || d.id === 'climate' ? 'sat' : 'windy';
 }
 
 /* ============================================================
@@ -1805,9 +1806,8 @@ var ESRI_LABELS = 'https://server.arcgisonline.com/ArcGIS/rest/services/Referenc
 var TW_BOX = [119.2, 21.7, 122.4, 25.5];
 var TW_IMG = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox=' + TW_BOX.join(',') + '&bboxSR=4326&imageSR=4326&size=384,456&format=jpg&f=image';
 var PLACE_LL = { Taipei: [25.04, 121.56], Taichung: [24.15, 120.67], Nantou: [23.96, 120.97], Hualien: [23.98, 121.60], Chiayi: [23.48, 120.45], Kaohsiung: [22.63, 120.30], Taitung: [22.76, 121.14] };
-var TYPHOON_TRACK = [[19.2, 125.4], [20.4, 124.3], [21.6, 123.3], [22.8, 122.5], [24.0, 121.9], [25.3, 121.5]];
 // Windy embed overlay + model per dataset
-var WINDY_LAYER = { pm25: ['pm2p5', 'cams'], landslide: ['rain', 'ecmwf'], rain: ['rain', 'ecmwf'], thunder: ['thunder', 'ecmwf'], wind: ['wind', 'ecmwf'], typhoon: ['wind', 'ecmwf'], waves: ['waves', 'ecmwfWaves'], climate: ['temp', 'ecmwf'] };
+var WINDY_LAYER = { pm25: ['pm2p5', 'cams'], rain: ['rain', 'ecmwf'], thunder: ['thunder', 'ecmwf'], wind: ['wind', 'ecmwf'], typhoon: ['wind', 'ecmwf'], waves: ['waves', 'ecmwfWaves'], climate: ['temp', 'ecmwf'] };
 
 var leafletReady = null, live = null;
 function loadLeaflet() {
