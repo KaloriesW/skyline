@@ -899,10 +899,106 @@
    "notes": [
     "pm10: cross-validation chose v1 (test-year MAE 4.662); blend did better on the test year (3.904). The choice was not changed."
    ]
+  },
+  {
+   "id": "hsinchu_county",
+   "name": "Hsinchu County",
+   "name_zh": "新竹縣",
+   "lat": 24.827,
+   "lon": 121.0129,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "ridge"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 6.147,
+    "model_mae": 3.647,
+    "improvement_pct": 40.7,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.126,
+     "ridge": 4.851,
+     "boosted": 4.488,
+     "blend": 4.424,
+     "baseline": 7.127
+    },
+    "test_mae": {
+     "baseline": 6.147,
+     "v1": 4.081,
+     "ridge": 4.162,
+     "boosted": 3.677,
+     "blend": 3.647,
+     "blend_no_weather": 4.818
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "ridge",
+    "baseline_mae": 6.517,
+    "model_mae": 5.017,
+    "improvement_pct": 23.0,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 6.29,
+     "ridge": 6.068,
+     "boosted": 8.2,
+     "blend": 6.341,
+     "baseline": 7.383
+    },
+    "test_mae": {
+     "baseline": 6.517,
+     "v1": 4.821,
+     "ridge": 5.017,
+     "boosted": 4.695,
+     "blend": 4.47,
+     "blend_no_weather": 5.454
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 29.5,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 33,
+     "warned": 15,
+     "caught": 10,
+     "false_alarms": 5,
+     "missed": 23,
+     "precision": 0.667,
+     "recall": 0.303
+    },
+    "tuned": {
+     "threshold": 29.5,
+     "bad_days": 33,
+     "warned": 49,
+     "caught": 26,
+     "false_alarms": 23,
+     "missed": 7,
+     "precision": 0.531,
+     "recall": 0.788
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 33,
+     "warned": 33,
+     "caught": 11,
+     "false_alarms": 22,
+     "missed": 22,
+     "precision": 0.333,
+     "recall": 0.333
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose ridge (test-year MAE 5.017); blend did better on the test year (4.470). The choice was not changed."
+   ]
   }
  ],
  "missing": [
-  "hsinchu_county",
   "miaoli",
   "changhua",
   "nantou",
