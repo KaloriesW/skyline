@@ -2162,7 +2162,7 @@ function renderChat() {
 
 /* ============================================================
    Bring-your-own AI for Ask Skyline.
-   - Demo: canned answers (no network).
+   - Built-in (no model): reads out the live data on screen (builtinAnswer). No network.
    - OpenAI-compatible: any /v1/chat/completions server (OpenAI, OpenRouter,
      Ollama, LM Studio, vLLM...), streamed with fetch + SSE.
    - Claude: the official Anthropic TypeScript SDK, loaded from a CDN on first use.
@@ -2194,38 +2194,44 @@ function aiLabel() {
   if (p === 'openai') return (S.ai.oaModel || 'no model set') + ' via ' + hostOf(S.ai.oaBase);
   if (p === 'claude') return 'Claude · ' + (S.ai.claudeModel || 'claude-opus-5-5');
   if (p === 'skyline') return 'Skyline AI' + (skyAI.model ? ' · ' + skyAI.model : '');
-  return 'Demo answers';
+  return 'Built-in summary (no AI model)';
 }
 function hostOf(u) { try { return new URL(u).host; } catch (e) { return u || 'no URL set'; } }
 
 // Everything the model may use: the same data the screens show for the current location.
-// Each line carries its source, which says "live" or "Sample".
+// Each line carries its source. Whatever has no data is listed as unavailable, never with a value.
 function skylineContext() {
-  var L = S.loc, src = nearestSource(L), nowWx = wxNow(L), tv = tyView();
+  var L = S.loc, nowWx = wxNow(), tv = tyView(), hl = todayHL();
   applyLiveSets();
   var cat = catalog(L), lines = [];
   lines.push('Location: ' + L.name + (L.sub ? ' (' + L.sub + ')' : '') + ' at ' + fmtCoord(L.lat, L.lon) + (inTW(L.lat, L.lon) ? '' : ' — outside Taiwan: team models and prediction maps do not cover it'));
-  var wxSrc = nowWx.live ? 'Open-Meteo forecast API, live' + (nowWx.time ? ', updated ' + nowWx.time + ' local time' : '') : 'Sample (placeholder, live weather not loaded; nearest station would be ' + src.name + ')';
-  lines.push('Now: ' + fmtT(nowWx.temp) + ', ' + nowWx.label + '. Headline: ' + nowWx.headline + ' [source: ' + wxSrc + ']');
-  lines.push('Today: high ' + fmtT(todayHL(L).hi) + ', low ' + fmtT(todayHL(L).lo) + ' [source: ' + wxSrc + ']');
+  if (nowWx.live) {
+    var wxSrc = 'Open-Meteo forecast API' + (nowWx.stale ? ', last updated ' + fmtAge(nowWx.t) + ' (refresh failed, may be out of date)' : ', live' + (nowWx.time ? ', updated ' + nowWx.time + ' local time' : ''));
+    lines.push('Now: ' + fmtT(nowWx.temp) + ', ' + nowWx.label + '. Headline: ' + nowWx.headline + ' [source: ' + wxSrc + ']');
+    if (hl) lines.push('Today: high ' + fmtT(hl.hi) + ', low ' + fmtT(hl.lo) + ' [source: ' + wxSrc + ']');
+  } else lines.push('Now: UNAVAILABLE — ' + naOf(nowWx.state, 'om').msg);
+  var gone = function (t) { return '- ' + t.title + ': UNAVAILABLE — ' + (t.na.h === '—' ? '' : t.na.h + '. ') + t.na.msg; };
   cat.forEach(function (t) {
+    if (t.id === 'map') return;
+    if (t.na) { lines.push(gone(t)); return; }
     if (t.kind === 'stat') lines.push('- ' + t.title + ': ' + t.value + ' — ' + t.sub + ' [source: ' + t.src + ']');
     if (t.kind === 'hourly') lines.push('- Hourly: ' + t.hours.map(function (h) { return h.t + ' ' + h.temp + ' rain ' + h.rain; }).join('; ') + ' [source: ' + t.src + ']');
     if (t.kind === 'week') lines.push('- 7-day forecast (low–high): ' + t.week.map(function (w) { return w.day + ' ' + w.lo + '–' + w.hi; }).join('; ') + ' [source: ' + t.src + ']');
     if (t.kind === 'typhoon') lines.push(tv.state === 'active' ? '- Typhoon watch: ' + tv.title + ' of this location' + (tv.sub ? '; ' + tv.sub : '') + ' [source: ' + tv.src + ']'
-      : tv.state === 'none' ? '- Typhoon watch: no active typhoon near Taiwan [source: ' + tv.src + ']'
-      : '- Typhoon watch: sample storm TD-27, 860 km SE, moving NW at 18 km/h; sea warning possible in ~48h [source: Sample (placeholder, typhoon feed not loaded)]');
+      : '- Typhoon watch: no active typhoon near Taiwan [source: ' + tv.src + ']');
   });
   lines.push('Taiwan prediction maps (region levels now / +24h / +72h):');
   activeSets().forEach(function (d) {
-    var at = function (t) { return MAP_PLACES.map(function (p, i) { return p.name + ' ' + d.labels[lvlAt(d, i, t)]; }).join(', '); };
+    if (!d.lv) { lines.push('- ' + d.title + ': UNAVAILABLE — ' + (d.na.h === '—' ? '' : d.na.h + '. ') + d.na.msg); return; }
+    if (d.quiet) { lines.push('- ' + d.title + ' [' + d.src + ']: ' + d.quiet + '.'); return; }
+    var at = function (t) { return MAP_PLACES.map(function (p, i) { return p.name + ' ' + lvlText(d, lvlAt(d, i, t)); }).join(', '); };
     lines.push('- ' + d.title + ' [' + d.src + ']: now: ' + at(NOW) + ' | +24h: ' + at(7) + ' | +72h: ' + at(9) + '. Note: ' + d.note);
   });
-  return 'You are Skyline, a weather assistant for Taiwan inside a hackathon app. Answer using only the data in <skyline_data>. ' +
-    'If the data does not cover the question, say so plainly instead of guessing. Name the source for each fact (for example "CWA station", "Windy", "team PM2.5 model"). ' +
+  return 'You are Skyline, a weather assistant for Taiwan. Answer using only the data in <skyline_data>. ' +
+    'If the data does not cover the question, say so plainly instead of guessing. Name the source for each fact (for example "Open-Meteo", "team PM2.5 model", "CWA typhoon feed"). ' +
     'Keep answers short and practical: two to five sentences, plain text, no headings. Reply in the language the user writes in (English or Traditional Chinese). ' +
-    'Temperatures are in °' + S.units + '. Each line names its source. Sources ending in "live" are real, current data. Sources starting with "Sample" are placeholder values, not measurements: ' +
-    'if an answer depends on one, say that figure is sample data.\n\n' +
+    'Temperatures are in °' + S.units + '. Each line names its source. Sources ending in "live" are real, current data. A line marked UNAVAILABLE has no data: ' +
+    'say it is not available (and why, if the line says) and never estimate a value for it.\n\n' +
     '<skyline_data>\n' + lines.join('\n') + '\n</skyline_data>';
 }
 
@@ -2235,7 +2241,7 @@ function chatHistory() {
   for (var i = 0; i < chat.length; i++) {
     var m = chat[i];
     if (m.typing || m.error || m.live) continue;
-    var text = m.me ? m.text : (m.plain || stripHTML(cannedOf(m).text));
+    var text = m.me ? m.text : (m.plain || (m.builtin ? stripHTML(m.en.text) : ''));
     if (!text) continue;
     var role = m.me ? 'user' : 'assistant';
     if (out.length && out[out.length - 1].role === role) out[out.length - 1].content += '\n\n' + text;
@@ -2301,19 +2307,19 @@ async function readSSE(res, onDelta) {
    localhost or a plain static host); POST /api/ask streams the answer in the OpenAI SSE format. */
 var skyAI = { state: 'checking', model: '', remaining: null, promise: null };   // state: checking | ok | off
 var SKY_ERR = {
-  budget: 'The shared Skyline AI budget is used up for now. Demo answers still work, or add your own key in Settings.',
+  budget: 'The shared Skyline AI budget is used up for now. The built-in summary still works, or add your own key in Settings.',
   rate: 'Skyline AI is busy: too many questions in a short time. Wait a moment and ask again.',
-  gone: 'Skyline AI isn’t available on this server. Pick Demo or your own provider in Settings.',
+  gone: 'Skyline AI isn’t available on this server. Use the built-in summary or your own provider in Settings.',
   server: 'Skyline AI had a problem answering. Try again in a moment.',
   net: 'Couldn’t reach the Skyline server. Check your connection and try again.'
 };
 // Has the user picked a provider themselves? (Untouched installs get Skyline AI when the server offers it.)
-function aiConfigured() { return !!S.ai.chosen || S.ai.provider !== 'demo'; }
+function aiConfigured() { return !!S.ai.chosen || S.ai.provider !== 'builtin'; }
 // The provider actually used right now.
 function aiProvider() {
   var p = S.ai.provider;
-  if (p === 'skyline') return skyAI.state === 'off' ? 'demo' : 'skyline';
-  if (p === 'demo' && !S.ai.chosen && skyAI.state === 'ok') return 'skyline';
+  if (p === 'skyline') return skyAI.state === 'off' ? 'builtin' : 'skyline';
+  if (p === 'builtin' && !S.ai.chosen && skyAI.state === 'ok') return 'skyline';
   return p;
 }
 function probeSkyAI(force) {
@@ -2452,11 +2458,11 @@ async function llmAsk(q) {
 /* ---------- Settings ---------- */
 function aiSettingsHTML() {
   var p = aiProvider(), skyOff = skyAI.state === 'off';
-  var segH = '<div class="seg" role="group" aria-label="AI provider" style="flex-wrap:wrap">' + [['skyline', 'Skyline (no setup)'], ['demo', 'Demo'], ['openai', 'OpenAI-compatible'], ['claude', 'Claude']].map(function (o) {
+  var segH = '<div class="seg" role="group" aria-label="AI provider" style="flex-wrap:wrap">' + [['skyline', 'Skyline (no setup)'], ['builtin', 'Built-in (no model)'], ['openai', 'OpenAI-compatible'], ['claude', 'Claude']].map(function (o) {
     var dis = o[0] === 'skyline' && skyOff;
     return '<button type="button" data-action="ai-provider" data-val="' + o[0] + '" aria-pressed="' + (p === o[0]) + '"' + (dis ? ' disabled style="opacity:.45;cursor:not-allowed"' : '') + '>' + o[1] + '</button>';
   }).join('') + '</div>';
-  if (skyOff) segH += '<p class="hint">Skyline (no setup) isn’t available on this server. Demo or your own provider still work. <button type="button" class="light-btn" data-action="ai-recheck">Check again</button></p>';
+  if (skyOff) segH += '<p class="hint">Skyline (no setup) isn’t available on this server. The built-in summary or your own provider still work. <button type="button" class="light-btn" data-action="ai-recheck">Check again</button></p>';
   var body = '';
   if (p === 'skyline') {
     body = '<p class="hint">No key and nothing to set up. Your question and the Skyline data shown for your location go to the Skyline server, which asks a shared model for you.</p>' +
@@ -2474,7 +2480,7 @@ function aiSettingsHTML() {
     body = aiField('ai-key-claude', 'Anthropic API key', '<input id="ai-key-claude" type="password" data-input="key.claude" value="' + esc(AI_KEYS.claude) + '" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">') +
       modelField('ai-model-claude', 'ai.claudeModel', S.ai.claudeModel, 'claude-opus-5-5');
   } else {
-    body = '<p class="hint">Canned answers with no network. Pick a provider to use a real model.</p>';
+    body = '<p class="hint">No AI model. Ask AI reads out the live data on screen (current conditions, rain, thunderstorms, wind, PM2.5, waves, typhoons, seasonal outlook) with its sources, and can’t answer anything else. Pick a provider to use a real model.</p>';
   }
   if (p === 'openai' || p === 'claude') {
     body += setRow('Remember the key on this device', 'Otherwise it’s forgotten when you close the tab', '<button type="button" class="switch" role="switch" aria-checked="' + !!S.ai.remember + '" aria-label="Remember the key on this device" data-action="ai-remember"></button>') +
@@ -2574,7 +2580,7 @@ function settingsView() {
 
   '<section class="card" aria-labelledby="st-units"><h2 id="st-units">Units &amp; language</h2>' +
     setRow('Temperature', '', seg('units', 'Temperature unit', [['C', '°C'], ['F', '°F']])) +
-    setRow('Language', 'Demo AI answers follow this too', seg('lang', 'Language', [['zh', '中文'], ['en', 'English']])) +
+    setRow('Language', 'The built-in Ask AI summary follows this too', seg('lang', 'Language', [['zh', '中文'], ['en', 'English']])) +
   '</section>' +
   '<button type="button" class="light-btn" data-action="reset-all">Reset everything to default</button>' +
   '</div></div></div>';
