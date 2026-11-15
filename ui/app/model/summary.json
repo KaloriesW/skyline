@@ -218,6 +218,103 @@
    ]
   },
   {
+   "id": "taoyuan",
+   "name": "Taoyuan City",
+   "name_zh": "桃園市",
+   "lat": 24.9937,
+   "lon": 121.301,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "ridge"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 6.147,
+    "model_mae": 3.685,
+    "improvement_pct": 40.1,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 4.968,
+     "ridge": 4.754,
+     "boosted": 4.527,
+     "blend": 4.461,
+     "baseline": 7.127
+    },
+    "test_mae": {
+     "baseline": 6.147,
+     "v1": 4.054,
+     "ridge": 4.059,
+     "boosted": 3.709,
+     "blend": 3.685,
+     "blend_no_weather": 4.794
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "ridge",
+    "baseline_mae": 6.517,
+    "model_mae": 4.902,
+    "improvement_pct": 24.8,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 6.179,
+     "ridge": 6.14,
+     "boosted": 7.809,
+     "blend": 6.384,
+     "baseline": 7.383
+    },
+    "test_mae": {
+     "baseline": 6.517,
+     "v1": 4.789,
+     "ridge": 4.902,
+     "boosted": 4.675,
+     "blend": 4.492,
+     "blend_no_weather": 5.469
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 26.5,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 33,
+     "warned": 17,
+     "caught": 10,
+     "false_alarms": 7,
+     "missed": 23,
+     "precision": 0.588,
+     "recall": 0.303
+    },
+    "tuned": {
+     "threshold": 26.5,
+     "bad_days": 33,
+     "warned": 78,
+     "caught": 29,
+     "false_alarms": 49,
+     "missed": 4,
+     "precision": 0.372,
+     "recall": 0.879
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 33,
+     "warned": 33,
+     "caught": 11,
+     "false_alarms": 22,
+     "missed": 22,
+     "precision": 0.333,
+     "recall": 0.333
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose ridge (test-year MAE 4.902); blend did better on the test year (4.492). The choice was not changed."
+   ]
+  },
+  {
    "id": "taichung",
    "name": "Taichung City",
    "name_zh": "臺中市",
@@ -317,7 +414,6 @@
   }
  ],
  "missing": [
-  "taoyuan",
   "tainan",
   "kaohsiung",
   "keelung",
