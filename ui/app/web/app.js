@@ -1898,19 +1898,12 @@ function drawSat(d, t) {
   var L = live.L, P = pal();
   live.data.clearLayers(); live.marks.clearLayers();
   MAP_PLACES.forEach(function (p, i) {
-    var l = lvlAt(d, i, t), ll = PLACE_LL[p.name];
-    L.circle(ll, { pane: 'data', radius: 24000 + l * 9000, stroke: false, fillColor: P[l], fillOpacity: 0.8, interactive: false }).addTo(live.data);
+    var l = lvlAt(d, i, t), ll = PLACE_LL[p.name], shown = l != null && !d.quiet;
+    if (shown) L.circle(ll, { pane: 'data', radius: 24000 + l * 9000, stroke: false, fillColor: P[l], fillOpacity: 0.8, interactive: false }).addTo(live.data);
     L.circleMarker(ll, { radius: 4, color: '#05172E', weight: 1, fillColor: '#fff', fillOpacity: 1 })
-      .bindTooltip(p.name + ' · ' + d.labels[l], { permanent: true, direction: 'right', offset: [6, 0], className: 'map-label' }).addTo(live.marks);
+      .bindTooltip(d.quiet ? p.name : p.name + ' · ' + lvlText(d, l), { permanent: true, direction: 'right', offset: [6, 0], className: 'map-label' }).addTo(live.marks);
   });
-  if (d.id === 'typhoon' && tyStorm()) drawTy(L, t);
-  else if (d.id === 'typhoon') {
-    L.polyline(TYPHOON_TRACK, { color: '#FFC24B', weight: 3, dashArray: '8 8' }).addTo(live.marks);
-    var k = t / 11 * (TYPHOON_TRACK.length - 1), i0 = Math.min(TYPHOON_TRACK.length - 2, Math.floor(k)), f = k - i0;
-    var a = TYPHOON_TRACK[i0], b = TYPHOON_TRACK[i0 + 1], pos = [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
-    L.circle(pos, { radius: 70000 + t * 4000, color: '#fff', weight: 2, fillColor: '#EF4444', fillOpacity: 0.25 }).addTo(live.marks);
-    L.circleMarker(pos, { radius: 5, color: '#fff', weight: 0, fillColor: '#fff', fillOpacity: 1 }).bindTooltip('TD-27 (sample) · ' + TIMES[t]).addTo(live.marks);
-  }
+  if (d.id === 'typhoon') drawTy(L, t);   // draws the real track, or nothing when no storm is active
   if (inTW(S.loc.lat, S.loc.lon)) {
     L.circleMarker([S.loc.lat, S.loc.lon], { radius: 7, color: '#fff', weight: 2, fillColor: S.accent, fillOpacity: 1 })
       .bindTooltip('You: ' + S.loc.name).addTo(live.marks);
@@ -1918,8 +1911,9 @@ function drawSat(d, t) {
 }
 
 // Card previews: one real satellite still of Taiwan (a single cached request shared by every
-// card), but each dataset gets its own crop, its own overlay motif and a small key showing the
-// worst region and the colour scale, so no two cards look the same.
+// card). Each dataset gets its own crop and, once its data has loaded, an overlay of the current
+// region levels, a small icon motif and a key naming the worst region. A dataset with no data
+// shows the bare still and its state ("Not connected yet", "Unavailable", "Loading…").
 // Crop per dataset: [centre lat, centre lon, width in still pixels] (the still is 384 × 456).
 var THUMB_VIEW = { pm25: [23.35, 120.6, 320], landslide: [23.95, 121.25, 280], rain: [24.3, 121.15, 330], thunder: [24.0, 120.9, 310],
   wind: [24.45, 120.6, 350], typhoon: [23.7, 121.3, 300], waves: [24.6, 121.15, 290], climate: [23.7, 120.9, 384] };
@@ -1928,55 +1922,48 @@ function thumbHTML(d, base) {
   var px = function (ll) { return [(ll[1] - TW_BOX[0]) / (TW_BOX[2] - TW_BOX[0]) * W, (TW_BOX[3] - ll[0]) / (TW_BOX[3] - TW_BOX[1]) * H]; };
   var f1 = function (n) { return n.toFixed(1); };
   var inBox = function (ll) { return ll[1] >= TW_BOX[0] && ll[1] <= TW_BOX[2] && ll[0] >= TW_BOX[1] && ll[0] <= TW_BOX[3]; };
-  var v = THUMB_VIEW[d.id] || THUMB_VIEW.climate, storm = null;
-  if (d.id === 'typhoon') {
-    // centre the crop on the first forecast point that falls on the still
-    storm = TYPHOON_TRACK.filter(inBox)[0] || TYPHOON_TRACK[TYPHOON_TRACK.length - 1];
-    v = [storm[0] - 0.3, storm[1] - 0.6, v[2]];
-  }
+  var v = THUMB_VIEW[d.id] || THUMB_VIEW.climate, has = !!d.lv && !d.quiet;
+  var ty = d.id === 'typhoon' && has ? tyStorm() : null;
+  if (ty && ty.active && inBox(ty.cur.ll)) v = [ty.cur.ll[0] - 0.3, ty.cur.ll[1] - 0.6, v[2]];   // centre the crop on the storm when it is on the still
   var vw = Math.min(W, v[2]), vh = vw / 1.7, c = px(v);
   var vx = Math.max(0, Math.min(W - vw, c[0] - vw / 2)), vy = Math.max(0, Math.min(H - vh, c[1] - vh / 2));
   var at = MAP_PLACES.map(function (p) { return px(PLACE_LL[p.name]); });
+  var now = MAP_PLACES.map(function (p, i) { return has ? lvlAt(d, i, NOW) : null; });
   var spots = at.map(function (q, i) {
-    var l = d.base[i];
-    return '<circle cx="' + f1(q[0]) + '" cy="' + f1(q[1]) + '" r="' + (20 + l * 9) + '" fill="' + P[l] + '" fill-opacity="' + (base === 'sat' ? 0.55 : 0.7) + '" filter="url(#sk-b16)"/>';
+    var l = now[i];
+    return l == null ? '' : '<circle cx="' + f1(q[0]) + '" cy="' + f1(q[1]) + '" r="' + (20 + l * 9) + '" fill="' + P[l] + '" fill-opacity="' + (base === 'sat' ? 0.55 : 0.7) + '" filter="url(#sk-b16)"/>';
   }).join('');
-  var mark = function (minL, fn) { return at.map(function (q, i) { return d.base[i] >= minL ? fn(q, d.base[i]) : ''; }).join(''); };
+  var mark = function (minL, fn) { return at.map(function (q, i) { return now[i] != null && now[i] >= minL ? fn(q, now[i]) : ''; }).join(''); };
   var rows = function (n, fn) { var s = ''; for (var i = 0; i < n; i++) s += fn(i, vy + (i + 0.5) * vh / n); return s; };
   var motif = '';
-  if (d.id === 'pm25') {            // haze bank along the west coast
-    motif = '<ellipse cx="138" cy="252" rx="46" ry="150" transform="rotate(12 138 252)" fill="' + P[2] + '" fill-opacity="0.3" filter="url(#sk-b16)"/>';
-  } else if (d.id === 'landslide') { // slope contours on the Central Range, warning triangles on risky regions
-    motif = '<g fill="none" stroke="#fff" stroke-opacity="0.32" stroke-width="1.2" transform="rotate(14 216 216)">' +
-      [26, 40, 54].map(function (r) { return '<ellipse cx="216" cy="216" rx="' + r + '" ry="' + (r * 3 + 30) + '"/>'; }).join('') + '</g>' +
-      mark(2, function (q, l) { return '<path d="M' + f1(q[0]) + ',' + f1(q[1] - 10) + ' l9,16 h-18 z" fill="' + P[l] + '" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>'; });
+  if (!has) {
+    motif = '';
   } else if (d.id === 'rain') {      // slanted rain streaks
     motif = '<g fill="none" stroke="#CFE8FF" stroke-opacity="0.55" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="9 13">' +
       rows(18, function (i) { return '<path d="M' + f1(vx + i * 24) + ',' + f1(vy - 10) + ' l-44,' + f1(vh + 20) + '"/>'; }) + '</g>';
   } else if (d.id === 'thunder') {   // lightning bolts where storms are likely
     motif = mark(2, function (q) { return '<path transform="translate(' + f1(q[0]) + ' ' + f1(q[1]) + ')" d="M2,-14 L-7,2 H-1 L-3,14 L8,-3 H2 Z" fill="#FFE066" stroke="#05172E" stroke-width="1" stroke-linejoin="round"/>'; });
-  } else if (d.id === 'wind') {      // north-easterly flow lines
+  } else if (d.id === 'wind') {      // flow lines (an icon for wind, not a measured direction)
     motif = '<g fill="none" stroke="#fff" stroke-opacity="0.6" stroke-width="1.3" stroke-linecap="round" stroke-dasharray="10 14">' +
-      rows(6, function (i, y) { return '<path class="sk-flow" d="M' + f1(vx + vw + 10) + ',' + f1(y - 34) + ' C' + f1(vx + vw * 0.66) + ',' + f1(y - 30) + ' ' + f1(vx + vw * 0.33) + ',' + f1(y + 22) + ' ' + f1(vx - 10) + ',' + f1(y + 34) + '"/>'; }) + '</g>';
-  } else if (d.id === 'typhoon') {   // forecast track and the storm
-    var s = px(storm);
-    motif = '<polyline points="' + TYPHOON_TRACK.map(function (ll) { var q = px(ll); return f1(q[0]) + ',' + f1(q[1]); }).join(' ') + '" fill="none" stroke="#FFC24B" stroke-width="2.5" stroke-dasharray="7 7" stroke-linecap="round"/>' +
+      rows(6, function (i, y) { return '<path d="M' + f1(vx + vw + 10) + ',' + f1(y) + ' C' + f1(vx + vw * 0.66) + ',' + f1(y - 14) + ' ' + f1(vx + vw * 0.33) + ',' + f1(y + 14) + ' ' + f1(vx - 10) + ',' + f1(y) + '"/>'; }) + '</g>';
+  } else if (ty && ty.active) {      // the real track and the storm's current position
+    var s = px(ty.cur.ll);
+    motif = '<polyline points="' + ty.pts.map(function (p) { var q = px(p.ll); return f1(q[0]) + ',' + f1(q[1]); }).join(' ') + '" fill="none" stroke="#FFC24B" stroke-width="2.5" stroke-dasharray="7 7" stroke-linecap="round"/>' +
       '<circle cx="' + f1(s[0]) + '" cy="' + f1(s[1]) + '" r="34" fill="#EF4444" fill-opacity="0.18" stroke="#fff" stroke-opacity="0.5" stroke-width="1"/>' +
       '<circle cx="' + f1(s[0]) + '" cy="' + f1(s[1]) + '" r="18" fill="#EF4444" fill-opacity="0.32" stroke="#fff" stroke-width="2"/><circle cx="' + f1(s[0]) + '" cy="' + f1(s[1]) + '" r="4.5" fill="#fff"/>';
   } else if (d.id === 'waves') {     // swell lines
     var humps = Math.ceil((vw + 20) / 26), tail = ''; for (var k = 1; k < humps; k++) tail += ' t26,0';
     motif = '<g fill="none" stroke="#fff" stroke-opacity="0.5" stroke-width="1.3" stroke-linecap="round">' +
       rows(7, function (i, y) { return '<path d="M' + f1(vx - 10 - (i % 2) * 13) + ',' + f1(y) + ' q13,-9 26,0' + tail + ' t26,0"/>'; }) + '</g>';
-  } else if (d.id === 'climate') {   // warm anomaly wash with isotherms
-    motif = '<rect width="' + W + '" height="' + H + '" fill="#FF6A3D" fill-opacity="0.2"/><g fill="none" stroke="#FFD7A8" stroke-opacity="0.65" stroke-width="1.3">' +
-      rows(4, function (i, y) { return '<path d="M' + f1(vx - 10) + ',' + f1(y) + ' C' + f1(vx + vw * 0.3) + ',' + f1(y - 24) + ' ' + f1(vx + vw * 0.6) + ',' + f1(y + 24) + ' ' + f1(vx + vw + 10) + ',' + f1(y - 6) + '"/>'; }) + '</g>';
   }
   var windy = base === 'windy' ? '<rect width="' + W + '" height="' + H + '" fill="url(#sk-windy)" fill-opacity="0.72"/>' : '';
-  var worst = 0; d.base.forEach(function (l, i) { if (l > d.base[worst]) worst = i; });
+  var worst = -1; now.forEach(function (l, i) { if (l != null && (worst < 0 || l > now[worst])) worst = i; });
+  var tag = !d.lv ? '<span class="thumb-peak na">' + (d.na.h === '—' ? d.na.msg : d.na.h) + '</span>'
+    : d.quiet ? '<span class="thumb-peak na">' + d.quiet + '</span>'
+    : worst < 0 ? '' : '<span class="thumb-peak"><i style="background:' + P[now[worst]] + '"></i><span>' + esc(MAP_PLACES[worst].name) + '</span><span>' + esc(d.labels[now[worst]]) + '</span></span>';
   return '<svg viewBox="' + f1(vx) + ' ' + f1(vy) + ' ' + f1(vw) + ' ' + f1(vh) + '" preserveAspectRatio="xMidYMid slice" role="img" aria-label="' + esc(d.title) + ' preview on ' + (base === 'sat' ? 'satellite' : 'Windy') + ' map">' +
-    '<rect width="' + W + '" height="' + H + '" fill="#05172E"/><image href="' + TW_IMG + '" width="' + W + '" height="' + H + '" preserveAspectRatio="none" style="filter:brightness(1.45) saturate(1.15)"/>' + windy + spots + motif + '</svg>' +
-    '<span class="thumb-peak"><i style="background:' + P[d.base[worst]] + '"></i><span>' + esc(MAP_PLACES[worst].name) + '</span><span>' + esc(d.labels[d.base[worst]]) + '</span></span>' +
-    '<span class="thumb-key" aria-hidden="true">' + P.map(function (col) { return '<i style="background:' + col + '"></i>'; }).join('') + '</span>';
+    '<rect width="' + W + '" height="' + H + '" fill="#05172E"/><image href="' + TW_IMG + '" width="' + W + '" height="' + H + '" preserveAspectRatio="none" style="filter:brightness(1.45) saturate(1.15)"/>' + windy + spots + motif + '</svg>' + tag +
+    (has ? '<span class="thumb-key" aria-hidden="true">' + P.map(function (col) { return '<i style="background:' + col + '"></i>'; }).join('') + '</span>' : '');
 }
 
 function predView(sub) {
@@ -1984,24 +1971,29 @@ function predView(sub) {
   var banner = tw ? '' : '<div class="banner">You’re looking at <b>' + esc(S.loc.name) + '</b>. Predictions and the team models cover Taiwan only, so these maps always show Taiwan.</div>';
   var d = activeSets().filter(function (x) { return x.id === sub; })[0];
   if (!d) {
-    var groups = [['By Skyline', 'Our own Taiwan models'], ['Others', 'Pulled from Windy, CWA and other APIs']];
+    var groups = [['By Skyline', 'Our own Taiwan models'], ['Others', 'From Open-Meteo, ECMWF and CWA']];
     return '<div class="page"><header><div class="eyebrow">Taiwan only</div><h1>Predictions</h1>' +
       '<p class="lede">Pick a dataset to open its map, then scrub back through the past or forward into the forecast.</p></header>' + banner +
       groups.map(function (g) {
         return '<section aria-labelledby="g-' + g[0].replace(/\s/g, '') + '"><div class="group-head"><h2 id="g-' + g[0].replace(/\s/g, '') + '">' + g[0] + '</h2><span>' + g[1] + '</span></div><div class="pred-grid">' +
           activeSets().filter(function (x) { return x.group === g[0]; }).map(function (x) {
             var base = baseFor(x), own = x.group === 'By Skyline';
-            return '<a class="pcard' + (own ? ' own' : '') + '" href="#predictions/' + x.id + '"><div class="thumb">' +
+            return '<a class="pcard' + (own ? ' own' : '') + (x.lv ? '' : ' na') + '" href="#predictions/' + x.id + '"><div class="thumb">' +
               thumbHTML(x, base) +
-              '<span class="base-tag">' + (base === 'sat' ? 'Satellite' : 'Windy') + '</span>' + (own ? '<span class="own-tag">Skyline</span>' : '') + '</div>' +
+              (x.lv ? '<span class="base-tag">' + (base === 'sat' ? 'Satellite' : 'Windy') + '</span>' : '') + (own ? '<span class="own-tag">Skyline</span>' : '') + '</div>' +
               '<div class="pc-body"><h3>' + x.title + '</h3><p>' + x.desc + '</p><span class="src">' + x.src + '</span></div></a>';
           }).join('') + '</div></section>';
       }).join('') + '</div>';
   }
   var own = d.group === 'By Skyline';
-  return '<div class="page"><header class="pm-head"><a class="btn ghost" href="#predictions">← All predictions</a>' +
+  var head = '<div class="page"><header class="pm-head"><a class="btn ghost" href="#predictions">← All predictions</a>' +
     '<div><div class="eyebrow">' + d.group + '</div><h1>' + d.title + '</h1></div><div class="grow"></div>' +
-    '<span class="chip ' + (own ? 'own' : 'solid') + '">' + d.src + '</span></header>' + banner +
+    '<span class="chip ' + (own ? 'own' : 'solid') + '">' + d.src + '</span></header>' + banner;
+  // No data: say why. No map, overlay, track, region values or ranking are drawn.
+  if (!d.lv) return head + '<section class="pm-na" role="status"><h2>' + (d.na.h === '—' ? d.na.msg : d.na.h) + '</h2>' +
+    (d.na.h === '—' ? '' : '<p>' + d.na.msg + '</p>') + '<p>' + d.desc + '</p>' +
+    (d.na.retry ? '<button type="button" class="btn accent" data-action="retry-live">Retry</button>' : '') + '</section></div>';
+  return head +
     '<div class="pm-body"><section class="pm-map" aria-label="Map">' +
       '<div class="map-bar"><span class="mode" id="pm-mode"></span>' +
         '<div class="seg" role="group" aria-label="Map base"><button type="button" data-action="set-base" data-base="sat" id="base-sat">Satellite</button><button type="button" data-action="set-base" data-base="windy" id="base-windy">Windy</button></div></div>' +
@@ -2017,9 +2009,9 @@ function predView(sub) {
 }
 function updatePred() {
   var sub = route().sub, d = activeSets().filter(function (x) { return x.id === sub; })[0];
-  if (!d || !$('#pm-live')) return;
+  if (!d || !d.lv || !$('#pm-live')) return;
   var t = S.predT, base = baseFor(d), P = pal();
-  var mode = t < NOW ? ['Observed (past)', '#5B6F99', '#fff'] : t === NOW ? ['Now', '#fff', '#0B1B3F'] : ['Prediction', 'var(--accent)', 'var(--accent-ink)'];
+  var mode = t < NOW ? ['Past', '#5B6F99', '#fff'] : t === NOW ? ['Now', '#fff', '#0B1B3F'] : ['Prediction', 'var(--accent)', 'var(--accent-ink)'];
   renderLive(d, t, base);
   $('#pm-note').textContent = base === 'windy'
     ? 'Live Windy map (' + (WINDY_LAYER[d.id] || ['wind'])[0] + ' layer). ' + (
@@ -2030,15 +2022,16 @@ function updatePred() {
   var m = $('#pm-mode'); m.textContent = mode[0]; m.style.background = mode[1]; m.style.color = mode[2];
   $('#pm-time').textContent = TIMES[t];
   $('#pm-k').textContent = mode[0] + ' · ' + TIMES[t];
-  $('#pm-conf').textContent = 'Confidence: ' + (t <= NOW ? 'Observed' : t <= 7 ? d.conf[0] : t <= 9 ? d.conf[1] : d.conf[2]);
+  $('#pm-conf').textContent = d.basis;
   $('#base-sat').setAttribute('aria-pressed', base === 'sat');
   $('#base-windy').setAttribute('aria-pressed', base === 'windy');
   var yours = inTW(S.loc.lat, S.loc.lon) ? nearestMapPlace() : -1;
-  $('#pm-rows').innerHTML = MAP_PLACES.map(function (p, i) {
+  $('#pm-rows').innerHTML = d.quiet ? '<div class="region"><span>' + d.quiet + '</span></div>' : MAP_PLACES.map(function (p, i) {
     var l = lvlAt(d, i, t);
-    return '<div class="region' + (i === yours ? ' you' : '') + '"><span>' + p.name + '</span><b style="background:' + P[l] + ';color:' + inkFor(P[l]) + '">' + d.labels[l] + '</b></div>';
+    return '<div class="region' + (i === yours ? ' you' : '') + '"><span>' + p.name + '</span>' +
+      (l == null ? '<b class="none">' + d.none + '</b>' : '<b style="background:' + P[l] + ';color:' + inkFor(P[l]) + '">' + d.labels[l] + '</b>') + '</div>';
   }).join('');
-  $('#pm-legend').innerHTML = d.legend.map(function (l, i) { return '<span><i style="background:' + P[i] + '"></i>' + l + '</span>'; }).join('');
+  $('#pm-legend').innerHTML = d.quiet ? '' : d.legend.map(function (l, i) { return '<span><i style="background:' + P[i] + '"></i>' + l + '</span>'; }).join('');
   var r = $('#pred-time'); r.setAttribute('aria-valuetext', TIMES[t] + ', ' + mode[0]);
 }
 function nearestMapPlace() {
