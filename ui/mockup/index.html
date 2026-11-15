@@ -1093,10 +1093,10 @@ var PIN_IDS = ['thunder', 'pm25', 'wind', 'landslide', 'rain', 'humidity', 'uv',
 var KEY = 'skyline-mockup-v1';
 var DEFAULTS = {
   loc: { name: 'Xinyi District', sub: 'Taipei · 110 信義區', lat: 25.0330, lon: 121.5654, kind: 'District' },
-  weather: 'partly-cloudy', pinCount: 3, pins: PIN_IDS.slice(), order: null, spans: {}, hidden: {},
+  weather: 'live', dataV: 1, pinCount: 3, pins: PIN_IDS.slice(), order: null, spans: {}, hidden: {},
   accent: '#FFC24B', risk: 'default', bgMode: 'live', tiles: 'glass', fonts: 'default', radius: 24, skyline: 'city', mapBase: 'auto',
   reduceMotion: false, units: 'C', lang: 'en',
-  sources: { cwa: true, windyPoint: true, windyMap: true, pm25: true, landslide: true, typhoon: true },
+  sources: { openMeteo: true, cwa: true, windyPoint: true, windyMap: true, pm25: true, landslide: true, typhoon: true },
   recents: [], predBase: {}, predT: NOW,
   ai: { provider: 'demo', oaBase: 'https://openrouter.ai/api/v1', oaModel: '', claudeModel: 'claude-opus-5-5', remember: false }
 };
@@ -1109,6 +1109,8 @@ try {
     for (var k in saved) if (k in DEFAULTS) S[k] = saved[k];
     S.sources = Object.assign(clone(DEFAULTS.sources), saved.sources || {});
     S.ai = Object.assign(clone(DEFAULTS.ai), saved.ai || {});
+    // Settings saved before live data existed held a demo condition by default: start those on Live.
+    if (!saved.dataV) { S.weather = 'live'; S.dataV = 1; }
   }
 } catch (e) { /* storage unavailable: run with defaults */ }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
@@ -1532,7 +1534,7 @@ function skyLayers(b) {
   h += '<canvas class="wx-back" aria-hidden="true"></canvas>';
   return h + '</div>';
 }
-function litShare() { return { 'clear-night': 0.42, 'dusk': 0.34, 'thunderstorm': 0.38, 'rain': 0.28, 'dawn': 0.16, 'cloudy': 0.1 }[S.weather] || 0; }
+function litShare() { return { 'clear-night': 0.42, 'dusk': 0.34, 'thunderstorm': 0.38, 'rain': 0.28, 'dawn': 0.16, 'cloudy': 0.1 }[wxKey()] || 0; }
 function litWindows(city) {
   var share = litShare();
   if (!share) return '';
@@ -1587,8 +1589,8 @@ function feed(name, url, ok) {
   f.busy = true; f.tried = now;
   getJSON(url).then(function (d) {
     f.busy = false;
-    if (!ok(d)) return;
-    f.d = d; f.t = Date.now(); liveArrived();
+    if (ok(d)) { f.d = d; f.t = Date.now(); }
+    liveArrived();
   }, function () { f.busy = false; liveArrived(); });
 }
 function feedData(name) { var f = FEEDS[name]; return f && f.d && Date.now() - f.t < 6 * LIVE_TTL ? f.d : null; }
@@ -1907,11 +1909,28 @@ function dayNames() {
 }
 // Today's high/low always brackets the current temperature
 function todayHL(L) {
-  var b = WEATHER[S.weather] || WEATHER['partly-cloudy'], off = tempOffset(L), now = b.temp + off;
+  var wx = liveWx();
+  if (wx && isNum(wx.daily.temperature_2m_max[0]) && isNum(wx.daily.temperature_2m_min[0])) {
+    return { hi: Math.max(wx.daily.temperature_2m_max[0], wx.current.temperature_2m), lo: Math.min(wx.daily.temperature_2m_min[0], wx.current.temperature_2m) };
+  }
+  var b = WEATHER[wxKey()], off = tempOffset(L), now = b.temp + off;
   return { hi: Math.max(WEEK[0][1] + off, now), lo: Math.min(WEEK[0][0] + off, now) };
 }
 function weekData(L) {
-  var off = tempOffset(L), names = dayNames(), hl = todayHL(L);
+  var off = tempOffset(L), names = dayNames(), hl = todayHL(L), wx = liveWx();
+  if (wx) {
+    var dy = wx.daily, rows = [], mn = Infinity, mx = -Infinity;
+    for (var i = 0; i < Math.min(7, dy.time.length); i++) {
+      var dlo = i ? dy.temperature_2m_min[i] : hl.lo, dhi = i ? dy.temperature_2m_max[i] : hl.hi;
+      if (!isNum(dlo) || !isNum(dhi)) break;
+      rows.push({ day: i ? weekdayOf(dy.time[i]) : 'Today', lo: dlo, hi: dhi, c: WEEK_COL[wmoKind(dy.weather_code[i])] });
+      mn = Math.min(mn, dlo); mx = Math.max(mx, dhi);
+    }
+    var span = Math.max(1, mx - mn);
+    if (rows.length) return rows.map(function (r) {
+      return { day: r.day, lo: fmtT(r.lo), hi: fmtT(r.hi), c: r.c, l: ((r.lo - mn) / span * 100) + '%', r: ((mx - r.hi) / span * 100) + '%' };
+    });
+  }
   return WEEK.map(function (w, i) {
     var lo = i ? w[0] + off : hl.lo, hi = i ? w[1] + off : hl.hi;
     return { day: names[i], lo: fmtT(lo), hi: fmtT(hi), c: WEEK_COL[w[2]], l: ((lo - off - 17) / 14 * 100) + '%', r: ((31 - (hi - off)) / 14 * 100) + '%' };
@@ -1943,6 +1962,7 @@ function catalog(L) {
     { id: 'climate', title: 'Climate outlook · 30 days', src: 'Climate projections', value: S.units === 'F' ? '+2.2°' : '+1.2°', sub: 'Warmer and wetter than normal (115% of normal rain)', span: 2, rows: 1, kind: 'stat' }
   ];
   var off = { pm25: !S.sources.pm25, landslide: !S.sources.landslide, typhoon: !S.sources.typhoon, map: !S.sources.windyMap };
+  liveTiles(all, L);
   return all.filter(function (t) { return !off[t.id]; });
 }
 function activeSets() {
@@ -1982,7 +2002,7 @@ var WINDY_LINES =
    'M-10,280 C60,260 150,300 230,270 S300,250 320,270', 'M-10,360 C70,340 150,380 230,350 S300,330 320,350', 'M-10,440 C60,420 150,460 230,430 S300,410 320,430']
     .map(function (d) { return '<path class="sk-flow" d="' + d + '"/>'; }).join('') + '</g>';
 
-function lvlAt(d, i, t) { return Math.max(0, Math.min(3, d.base[i] + Math.round(d.trend[i] * (t - NOW) / 4))); }
+function lvlAt(d, i, t) { if (d.lv && d.lv[t]) return d.lv[t][i]; returnMath.max(0, Math.min(3, d.base[i] + Math.round(d.trend[i] * (t - NOW) / 4))); }
 function baseFor(d) {
   if (S.predBase[d.id]) return S.predBase[d.id];
   if (S.mapBase === 'sat' || S.mapBase === 'windy') return S.mapBase;
@@ -2082,7 +2102,7 @@ function statsInner() {
     (editing ? '<p class="edit-tip">Drag a tile to move it, or use its buttons. Make tiles bigger or smaller, or hide the ones you don’t need. Hidden tiles wait below so you can bring them back.</p>' : '') +
     '<div class="grid' + (editing ? ' editing' : '') + '" id="grid">' + tiles + '</div>' +
     (hidden.length ? '<div class="hidden-row"><span>Hidden:</span>' + hidden.map(function (id) { return '<button type="button" data-action="tile-restore" data-id="' + id + '">+ ' + byId[id].title + '</button>'; }).join('') + '</div>' : '') +
-    '<p class="foot">Sample data for the mockup. In the app, every reading comes from the source closest to your location (CWA station, Windy point forecast, or other APIs). Typhoon tracks come from CWA warnings, because Windy’s API doesn’t provide them.</p>';
+    '<p class="foot">Readings marked “live” come from Open-Meteo at your coordinates, the team PM2.5 model or the typhoon feed. Anything marked “Sample” is a placeholder, not a measurement.</p>';
 }
 
 function tileBody(t) {
@@ -2106,6 +2126,8 @@ function tileBody(t) {
       '<a class="btn accent open" href="#predictions/wind">Open map</a></div>';
   }
   if (t.kind === 'typhoon') {
+    var tv = tyView();
+    if (tv.state !== 'sample') return tyTileHTML(tv);
     return '<div style="display:flex;gap:16px;align-items:center;flex:1">' +
       '<svg width="120" height="96" viewBox="0 0 300 240" aria-hidden="true" style="flex:none;border-radius:14px;background:#0A2A48">' +
         '<g transform="translate(40,10) scale(0.42)"><path d="' + ISL + '" fill="#2F5A49"/></g>' +
@@ -2229,8 +2251,9 @@ function drawSat(d, t) {
     L.circleMarker(ll, { radius: 4, color: '#05172E', weight: 1, fillColor: '#fff', fillOpacity: 1 })
       .bindTooltip(p.name + ' · ' + d.labels[l], { permanent: true, direction: 'right', offset: [6, 0], className: 'map-label' }).addTo(live.marks);
   });
-  if (d.id === 'typhoon') {
-    L.polyline(TYPHOON_TRACK, { color: '#FFC24B', weight: 3, dashArray: '8 8' }).addTo(live.marks);
+  if (d.id === 'typhoon' && tyStorm()) drawTy(L, t);
+  else if (d.id === 'typhoon') {
+    L.polyline(TYPHOON_TRACK,{ color: '#FFC24B', weight: 3, dashArray: '8 8' }).addTo(live.marks);
     var k = t / 11 * (TYPHOON_TRACK.length - 1), i0 = Math.min(TYPHOON_TRACK.length - 2, Math.floor(k)), f = k - i0;
     var a = TYPHOON_TRACK[i0], b = TYPHOON_TRACK[i0 + 1], pos = [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
     L.circle(pos, { radius: 70000 + t * 4000, color: '#fff', weight: 2, fillColor: '#EF4444', fillOpacity: 0.25 }).addTo(live.marks);
@@ -2871,6 +2894,7 @@ function settingsView() {
   '</section>' +
 
   '<section class="card" aria-labelledby="st-data"><h2 id="st-data">Data sources</h2><p class="hint">Each reading always comes from the closest enabled source. Turning off a model or map hides its tiles and prediction cards.</p>' +
+    setRow('Open-Meteo', 'Live conditions, forecast, air quality and waves at your coordinates. Off shows sample values.', sw('sources.openMeteo', 'Open-Meteo')) +
     setRow('CWA weather stations', 'Observed conditions', sw('sources.cwa', 'CWA weather stations')) +
     setRow('Windy Point Forecast', 'Forecasts at your exact point', sw('sources.windyPoint', 'Windy Point Forecast')) +
     setRow('Windy Map Forecast', 'Live maps', sw('sources.windyMap', 'Windy Map Forecast')) +
@@ -2925,11 +2949,12 @@ function render() {
   document.body.dataset.page = r.page;
   var app = $('#app');
   destroyLive();
+  loadLive(r.page); applyLiveSets();
   app.innerHTML = r.page === 'home' ? homeView() : r.page === 'predictions' ? predView(r.sub) : r.page === 'ask' ? askView() : settingsView();
   document.querySelectorAll('[data-nav]').forEach(function (a) {
     if (a.dataset.nav === r.page) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
   });
-  if (r.page === 'home' && S.bgMode === 'live') SkyFX.start($('.hero'), S.weather, !!S.reduceMotion || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches));
+  if (r.page === 'home' && S.bgMode === 'live') SkyFX.start($('.hero'), wxKey(),!!S.reduceMotion || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches));
   else SkyFX.stop();
   if (r.page === 'predictions' && r.sub) updatePred();
   if (r.page === 'ask' && pendingAsk) { var pq = pendingAsk; pendingAsk = null; ask(pq); }
