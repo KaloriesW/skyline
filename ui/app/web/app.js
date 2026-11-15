@@ -1401,7 +1401,7 @@ function liveTiles(all, L) {
 }
 
 // ----- Typhoon feed -----
-// null: no feed, callers show the sample storm. Otherwise { active:false } or the first storm with a track.
+// null: no feed (callers show the tyState() state, never a storm). Otherwise { active:false } or the first storm with a track.
 function tyStorm() {
   var d = S.sources.typhoon ? feedData('ty') : null;
   if (!d) return null;
@@ -1438,8 +1438,8 @@ function tyPosAt(ty, step) {
 // What the Home typhoon tile shows
 function tyView() {
   var ty = tyStorm();
-  if (!ty) return { state: 'sample' };
-  var src = ty.source + ' · live';
+  if (!ty) return { state: tyState() };   // loading | gone | error | off: no storm is drawn
+  var src = ty.source + liveTag('ty');
   if (!ty.active) return { state: 'none', src: src, updated: ty.updated };
   var c = ty.cur, L = S.loc, bits = [];
   if (isNum(c.wind)) bits.push('Max wind ' + Math.round(c.wind * 3.6) + ' km/h');
@@ -1485,12 +1485,14 @@ function hourIdx(resp) {
   return resp.hourly.time.indexOf(new Date(Date.now() + (resp.utc_offset_seconds || 0) * 1000).toISOString().slice(0, 13) + ':00');
 }
 // 12 slider steps × 7 cities. Past the end of a forecast, a city keeps its last known level.
+// A city with no response (arr[p] is null) or no value yet has level null.
 function regLevels(arr, val, th) {
   var out = [];
   STEP_H.forEach(function (hh, s) {
     out.push(arr.map(function (r, p) {
+      if (!r) return null;
       var i0 = hourIdx(r), v = i0 < 0 ? null : val(r.hourly, i0 + hh);
-      if (!isNum(v)) return s ? out[s - 1][p] : 0;
+      if (!isNum(v)) return s ? out[s - 1][p] : null;
       return (v >= th[0]) + (v >= th[1]) + (v >= th[2]);
     }));
   });
@@ -1499,8 +1501,8 @@ function regLevels(arr, val, th) {
 function tySet() {
   var ty = tyStorm();
   if (!ty) return null;
-  var src = esc(ty.source) + ' · live', stamp = FEEDS.ty.t;
-  if (!ty.active) return { lv: STEP_H.map(function () { return MAP_PLACES.map(function () { return 0; }); }), sig: 'ty:none:' + stamp, src: src, note: 'No active typhoon near Taiwan right now.', conf: ['—', '—', '—'] };
+  var src = esc(ty.source) + liveTag('ty'), stamp = FEEDS.ty.t;
+  if (!ty.active) return { lv: STEP_H.map(function () { return MAP_PLACES.map(function () { return 0; }); }), sig: 'ty:none:' + stamp + src, src: src, note: 'No active typhoon near Taiwan right now.', basis: 'CWA typhoon feed', quiet: 'No active typhoon' };
   var lv = STEP_H.map(function (hh, s) {
     var pos = tyPosAt(ty, s);
     return MAP_PLACES.map(function (p) {
@@ -1509,75 +1511,107 @@ function tySet() {
       return (d < 700) + (d < 400) + (d < 200);
     });
   });
-  return { lv: lv, sig: 'ty:' + stamp + ':' + S.lang, src: src, conf: ['Forecast track', 'Forecast track', 'Forecast track'],
-    note: 'Track of ' + esc(ty.name) + '. Region levels are estimated from each city’s distance to the track. They are not official warnings.' };
+  return { lv: lv, sig: 'ty:' + stamp + ':' + S.lang + src, src: src, basis: 'Forecast track',
+    note: 'Track of ' + esc(ty.name) + '. Each region shows how far the storm centre is from it along the track. These are distances, not official warnings.' };
 }
-// Live levels, source and note for a dataset, or null to keep its sample values
+// Live levels, source and note for a dataset, or null when it has no data (setNA says why)
 function liveSet(d) {
   if (d.id === 'typhoon') return tySet();
-  var on = liveOn(), reg = on ? feedData('reg') : null, air = on ? feedData('regAir') : null;
-  var model = ['Model forecast', 'Model forecast', 'Model forecast'], lv;
+  if (d.id === 'landslide' || !liveOn()) return null;
+  var model = 'Model data, not station readings', lv, src;
   if (d.id === 'pm25') {
+    var air = feedData('regAir');
     if (!air) return null;
     lv = regLevels(air, function (h, i) { return h.pm2_5[i]; }, [15.5, 35.5, 54.5]);
-    var pm = S.sources.pm25 ? feedData('pm') : null;
+    var pm = pmData(), pmSt = apiState('pm25', 'pm');
     var note = 'PM2.5 at seven cities from the Copernicus CAMS model, via Open-Meteo. These are model estimates, not station readings. The forecast ends about four days ahead, so later steps repeat the last value.';
     if (pm) {
       MAP_PLACES.forEach(function (p, i) { if (p.name === 'Taichung') lv[7][i] = pmLevel(pm.pm25); });
       note += ' Team model, Taichung, ' + esc(pm.date || 'tomorrow') + ': ' + pm.pm25 + ' µg/m³ (' + esc(pm.category || '') + ').';
-    }
-    return { lv: lv, sig: 'pm25:' + FEEDS.regAir.t + ':' + (pm ? FEEDS.pm.t : 0), conf: model, note: note,
-      src: pm ? 'Team model (Taichung) + Open-Meteo CAMS · live' : 'Open-Meteo CAMS · live' };
+    } else if (pmSt === 'gone') note += ' The team PM2.5 model isn’t connected on this server.';
+    else if (pmSt === 'error') note += ' The team PM2.5 model couldn’t be reached.';
+    src = (pm ? 'Team model (Taichung) + Open-Meteo CAMS' : 'Open-Meteo CAMS') + liveTag('regAir');
+    return { lv: lv, sig: 'pm25:' + FEEDS.regAir.t + ':' + (pm ? FEEDS.pm.t : pmSt) + src, basis: model, note: note, src: src };
   }
+  if (d.id === 'waves') {
+    var seas = feedData('regSea');
+    if (!seas) return null;
+    var j = 0, coast = regCoast(), rows = coast.map(function (c) { return c ? seas[j++] : null; });
+    src = 'Open-Meteo Marine' + liveTag('regSea');
+    return { sig: 'waves:' + FEEDS.regSea.t + src, src: src, basis: model, none: 'No coast',
+      note: 'Wave height at the coast point nearest each city (' + MAP_PLACES.map(function (p, i) { return coast[i] ? p.name + ': ' + coast[i][0] : ''; }).filter(Boolean).join(', ') + '). Nantou has no coast. Open-Meteo Marine wave models.',
+      lv: regLevels(rows, function (h, i) { return h.wave_height[i]; }, [1, 2, 3]) };
+  }
+  if (d.id === 'climate') {
+    var ss = feedData('regSeason');
+    if (!ss) return null;
+    var mi = seasonPick(ss[0].monthly);
+    if (mi < 0) return null;
+    var row = ss.map(function (r) { var a = r.monthly.temperature_2m_anomaly[mi]; return isNum(a) ? (a >= 0.5) + (a >= 1) + (a >= 1.5) : null; });
+    src = 'ECMWF SEAS5 · Open-Meteo' + liveTag('regSeason');
+    return { sig: 'climate:' + FEEDS.regSeason.t + src, src: src, basis: 'Seasonal forecast', lv: STEP_H.map(function () { return row; }),
+      note: 'Temperature anomaly for ' + monthName(ss[0].monthly.time[mi]) + ' ' + String(ss[0].monthly.time[mi]).slice(0, 4) + ' at seven cities, from the ECMWF SEAS5 seasonal forecast via Open-Meteo. “Normal” is the model’s own long-term climatology. This is a monthly outlook, so the time slider doesn’t change it.' };
+  }
+  var reg = feedData('reg');
   if (!reg) return null;
-  var sig = d.id + ':' + FEEDS.reg.t;
-  if (d.id === 'rain') return { sig: sig, src: OM_LIVE, conf: model, note: 'Rain that fell in the 24 hours up to each time, at seven cities. Open-Meteo forecast models.',
-    lv: regLevels(reg, function (h, i) { var s = 0, k = 0; for (var j = i - 23; j <= i; j++) if (isNum(h.precipitation[j])) { s += h.precipitation[j]; k++; } return k ? s : null; }, [2, 10, 40]) };
-  if (d.id === 'thunder') return { sig: sig, src: 'Open-Meteo · CAPE · live', conf: model, note: 'Storm energy (CAPE) at seven cities. High CAPE means storms can form, not that one will. Open-Meteo forecast models.',
+  src = 'Open-Meteo' + liveTag('reg');
+  var sig = d.id + ':' + FEEDS.reg.t + src;
+  if (d.id === 'rain') return { sig: sig, src: src, basis: model, note: 'Rain that fell in the 24 hours up to each time, at seven cities. Open-Meteo forecast models.',
+    lv: regLevels(reg, function (h, i) { var s = 0, k = 0; for (var j2 = i - 23; j2 <= i; j2++) if (isNum(h.precipitation[j2])) { s += h.precipitation[j2]; k++; } return k ? s : null; }, [2, 10, 40]) };
+  if (d.id === 'thunder') return { sig: sig, src: 'Open-Meteo · CAPE' + liveTag('reg'), basis: model, note: 'Storm energy (CAPE) at seven cities. High CAPE means storms can form, not that one will. Open-Meteo forecast models.',
     lv: regLevels(reg, function (h, i) { return h.cape[i]; }, [500, 1500, 2500]) };
-  if (d.id === 'wind') return { sig: sig, src: OM_LIVE, conf: model, note: 'Peak gusts at seven cities. Open-Meteo forecast models.',
+  if (d.id === 'wind') return { sig: sig, src: src, basis: model, note: 'Peak gusts at seven cities. Open-Meteo forecast models.',
     lv: regLevels(reg, function (h, i) { return h.wind_gusts_10m[i]; }, [20, 40, 60]) };
   return null;
 }
-// Swaps each dataset between live and sample values. Returns the ids that changed.
+// Why a dataset has no levels (same shape as naOf)
+function setNA(d) {
+  if (d.id === 'landslide') return naOf('gone', 'landslide');
+  if (d.id === 'typhoon') return naOf(tyState(), 'ty');
+  if (!liveOn()) return naOf('off', 'om');
+  var st = feedState({ pm25: 'regAir', waves: 'regSea', climate: 'regSeason' }[d.id] || 'reg');
+  return naOf(st === 'gone' ? 'error' : st, 'om');
+}
+// Gives each dataset its live levels, or a state (d.na) and no levels at all. Returns the ids that changed.
 function applyLiveSets() {
   var changed = {};
   DATASETS.forEach(function (d) {
-    if (!d._s) d._s = { base: d.base, trend: d.trend, src: d.src, note: d.note, conf: d.conf };
-    var o = d._s, lv = null;
+    if (!d._src) d._src = d.src;
+    var lv = null;
     try { lv = liveSet(d); } catch (e) { lv = null; }
-    var sig = lv ? lv.sig : 'sample';
+    var na = lv ? null : setNA(d), sig = lv ? lv.sig : 'na:' + na.st + ':' + na.msg;
     if (d._sig === sig) return;
     d._sig = sig; changed[d.id] = 1;
-    if (lv) { d.lv = lv.lv; d.base = lv.lv[NOW]; d.trend = d.base.map(function () { return 0; }); d.src = lv.src; d.note = lv.note; d.conf = lv.conf; }
-    else { d.lv = null; d.base = o.base; d.trend = o.trend; d.src = 'Sample · ' + o.src; d.note = o.note; d.conf = o.conf; }
+    d.lv = lv ? lv.lv : null; d.na = na; d.src = lv ? lv.src : d._src; d.note = lv ? lv.note : ''; d.basis = lv ? lv.basis : '';
+    d.none = (lv && lv.none) || '—'; d.quiet = (lv && lv.quiet) || '';
   });
   return changed;
 }
+// Level (0–3) of region i at slider step t; null when the dataset or that region has no value
+function lvlAt(d, i, t) { var l = d.lv && d.lv[t] ? d.lv[t][i] : null; return l == null ? null : l; }
+function lvlText(d, l) { return l == null ? d.none : d.labels[l]; }
 
 /* ============================================================
-   Tile catalog (sample values, replaced by live ones in liveTiles)
+   Tiles (every value comes from liveTiles; nothing here is a reading)
    ============================================================ */
-// Sample daily lows/highs (°C) for today and the next six days
-var WEEK = [[21, 27, 'storm'], [20, 25, 'storm'], [19, 24, 'rain'], [20, 26, 'cloud'], [21, 28, 'sun'], [22, 29, 'sun'], [21, 27, 'cloud']];
 var WEEK_COL = { sun: '#FFC24B', cloud: '#E2E8F0', rain: '#7DD3FC', storm: '#A78BFA' };
 function dayNames() {
   var out = ['Today'], d = new Date();
   for (var i = 1; i < 7; i++) out.push(new Date(d.getFullYear(), d.getMonth(), d.getDate() + i).toLocaleDateString('en-US', { weekday: 'short' }));
   return out;
 }
-// Today's high/low always brackets the current temperature
-function todayHL(L) {
+// Today's high/low always brackets the current temperature. null without live weather.
+function todayHL() {
   var wx = liveWx();
   if (wx && isNum(wx.daily.temperature_2m_max[0]) && isNum(wx.daily.temperature_2m_min[0])) {
     return { hi: Math.max(wx.daily.temperature_2m_max[0], wx.current.temperature_2m), lo: Math.min(wx.daily.temperature_2m_min[0], wx.current.temperature_2m) };
   }
-  var b = WEATHER[wxKey()], off = tempOffset(L), now = b.temp + off;
-  return { hi: Math.max(WEEK[0][1] + off, now), lo: Math.min(WEEK[0][0] + off, now) };
+  return null;
 }
-function weekData(L) {
-  var off = tempOffset(L), names = dayNames(), hl = todayHL(L), wx = liveWx();
-  if (wx) {
+// Seven days of lows and highs. Without live weather: the day names with "—" (rows are flagged na).
+function weekData() {
+  var hl = todayHL(), wx = liveWx();
+  if (wx && hl) {
     var dy = wx.daily, rows = [], mn = Infinity, mx = -Infinity;
     for (var i = 0; i < Math.min(7, dy.time.length); i++) {
       var dlo = i ? dy.temperature_2m_min[i] : hl.lo, dhi = i ? dy.temperature_2m_max[i] : hl.hi;
@@ -1590,35 +1624,29 @@ function weekData(L) {
       return { day: r.day, lo: fmtT(r.lo), hi: fmtT(r.hi), c: r.c, l: ((r.lo - mn) / span * 100) + '%', r: ((mx - r.hi) / span * 100) + '%' };
     });
   }
-  return WEEK.map(function (w, i) {
-    var lo = i ? w[0] + off : hl.lo, hi = i ? w[1] + off : hl.hi;
-    return { day: names[i], lo: fmtT(lo), hi: fmtT(hi), c: WEEK_COL[w[2]], l: ((lo - off - 17) / 14 * 100) + '%', r: ((31 - (hi - off)) / 14 * 100) + '%' };
-  });
+  return dayNames().map(function (n) { return { day: n, lo: '—', hi: '—', c: 'rgba(255,255,255,0.28)', l: '0%', r: '100%', na: true }; });
 }
 function catalog(L) {
-  var sun = '#FFC24B', cloud = '#E2E8F0', rainc = '#7DD3FC', storm = '#A78BFA';
-  var src = nearestSource(L), off = tempOffset(L);
-  var near = 'Nearest: ' + src.name;
-  var hrs = [['Now', 24, sun, '0%'], ['3 PM', 26, sun, '5%'], ['4 PM', 26, cloud, '20%'], ['5 PM', 25, storm, '60%'], ['6 PM', 23, storm, '80%'], ['7 PM', 22, rainc, '55%'], ['8 PM', 22, cloud, '30%'], ['9 PM', 21, cloud, '10%'], ['10 PM', 21, cloud, '5%'], ['11 PM', 20, cloud, '5%']];
-  var grad = 'linear-gradient(90deg,' + pal().join(',') + ')';
+  var grad = 'linear-gradient(90deg,' + pal().join(',') + ')', OM = 'Open-Meteo';
+  var stat = function (id, title, src, o) { var t = { id: id, title: title, src: src, value: '—', sub: '', span: 1, rows: 1, kind: 'stat' }; for (var k in (o || {})) t[k] = o[k]; return t; };
   var all = [
-    { id: 'hourly', title: 'Hourly', src: near, span: 4, rows: 1, kind: 'hourly', hours: hrs.map(function (h) { return { t: h[0], temp: fmtT(h[1] + off), c: h[2], rain: h[3] }; }) },
-    { id: 'map', title: 'Live map', src: 'Windy Map Forecast', span: 2, rows: 2, kind: 'map' },
-    { id: 'thunder', title: 'Thunderstorm risk', src: 'Windy · CAPE + convPrecip', value: 'High', sub: 'CAPE 2,400 J/kg · storms likely 4–7 PM', meter: '78%', meterBg: grad, span: 1, rows: 1, kind: 'stat', bg: '#3B2F6B' },
-    { id: 'storms', title: 'Storm outlook · 72h', src: 'Windy warnings + models', value: '2 events', sub: 'Afternoon storms Sat and Sun. Hail possible Sat (code 96).', span: 1, rows: 1, kind: 'stat' },
+    { id: 'hourly', title: 'Hourly', src: OM, span: 4, rows: 1, kind: 'hourly', hours: [] },
+    { id: 'map', title: 'Live map', src: 'Windy', span: 2, rows: 2, kind: 'map' },
+    stat('thunder', 'Thunderstorm risk', 'Open-Meteo · CAPE + weather codes', { meterBg: grad, bg: '#3B2F6B' }),
+    stat('storms', 'Storm outlook · 72h', OM),
     { id: 'typhoon', title: 'Typhoon watch', src: 'CWA typhoon warnings', span: 2, rows: 1, kind: 'typhoon', bg: '#123A5E' },
-    { id: 'pm25', title: 'PM2.5', src: 'Team model · Windy CAMS', value: '18 µg/m³', sub: 'Moderate · peaks 9 PM', meter: '30%', meterBg: grad, span: 1, rows: 1, kind: 'stat' },
-    { id: 'landslide', title: 'Landslide risk', src: 'Team model', value: 'Low', sub: 'Rises to Medium if rain tops 80 mm', span: 1, rows: 1, kind: 'stat', bg: '#FFF4E0', fg: '#5A2E00' },
-    { id: 'week', title: '7-day forecast', src: near, span: 2, rows: 2, kind: 'week', week: weekData(L) },
-    { id: 'wind', title: 'Wind & gusts', src: 'Windy · wind, windGust', value: '14 km/h', sub: 'Gusts 38 km/h · from NE', span: 1, rows: 1, kind: 'stat' },
-    { id: 'rain', title: 'Rain today', src: 'Windy · precip', value: '32 mm', sub: 'Mostly convective, 4–7 PM', span: 1, rows: 1, kind: 'stat' },
-    { id: 'clouds', title: 'Cloud layers', src: 'Windy · l/m/hclouds', value: '65%', sub: 'Low 40% · Mid 55% · High 70% · Base 900 m', span: 1, rows: 1, kind: 'stat' },
-    { id: 'humidity', title: 'Humidity', src: 'Windy · rh, dewpoint', value: '78%', sub: 'Dew point ' + fmtT(20 + off), span: 1, rows: 1, kind: 'stat' },
-    { id: 'pressure', title: 'Pressure', src: 'Windy · pressure', value: '1008 hPa', sub: 'Falling. Storms are building.', span: 1, rows: 1, kind: 'stat' },
-    { id: 'visibility', title: 'Visibility', src: 'Windy · visibility', value: '12 km', sub: 'Drops to 3 km in storms', span: 1, rows: 1, kind: 'stat' },
-    { id: 'waves', title: 'Coast & waves', src: 'Windy · gfsWave', value: '1.8 m', sub: 'NE swell · avoid the Keelung coast', span: 1, rows: 1, kind: 'stat' },
-    { id: 'uv', title: 'UV index', src: 'CWA', value: '7', sub: 'High until 3 PM', span: 1, rows: 1, kind: 'stat' },
-    { id: 'climate', title: 'Climate outlook · 30 days', src: 'Climate projections', value: S.units === 'F' ? '+2.2°' : '+1.2°', sub: 'Warmer and wetter than normal (115% of normal rain)', span: 2, rows: 1, kind: 'stat' }
+    stat('pm25', 'PM2.5', 'Open-Meteo CAMS', { meterBg: grad }),
+    stat('landslide', 'Landslide risk', 'Team landslide model', { bg: '#FFF4E0', fg: '#5A2E00' }),
+    { id: 'week', title: '7-day forecast', src: OM, span: 2, rows: 2, kind: 'week', week: weekData() },
+    stat('wind', 'Wind & gusts', OM),
+    stat('rain', 'Rain today', OM),
+    stat('clouds', 'Cloud layers', OM),
+    stat('humidity', 'Humidity', OM),
+    stat('pressure', 'Pressure', OM),
+    stat('visibility', 'Visibility', OM),
+    stat('waves', 'Coast & waves', 'Open-Meteo Marine'),
+    stat('uv', 'UV index', OM),
+    stat('climate', 'Seasonal outlook', 'ECMWF SEAS5 · Open-Meteo', { span: 2 })
   ];
   var off = { pm25: !S.sources.pm25, landslide: !S.sources.landslide, typhoon: !S.sources.typhoon, map: !S.sources.windyMap };
   liveTiles(all, L);
