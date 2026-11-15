@@ -2039,9 +2039,9 @@ function mapSVG(d, t, base, o) {
    Views
    ============================================================ */
 function homeView() {
-  var b = WEATHER[S.weather] || WEATHER['partly-cloudy'];
+  var b = WEATHER[wxKey()];
   var live = S.bgMode === 'live';
-  var L = S.loc, src = nearestSource(L), tw = inTW(L.lat, L.lon);
+  var L = S.loc, src = nearestSource(L), tw = inTW(L.lat, L.lon), nowWx = wxNow(L), demo = S.weather !== 'live' && S.weather === wxKey();
   var bgVars = live ? '--top:' + b.top + ';--mid:' + b.mid + ';--bottom:' + b.bottom : '--top:#163A7A;--mid:#1F4C94;--bottom:#2A5AA8';
   var cat = catalog(L), byId = {};
   cat.forEach(function (t) { byId[t.id] = t; });
@@ -2050,7 +2050,10 @@ function homeView() {
     var t = byId[id]; if (!t) return '';
     return '<div class="pin"><span class="t">' + t.title + '</span><span class="v">' + t.value + '</span><span class="s">' + t.sub + '</span><span class="src">' + t.src + '</span></div>';
   }).join('');
-  var opts = Object.keys(WEATHER).map(function (k) { return '<option value="' + k + '"' + (k === S.weather ? ' selected' : '') + '>' + WEATHER[k].label + '</option>'; }).join('');
+  var opts = '<option value="live"' + (demo ? '' : ' selected') + '>Live weather</option>' +
+    Object.keys(WEATHER).map(function (k) { return '<option value="' + k + '"' + (demo && k === S.weather ? ' selected' : '') + '>' + WEATHER[k].label + '</option>'; }).join('');
+  var srcChip = nowWx.live ? 'Open-Meteo · live' + (nowWx.time ? ' · updated ' + nowWx.time : '')
+    : liveLoading() ? 'Sample data · loading live conditions…' : 'Sample data · nearest source: ' + esc(src.name);
 
   return '<section class="hero" style="' + bgVars + '" aria-label="Current weather">' +
     (live ? skyLayers(b) : '') +
@@ -2064,7 +2067,8 @@ function homeView() {
       '<div class="temp" aria-label="Temperature ' + fmtT(b.temp + tempOffset(L)) + '">' + fmtT(b.temp + tempOffset(L)) + '</div>' +
       '<div class="headline">' + esc(b.headline) + '</div>' +
       '<div class="hilo" aria-label="Today: high ' + fmtT(todayHL(L).hi) + ', low ' + fmtT(todayHL(L).lo) + '"><span>H:' + fmtT(todayHL(L).hi) + '</span><span>L:' + fmtT(todayHL(L).lo) + '</span></div>' +
-      '<div class="chips"><span class="chip"><span class="dot" aria-hidden="true"></span>Live from nearest source: ' + esc(src.name) + (src.dist ? ' · ' + esc(src.dist) : '') + '</span>' +
+      '<div class="chips"><span class="chip">' + (nowWx.live ? '<span class="dot" aria-hidden="true"></span>' : '') + srcChip + '</span>' +
+      (demo ? '<span class="chip warn">Demo sky: ' + b.label + '</span>' : '') +
       (tw ? '' : '<span class="chip warn">Outside Taiwan: PM2.5, landslide and Predictions cover Taiwan only</span>') + '</div>' +
     '</div>' +
     (S.skyline === 'city' ? skylineSVG(skylineFor(L), b) : '') +
