@@ -391,7 +391,12 @@ def test_every_committed_model_loads_and_has_a_report():
             assert len(m["targets"][t]["features"]) == (25 if kind == "v1" else 33)
             assert round(report["results"][t][kind]["mae"], 2) == m["test_mae"][t]
             assert len(report["series"][t]["actual"]) == 365
-            assert m["parity"][t] < TOLERANCE  # checked against scikit-learn on every row when it was exported
+            # checked when the file was written: the JSON model against scikit-learn on every training row,
+            # and predict.py from the raw hourly history against pandas + scikit-learn on every usable day
+            par = m["parity"][t]
+            assert par["export"] < TOLERANCE, (cid, t)
+            assert par["end_to_end"]["rows"] > 1000 and par["end_to_end"]["over_tolerance"] == 0, (cid, t, par)
+            assert par["end_to_end"]["max_diff"] < TOLERANCE, (cid, t)
             # the choice came from cross-validation, never from the test year
             cv = report["results"][t]["cv_mae"]
             assert kind == min(pm.KINDS, key=lambda k: cv[k])
