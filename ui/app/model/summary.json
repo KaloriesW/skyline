@@ -1869,10 +1869,106 @@
     "pm25: cross-validation chose boosted (test-year MAE 2.253); blend did better on the test year (2.165). The choice was not changed.",
     "pm10: cross-validation chose ridge (test-year MAE 2.932); blend did better on the test year (2.768). The choice was not changed."
    ]
+  },
+  {
+   "id": "penghu",
+   "name": "Penghu County",
+   "name_zh": "澎湖縣",
+   "lat": 23.57,
+   "lon": 119.5664,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 3.596,
+    "model_mae": 2.625,
+    "improvement_pct": 27.0,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 3.528,
+     "ridge": 3.538,
+     "boosted": 3.768,
+     "blend": 3.513,
+     "baseline": 4.472
+    },
+    "test_mae": {
+     "baseline": 3.596,
+     "v1": 2.654,
+     "ridge": 2.644,
+     "boosted": 2.815,
+     "blend": 2.625,
+     "blend_no_weather": 2.842
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 4.742,
+    "model_mae": 3.796,
+    "improvement_pct": 19.9,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.709,
+     "ridge": 5.926,
+     "boosted": 8.135,
+     "blend": 6.49,
+     "baseline": 5.46
+    },
+    "test_mae": {
+     "baseline": 4.742,
+     "v1": 3.796,
+     "ridge": 3.781,
+     "boosted": 4.411,
+     "blend": 3.826,
+     "blend_no_weather": 4.057
+    },
+    "best_on_test": "ridge"
+   },
+   "warn_threshold": 24.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 0,
+     "warned": 0,
+     "caught": 0,
+     "false_alarms": 0,
+     "missed": 0,
+     "precision": null,
+     "recall": null
+    },
+    "tuned": {
+     "threshold": 24.0,
+     "bad_days": 0,
+     "warned": 5,
+     "caught": 0,
+     "false_alarms": 5,
+     "missed": 0,
+     "precision": 0.0,
+     "recall": null
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 0,
+     "warned": 0,
+     "caught": 0,
+     "false_alarms": 0,
+     "missed": 0,
+     "precision": null,
+     "recall": null
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose v1 (test-year MAE 3.796); ridge did better on the test year (3.781). The choice was not changed."
+   ]
   }
  ],
  "missing": [
-  "penghu",
   "kinmen",
   "lienchiang"
  ]
