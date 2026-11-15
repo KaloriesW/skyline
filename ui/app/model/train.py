@@ -399,6 +399,31 @@ def parity(exported: dict, fitted, X: pd.DataFrame) -> float:
     return float(np.max(np.abs(got - want)))
 
 
+def end_to_end_parity(d: pd.DataFrame, aq_raw: dict, wx_raw: dict, up_raw: list, exported: dict, fitted, X: pd.DataFrame) -> dict:
+    """The whole serving path against the whole training path, on the city's history.
+
+    Serving: raw hourly rows -> predict.py's daily table and features -> the JSON model.
+    Training: pandas daily table and features (X) -> the scikit-learn model.
+    Compared on every usable day whose week before and day after are all in the pandas table (around a hole
+    in the data pandas' row-based windows and the server's calendar-based ones mean different days).
+    The 3- and 7-day means cannot agree to the last bit (pandas keeps a running sum over the whole series),
+    so a tree could in principle take another branch; `over_tolerance` counts the days where that mattered.
+    """
+    table = pyinfer.daily_table(aq_raw["hourly"], wx_raw["hourly"])
+    up = pyinfer.upwind_daily(up_raw)
+    loaded = pyinfer.load_target(json.loads(json.dumps(exported)))
+    have = set(d.index)
+    want = np.asarray(fitted.predict(X), dtype=float)
+    rows, worst, over = 0, 0.0, 0
+    for day, w in zip(X.index, want):
+        if any(day + pd.Timedelta(days=k) not in have for k in range(-7, 2)):
+            continue
+        feats = pyinfer.features(table, day.date(), up)
+        diff = abs(pyinfer.predict_target(loaded, [feats[c] for c in exported["features"]]) - w)
+        rows, worst, over = rows + 1, max(worst, diff), over + (diff > PARITY_TOLERANCE)
+    return {"rows": rows, "max_diff": float(worst), "over_tolerance": int(over)}
+
+
 # ---------- one city ----------
 
 def prepare(aq_raw: dict, wx_raw: dict, up: pd.DataFrame):
@@ -414,7 +439,7 @@ def prepare(aq_raw: dict, wx_raw: dict, up: pd.DataFrame):
     return d, {k: v[ok] for k, v in X.items()}, targets[ok]
 
 
-def train_city(city: dict, aq_raw: dict, wx_raw: dict, up: pd.DataFrame, end: str) -> tuple[dict, dict, dict]:
+def train_city(city: dict, aq_raw: dict, wx_raw: dict, up_raw: list, up: pd.DataFrame, end: str) -> tuple[dict, dict, dict]:
     """Returns (model json, metrics json, {"X": feature frames, "targets": frame}) for one city."""
     d, X, targets = prepare(aq_raw, wx_raw, up)
     full = X["full"]
@@ -494,9 +519,11 @@ def train_city(city: dict, aq_raw: dict, wx_raw: dict, up: pd.DataFrame, end: st
         feature_cols[target] = list(X[fs].columns)
         final = make().fit(X[fs], y)
         exported[target] = export_target(best, final, feature_cols[target])
-        parity_diff[target] = parity(exported[target], final, X[fs])
-        if not parity_diff[target] < PARITY_TOLERANCE:
-            raise RuntimeError(f"{target}: the exported {best} model differs from scikit-learn by {parity_diff[target]:.3g}")
+        export_diff = parity(exported[target], final, X[fs])
+        if not export_diff < PARITY_TOLERANCE:
+            raise RuntimeError(f"{target}: the exported {best} model differs from scikit-learn by {export_diff:.3g}")
+        parity_diff[target] = {"export": export_diff,
+                               "end_to_end": end_to_end_parity(d, aq_raw, wx_raw, up_raw, exported[target], final, X[fs])}
 
     notes = []
     for target in ["pm25", "pm10"]:
@@ -547,6 +574,7 @@ def train_city(city: dict, aq_raw: dict, wx_raw: dict, up: pd.DataFrame, end: st
         "format": FORMAT,
         "city": city_info,
         "sklearn": sklearn.__version__,  # the version the trees were grown and read with (see export_trees)
+        "pandas": pd.__version__,        # predict.py adds daily sums up in this version's order
         "chosen": chosen,
         "targets": exported,
         "interval": intervals,
@@ -555,7 +583,9 @@ def train_city(city: dict, aq_raw: dict, wx_raw: dict, up: pd.DataFrame, end: st
         "upwind": upwind,
         "test_mae": {t: round(results[t][chosen[t]]["mae"], 2) for t in ["pm25", "pm10"]},
         "baseline_mae": {t: round(results[t]["baseline"]["mae"], 2) for t in ["pm25", "pm10"]},
-        "parity": parity_diff,  # largest difference from scikit-learn over every row, checked at export
+        # Checked when this file was written. export: the JSON model against scikit-learn on every training
+        # row. end_to_end: predict.py from the raw hourly rows against pandas + scikit-learn (see train.py).
+        "parity": parity_diff,
         "trained_through": f"{full.index.max():%Y-%m-%d}",
         "n_days": int(len(full)),
         "end": end,
@@ -695,7 +725,8 @@ def write_parity_fixture(path: Path, city: dict, model: dict, aq_raw: dict, wx_r
                     "computes from them; `expected[].pm25/pm10` are scikit-learn predictions of each model kind; `model` "
                     "(pm25 = blend, pm10 = v1) and `v1_pm25` are the JSON exports of the same fitted models. The ridge and "
                     "boosted kinds are the two parts of the blend.",
-           "city": city["id"], "sklearn": sklearn.__version__, "blanked": blanks, "feature_names": cols,
+           "city": city["id"], "sklearn": sklearn.__version__, "pandas": pd.__version__, "numpy": np.__version__,
+           "blanked": blanks, "feature_names": cols,
            "aq": aq, "wx": wx, "up": up, "daily": table(d), "up_daily": table(up_daily), "expected": rows,
            "v1_pm25": kinds["v1"], "model": fixture_model}
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -753,7 +784,7 @@ def main() -> int:
                 up = upwind_frame(up_raw)
             aq_raw, wx_raw = dl.history(city, START, args.end)
             t0 = time.time()
-            model, metrics, fitted = train_city(city, aq_raw, wx_raw, up, args.end)
+            model, metrics, fitted = train_city(city, aq_raw, wx_raw, up_raw, up, args.end)
         except RateLimited as e:
             stopped = f"{cid}: {e}"
             print(f"  STOPPED: {e}", flush=True)
@@ -779,7 +810,10 @@ def main() -> int:
               + f"\n  warnings: threshold {metrics['warn_threshold']}: {w['tuned']['caught']} of {w['tuned']['bad_days']} caught, "
                 f"{w['tuned']['warned']} warned; at 35: {w[metrics['chosen']['pm25']]['caught']} caught, "
                 f"{w[metrics['chosen']['pm25']]['warned']} warned"
-              + f"\n  export parity vs scikit-learn: {model['parity']}; model file {model_path.stat().st_size / 1024:.0f} KB", flush=True)
+              + "\n  parity vs pandas + scikit-learn: " + "; ".join(
+                  f"{t} export {v['export']:.1e}, end to end {v['end_to_end']['max_diff']:.1e} over {v['end_to_end']['rows']} days"
+                  f" ({v['end_to_end']['over_tolerance']} above {PARITY_TOLERANCE:g})" for t, v in model["parity"].items())
+              + f"; model file {model_path.stat().st_size / 1024:.0f} KB", flush=True)
         done.append(cid)
         write_summary(cities, args.out_dir)  # after every city, so an interrupted run leaves a correct summary
 
