@@ -85,6 +85,9 @@ def meteo_answer(req):
     return httpx.Response(200, json=PARITY["up"] if "," in req.url.params["latitude"] else PARITY["aq"])
 
 
+TYPHOON_DOC = json.loads((HERE.parent / "server" / "fixtures" / "cwa_W-C0034-005.json").read_text(encoding="utf-8"))
+
+
 class Upstream:
     def __init__(self):
         self.requests = []
