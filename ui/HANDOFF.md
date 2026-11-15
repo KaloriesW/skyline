@@ -2,6 +2,8 @@
 
 Last updated 2026-11-15. This covers the UI work in `ui/`: what exists, where it lives, how to run and deploy it, and what's left.
 
+> **In transition (2026-11-15).** The single-file mockup was split and moved to `ui/app/web/`, and `ui/mockup/` no longer exists. The app now runs from `ui/app/` (`ui/app/run.sh`, see [app/README.md](app/README.md)). It is being merged with the team's app from the `app` branch, and per-city PM2.5 models are being trained. The Files, Run, Deploy and "What the mockup does" sections below describe the old layout and are wrong until this file is rewritten. The live site on the box is unchanged.
+
 ## Links
 
 | What | Where |
