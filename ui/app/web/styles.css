@@ -571,7 +571,8 @@ input[type=range].plain { width: 100%; accent-color: var(--accent); }
   .home { padding: 0 16px 40px; }
   .grid { grid-template-columns: repeat(2, 1fr); }
   .size-h { grid-column: span 2; }
-  .hero { padding-top: 76px; }
+  .hero { padding-top: 76px; transition: padding .3s var(--ease); }
+  body.editing .hero { padding-top: 124px; }
   .temp { font-size: 92px; }
   .place { font-size: 27px; }
   .place-sub { font-size: 13px; }
