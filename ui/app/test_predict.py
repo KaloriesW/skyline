@@ -10,11 +10,14 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import sys
 from datetime import date
 from pathlib import Path
 
 import pytest
+
+os.environ.setdefault("OMP_NUM_THREADS", "1")  # the optional scikit-learn test: tiny data, threads only slow it down
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))

@@ -41,19 +41,24 @@ import argparse
 import copy
 import json
 import math
+import os
 import sys
 import time
 from datetime import date, timedelta
 from pathlib import Path
 
-import httpx
-import numpy as np
-import pandas as pd
-import sklearn
-from sklearn.ensemble import HistGradientBoostingRegressor
-from sklearn.linear_model import Ridge
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
+# About 1,400 rows per city: one thread grows these trees faster than several (much faster on a busy
+# machine) and gives the same sums every run. Set OMP_NUM_THREADS yourself to override.
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+
+import httpx  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+import sklearn  # noqa: E402
+from sklearn.ensemble import HistGradientBoostingRegressor  # noqa: E402
+from sklearn.linear_model import Ridge  # noqa: E402
+from sklearn.pipeline import make_pipeline  # noqa: E402
+from sklearn.preprocessing import StandardScaler  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))

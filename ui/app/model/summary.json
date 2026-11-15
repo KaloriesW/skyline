@@ -802,10 +802,106 @@
    "notes": [
     "pm10: cross-validation chose v1 (test-year MAE 5.032); blend did better on the test year (4.720). The choice was not changed."
    ]
+  },
+  {
+   "id": "chiayi_city",
+   "name": "Chiayi City",
+   "name_zh": "嘉義市",
+   "lat": 23.4812,
+   "lon": 120.4536,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 5.469,
+    "model_mae": 3.521,
+    "improvement_pct": 35.6,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.414,
+     "ridge": 5.31,
+     "boosted": 5.601,
+     "blend": 5.281,
+     "baseline": 7.026
+    },
+    "test_mae": {
+     "baseline": 5.469,
+     "v1": 3.964,
+     "ridge": 3.752,
+     "boosted": 3.77,
+     "blend": 3.521,
+     "blend_no_weather": 4.143
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 5.675,
+    "model_mae": 4.662,
+    "improvement_pct": 17.9,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 7.592,
+     "ridge": 7.643,
+     "boosted": 11.209,
+     "blend": 8.948,
+     "baseline": 7.3
+    },
+    "test_mae": {
+     "baseline": 5.675,
+     "v1": 4.662,
+     "ridge": 4.406,
+     "boosted": 4.518,
+     "blend": 3.904,
+     "blend_no_weather": 4.522
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 26.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 50,
+     "warned": 46,
+     "caught": 32,
+     "false_alarms": 14,
+     "missed": 18,
+     "precision": 0.696,
+     "recall": 0.64
+    },
+    "tuned": {
+     "threshold": 26.0,
+     "bad_days": 50,
+     "warned": 125,
+     "caught": 49,
+     "false_alarms": 76,
+     "missed": 1,
+     "precision": 0.392,
+     "recall": 0.98
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 50,
+     "warned": 50,
+     "caught": 27,
+     "false_alarms": 23,
+     "missed": 23,
+     "precision": 0.54,
+     "recall": 0.54
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose v1 (test-year MAE 4.662); blend did better on the test year (3.904). The choice was not changed."
+   ]
   }
  ],
  "missing": [
-  "chiayi_city",
   "hsinchu_county",
   "miaoli",
   "changhua",
