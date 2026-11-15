@@ -1093,10 +1093,107 @@
    "notes": [
     "pm10: cross-validation chose v1 (test-year MAE 4.254); blend did better on the test year (3.854). The choice was not changed."
    ]
+  },
+  {
+   "id": "changhua",
+   "name": "Changhua County",
+   "name_zh": "彰化縣",
+   "lat": 24.0756,
+   "lon": 120.5445,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "boosted",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "boosted",
+    "baseline_mae": 5.292,
+    "model_mae": 4.05,
+    "improvement_pct": 23.5,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 6.221,
+     "ridge": 6.551,
+     "boosted": 5.549,
+     "blend": 5.704,
+     "baseline": 7.054
+    },
+    "test_mae": {
+     "baseline": 5.292,
+     "v1": 4.032,
+     "ridge": 3.936,
+     "boosted": 4.05,
+     "blend": 3.79,
+     "blend_no_weather": 4.271
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 5.817,
+    "model_mae": 4.747,
+    "improvement_pct": 18.4,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 8.736,
+     "ridge": 9.322,
+     "boosted": 10.695,
+     "blend": 9.502,
+     "baseline": 7.458
+    },
+    "test_mae": {
+     "baseline": 5.817,
+     "v1": 4.747,
+     "ridge": 4.618,
+     "boosted": 5.145,
+     "blend": 4.485,
+     "blend_no_weather": 4.977
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 30.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 27,
+     "warned": 35,
+     "caught": 19,
+     "false_alarms": 16,
+     "missed": 8,
+     "precision": 0.543,
+     "recall": 0.704
+    },
+    "tuned": {
+     "threshold": 30.0,
+     "bad_days": 27,
+     "warned": 65,
+     "caught": 26,
+     "false_alarms": 39,
+     "missed": 1,
+     "precision": 0.4,
+     "recall": 0.963
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 27,
+     "warned": 27,
+     "caught": 10,
+     "false_alarms": 17,
+     "missed": 17,
+     "precision": 0.37,
+     "recall": 0.37
+    }
+   },
+   "notes": [
+    "pm25: cross-validation chose boosted (test-year MAE 4.050); blend did better on the test year (3.790). The choice was not changed.",
+    "pm10: cross-validation chose v1 (test-year MAE 4.747); blend did better on the test year (4.485). The choice was not changed."
+   ]
   }
  ],
  "missing": [
-  "changhua",
   "nantou",
   "yunlin",
   "chiayi_county",
