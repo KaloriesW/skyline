@@ -20,10 +20,13 @@ ui/
   HANDOFF.md            this file
   PLANNING.md           product decisions, data sources, tile catalog
   README.md             how to use the mockup
-  mockup/index.html     the whole web app: one file, no build step (~2,900 lines)
+  mockup/index.html     the whole web app: one file, no build step (~3,600 lines)
   mcp/skyline_mcp.py    MCP server with weather tools for Claude/ChatGPT/Cursor
   mcp/taiwan_districts.json   368 districts: postal code, 中文/English name, city, lat/lon
+  mcp/skyline_sources.py   typhoon parser and source settings (shared with server/)
   mcp/requirements.txt  mcp>=2.3,<3
+  server/skyline_extras.py   FastAPI router: /api/ask, /api/typhoon, /api/landslide, /mcp
+  server/README.md      how to add it to the team app
 .claude/launch.json     local preview server config (port 8765)
 ```
 
@@ -123,33 +126,41 @@ Views render as HTML strings in English. The 中文 layer swaps visible text aft
 
 ## What's real and what's sample
 
+Each tile and dataset labels its own source: "… · live" or "Sample · …".
+
 | Real | Sample |
 |---|---|
-| Postal code and district table, airports, universities (coordinates) | Every number on Home, Predictions and the default Ask AI answers |
-| Windy embeds, Esri satellite imagery | Typhoon "TD-27" |
-| MCP tools: Open-Meteo weather/air quality/storm risk, the team PM2.5 model (`/api/predict`) | Landslide and climate values |
-| Nearest-source *logic* (station list is approximate) | |
+| Postal code and district table, airports, universities (coordinates) | Landslide and climate values |
+| Home hero, 7-day row and most tiles: Open-Meteo forecast and CAMS air quality at the user's coordinates | Waves tile away from the coast, and the waves dataset |
+| Predictions region levels for PM2.5, rain, thunderstorms and wind (Open-Meteo, seven cities) | Typhoon "TD-27", shown whenever `/api/typhoon` doesn't answer |
+| Team PM2.5 model (`/api/predict`), when the page is served from the box | Demo Ask AI answers (they still quote fixed sample numbers) |
+| Windy embeds, Esri satellite imagery | Everything, when Open-Meteo is switched off or unreachable |
+| MCP tools: Open-Meteo weather/air quality/storm risk, team PM2.5 model, CWA typhoon status | |
+
+## Built on 2026-11-15, not deployed
+
+Nothing below is on the box yet. The live mockup is still the old file.
+
+- **Live data in the UI** (`mockup/index.html`, "Live data" block before the tile catalog). First render is sample, then it redraws when data arrives. Cached 10 minutes per location. "Live weather" is the default in the demo picker; a demo condition only overrides the sky.
+- **Ask AI with no setup.** A "Skyline (no setup)" provider calls `/api/ask` on the same origin. It becomes the default when `/api/ask/status` says it is available, and shows as unavailable otherwise.
+- **Server pieces** in `server/` (see [server/README.md](server/README.md)): `skyline_extras.py` adds `/api/ask` (OpenRouter proxy with a spend cap, default $5, and rate limits), `/api/typhoon` (CWA dataset W-C0034-005), `/api/landslide` (pass-through to `LANDSLIDE_API_URL`, 503 until a model exists) and mounts the MCP server at `/mcp`. The team app adds one line: `import skyline_extras; skyline_extras.install(app)`.
+- **MCP:** new tools `get_typhoon_status` and `get_landslide_risk`; `mount_http()` serves the tools over streamable HTTP on port 8000, so no second public URL is needed.
+- **Known gaps closed:** 中文 demo answers, a distinct preview per dataset card, the slider reopens Windy at the chosen forecast time (future steps only; Windy's embed can't open in the past), and locations near a district boundary say so.
 
 ## Next steps
 
-1. **Wire real data into the UI.**
-   - Current conditions and forecast: Open-Meteo works without keys, and CWA needs a key.
-   - PM2.5: the team's `/api/predict` on the same origin.
-   - The MCP server shows the calls to make.
-2. **Landslide and typhoon.** Add API endpoints for the landslide model and CWA typhoon warnings, then add them as MCP tools and map layers.
-3. **Our own overlay on Windy.** Drawing our data on top of Windy's map needs the Windy Map Forecast API, which needs a key; the free key is for development only.
-4. **AI with no setup.** Today users bring their own key. To use the team's OpenRouter key, add a small server proxy on the box, because the key must never go in the page. Mind the $50 cap.
-5. **Public MCP URL.** ChatGPT needs public HTTPS. Only port 8000 is public, so ask the organizer (Eric) for a second public URL, or mount the MCP server inside the team app.
-6. **Small known gaps.**
-   - Card previews use one fixed satellite still.
-   - On the Windy view the slider only changes the region values, not Windy's own timeline.
-   - District naming picks the nearest district centre, so a spot on a boundary can get the neighbouring district.
-   - Canned Ask AI answers stay in English in 中文 mode.
+1. **Deploy.** Copy the new `index.html` to the box, then install the server pieces into the team app (`app` branch) and set `OPENROUTER_API_KEY`, and either `CWA_API_KEY` or `CWA_TYPHOON_URL`. Agree the change with the team first: it touches their app.
+2. **Test with real keys.** The proxy has only run against mocks (38 tests pass). Check a real streamed answer, that spend is recorded, and that `/mcp` answers through the Cloudflare tunnel (adjust `MCP_ALLOWED_HOSTS` if it returns 421).
+3. **Landslide model API.** None exists. Once it does, set `LANDSLIDE_API_URL` and wire the tile and map.
+4. **Our own overlay on Windy.** Needs the Windy Map Forecast API and a key; the free key is for development only.
+5. **Small gaps left.**
+   - Demo Ask AI answers and the typhoon card preview still use sample numbers.
+   - District naming still uses the nearest centre; true boundaries need polygon data.
+   - A few Ask AI and AI-settings strings have no 中文.
+   - The CAMS PM2.5 forecast ends about four days out, so +5d and +7d repeat the last level.
 
 ## Tested
 
-- Browser pane at 1280×800 and 375×812, in English and 中文.
-- Live site serves the same file as local (hash match).
-- The team app still answers on `/api/model`.
-- MCP server: tested end to end over stdio with mcp 2.3.0 (tool listing and calls).
-- Ask AI with real providers: only model listing (OpenRouter), a rejected Claude key, and a local mock streaming server. No real model answer yet, because no key was available.
+- Browser pane at phone width and 1280×800, English and 中文, on localhost: Home with live Open-Meteo values, Predictions cards and maps, the Windy slider at +48h, Ask AI demo, Settings. Only the expected 404s for `/api/*` in the console.
+- Server: 38 pytest cases with upstreams mocked; MCP over stdio (7 tools) and over HTTP on localhost.
+- Not tested: anything on the box, a real OpenRouter or CWA key, a live typhoon, the UI against the real `/api/ask` and `/api/typhoon`.
