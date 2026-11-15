@@ -96,6 +96,8 @@ def apply_defaults(environ: Optional[MutableMapping[str, str]] = None) -> None:
     environ = os.environ if environ is None else environ
     if not environ.get("CWA_API_KEY", "").strip() and "CWA_TYPHOON_URL" not in environ:
         environ["CWA_TYPHOON_URL"] = CWA_TYPHOON_PUBLIC_URL
+    environ.setdefault("ASK_MAX_CONTEXT_CHARS", "9000")  # the page sends about 6,500 characters of live data
+    environ.setdefault("ASK_MAX_INPUT_CHARS", "12000")
     if not environ.get("ASK_SPEND_FILE", "").strip():
         environ["ASK_SPEND_FILE"] = str(HERE / "ask_spend.json")
 
@@ -229,7 +231,7 @@ async def _cached(key: str, tag: str, ttl: float, produce: Any, extra: Dict[str,
                 result = await produce()
                 if isinstance(result, JSONResponse):  # failed
                     hit = st.cache.get(key)
-                    if not hit:
+                    if not hit or hit[1] != tag:  # only fall back to an answer made for the same day and inputs
                         return result
                     return JSONResponse({**hit[2], **extra},  # the last good answer; the headers say it is old
                                         headers={"X-Skyline-Stale": "1", "Age": str(int(time.time() - hit[0]))})

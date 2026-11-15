@@ -21,7 +21,8 @@ PORT="${PORT:-8765}"
 VENV="${SKYLINE_VENV:-.venv}"
 PYTHON="${PYTHON:-python3}"
 
-if [ ! -x "$VENV/bin/python" ]; then
+if ! "$VENV/bin/python" -m pip --version >/dev/null 2>&1; then
+  rm -rf "$VENV"
   "$PYTHON" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else "Skyline needs Python 3.10 or newer (set PYTHON=/path/to/python3.x)")'
   "$PYTHON" -m venv "$VENV"
 fi

@@ -359,6 +359,9 @@ async def ask(request: Request):
     if not key:
         return _error(503, "Built-in AI isn't set up on this server.")
 
+    if "json" not in (request.headers.get("content-type") or "").lower():
+        # A plain cross-site form post cannot send JSON, so this stops other websites spending the budget.
+        return _error(415, "Send JSON (Content-Type: application/json).")
     try:
         body = await _read_json(request)
     except ValueError:

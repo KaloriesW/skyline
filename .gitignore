@@ -1,0 +1,13 @@
+# The auto-sync job commits everything, so keep secrets and bulk out from every folder.
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.log
+ask_spend.json
+.ask_spend.*
+.DS_Store

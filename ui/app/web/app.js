@@ -981,7 +981,7 @@ function loadLive(page) {
     feed('season@' + k, OM_SEASON + '?latitude=' + L.lat.toFixed(3) + '&longitude=' + L.lon.toFixed(3) + '&monthly=temperature_2m_anomaly,precipitation_anomaly', isSeason, 6 * 3600000);
     if (page === 'predictions' || page === 'ask') {
       var lat = MAP_PLACES.map(function (p) { return PLACE_LL[p.name][0]; }).join(','), lon = MAP_PLACES.map(function (p) { return PLACE_LL[p.name][1]; }).join(',');
-      var rq = '?latitude=' + lat + '&longitude=' + lon + '&timezone=auto&past_days=3', isReg = function (d) { return Array.isArray(d) && d.length === MAP_PLACES.length && !!d[0].hourly && Array.isArray(d[0].hourly.time); };
+      var rq = '?latitude=' + lat + '&longitude=' + lon + '&timezone=auto&past_days=4', isReg = function (d) { return Array.isArray(d) && d.length === MAP_PLACES.length && !!d[0].hourly && Array.isArray(d[0].hourly.time); };
       feed('reg', OM_WX + rq + '&forecast_days=8&hourly=precipitation,cape,wind_gusts_10m', isReg);
       feed('regAir', OM_AIR + rq + '&forecast_days=7&hourly=pm2_5', isReg);
       var cs = regCoast().filter(function (c) { return c; });
@@ -1380,6 +1380,7 @@ function activeSets() {
 }
 // Which base map a dataset opens on
 function baseFor(d) {
+  if (S.sources && S.sources.windyMap === false) return 'sat';
   if (S.predBase[d.id]) return S.predBase[d.id];
   if (S.mapBase === 'sat' || S.mapBase === 'windy') return S.mapBase;
   // Windy has no seasonal-outlook layer, so that dataset opens on the satellite map with our overlay
@@ -1735,7 +1736,7 @@ var TILES = {
   uv: {
     title: 'UV Index', icon: 'sun', size: 's', desc: 'Current UV level and when to use sun protection.',
     render: function (c) {
-      var h = c.w.hourly, uv = h.uv_index[c.hi] || 0, lvl = uv < 3 ? 'Low' : uv < 6 ? 'Moderate' : uv < 8 ? 'High' : uv < 11 ? 'Very High' : 'Extreme';
+      var h = c.w.hourly, uv = Math.round(h.uv_index[c.hi] || 0), lvl = uv < 3 ? 'Low' : uv < 6 ? 'Moderate' : uv < 8 ? 'High' : uv < 11 ? 'Very High' : 'Extreme';
       var today = c.cur.time.slice(0, 10), strong = [];
       h.time.forEach(function (t, i) { if (t.slice(0, 10) === today && h.uv_index[i] >= 3) strong.push(t); });
       var note = strong.length && pt(strong[strong.length - 1]).hh >= c.now.hh
@@ -2798,8 +2799,11 @@ function chatHistory() {
     if (out.length && out[out.length - 1].role === role) out[out.length - 1].content += '\n\n' + text;
     else out.push({ role: role, content: text });
   }
+  out = out.slice(-12);
+  var size = function () { return out.reduce(function (n, m) { return n + m.content.length; }, 0); };
+  while (out.length > 1 && size() > 5500) out.shift();
   while (out.length && out[0].role !== 'user') out.shift();
-  return out.slice(-12);
+  return out;
 }
 function stripHTML(h) { var d = document.createElement('div'); d.innerHTML = h || ''; return d.textContent || ''; }
 
@@ -3006,7 +3010,7 @@ async function llmAsk(q) {
     else await streamOpenAI(history, system, onDelta, ctrl.signal);
     if (!msg.plain.trim()) msg.plain = '(No answer came back.)';
   } catch (e) {
-    if (e && e.name === 'AbortError') msg.plain += (msg.plain ? '\n\n' : '') + '(Stopped.)';
+    if ((typeof ctrl !== 'undefined' && ctrl && ctrl.signal && ctrl.signal.aborted) || (e && e.name === 'AbortError')) msg.plain += (msg.plain ? '\n\n' : '') + '(Stopped.)';
     else { msg.error = (e && e.message) || String(e); }
   }
   msg.live = false; aiAbort = null;
@@ -3144,7 +3148,7 @@ function settingsView() {
    Router & render
    ============================================================ */
 function route() {
-  var h = decodeURIComponent(location.hash.slice(1)) || 'home';
+  var rawHash = location.hash.slice(1), h; try { h = decodeURIComponent(rawHash); } catch (e) { h = rawHash; } h = h || 'home';
   var parts = h.split('/');
   var page = parts[0] === 'stats' ? 'home' : parts[0];
   if (['home', 'predictions', 'ask', 'settings'].indexOf(page) < 0) page = 'home';
@@ -3211,7 +3215,7 @@ var ACTIONS = {
   'open-tomorrow': function () { TILES.tomorrow.open(); },
   'toggle-units': function () { S.units = S.units === 'F' ? 'C' : 'F'; save(); rerender(); },
   'set-base': function (el) { var sub = route().sub; S.predBase[sub] = el.dataset.base; save(); updatePred(); },
-  'ask': function (el) { ask(el.dataset.q); },
+  'ask': function (el) { ask(typeof tr === 'function' ? tr(el.dataset.q) : el.dataset.q); },
   'ask-about': function (el) { pendingAsk = el.dataset.q; location.hash = 'ask'; },
   'set': function (el) { S[el.dataset.key] = el.dataset.val; save(); applyTheme(); rerender(); },
   'toggle': function (el) {
