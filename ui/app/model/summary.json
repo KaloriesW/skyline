@@ -2063,9 +2063,104 @@
    "notes": [
     "pm10: cross-validation chose v1 (test-year MAE 6.269); blend did better on the test year (5.636). The choice was not changed."
    ]
+  },
+  {
+   "id": "lienchiang",
+   "name": "Lienchiang County",
+   "name_zh": "連江縣",
+   "lat": 26.1577,
+   "lon": 119.9518,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "v1",
+    "pm10": "ridge"
+   },
+   "pm25": {
+    "chosen": "v1",
+    "baseline_mae": 4.886,
+    "model_mae": 3.994,
+    "improvement_pct": 18.3,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 3.974,
+     "ridge": 4.032,
+     "boosted": 4.683,
+     "blend": 4.123,
+     "baseline": 5.377
+    },
+    "test_mae": {
+     "baseline": 4.886,
+     "v1": 3.994,
+     "ridge": 3.97,
+     "boosted": 4.345,
+     "blend": 4.016,
+     "blend_no_weather": 4.234
+    },
+    "best_on_test": "ridge"
+   },
+   "pm10": {
+    "chosen": "ridge",
+    "baseline_mae": 6.504,
+    "model_mae": 5.684,
+    "improvement_pct": 12.6,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 6.082,
+     "ridge": 5.956,
+     "boosted": 10.02,
+     "blend": 7.534,
+     "baseline": 6.495
+    },
+    "test_mae": {
+     "baseline": 6.504,
+     "v1": 5.694,
+     "ridge": 5.684,
+     "boosted": 6.454,
+     "blend": 5.805,
+     "blend_no_weather": 6.067
+    },
+    "best_on_test": "ridge"
+   },
+   "warn_threshold": 25.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 4,
+     "warned": 2,
+     "caught": 1,
+     "false_alarms": 1,
+     "missed": 3,
+     "precision": 0.5,
+     "recall": 0.25
+    },
+    "tuned": {
+     "threshold": 25.0,
+     "bad_days": 4,
+     "warned": 18,
+     "caught": 1,
+     "false_alarms": 17,
+     "missed": 3,
+     "precision": 0.056,
+     "recall": 0.25
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 4,
+     "warned": 4,
+     "caught": 0,
+     "false_alarms": 4,
+     "missed": 4,
+     "precision": 0.0,
+     "recall": 0.0
+    }
+   },
+   "notes": [
+    "pm25: cross-validation chose v1 (test-year MAE 3.994); ridge did better on the test year (3.970). The choice was not changed."
+   ]
   }
  ],
- "missing": [
-  "lienchiang"
- ]
+ "missing": []
 }
