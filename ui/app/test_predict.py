@@ -49,6 +49,17 @@ def close(a, b, rel=1e-9, abs_tol=1e-9):
 
 # ---------- parity with pandas / scikit-learn (recorded) ----------
 
+def test_sums_follow_numpy_and_pandas_order():
+    assert pm._np_sum([0.1] * 7) == 0.1 + 0.1 + 0.1 + 0.1 + 0.1 + 0.1 + 0.1
+    a = [0.1 * k for k in range(1, 20)]
+    r = [a[j] + a[8 + j] for j in range(8)]  # eight running sums, then pairs, then the leftovers in order
+    assert pm._np_sum(a) == ((r[0] + r[1]) + (r[2] + r[3])) + ((r[4] + r[5]) + (r[6] + r[7])) + a[16] + a[17] + a[18]
+    assert pm._group_sum([9.7, 49.7, 40.6], False) == 9.7 + (49.7 + 40.6) == 100.00000000000001  # no gap in the column
+    assert pm._group_sum([9.7, 49.7, 40.6], True) == 100.0                                       # Kahan when there is one
+    assert pm._group_sum([float("nan")] * 3, True) == 0.0 and pm._group_mean([float("nan")] * 3, True) != pm._group_mean([1.0], True)
+    assert pm._series_mean([1.0, float("nan"), 2.0]) == 1.5 and pm._series_mean([float("nan")]) != pm._series_mean([1.0])
+
+
 def test_fixture_is_what_the_test_needs():
     assert FIXTURE["city"] == "taichung" and len(FIXTURE["expected"]) >= 20
     assert len(V1) == 25 and len(FULL) == 33 and FULL[:25] == V1
@@ -60,19 +71,25 @@ def test_fixture_is_what_the_test_needs():
     assert FIXTURE["sklearn"] == MODEL_DOC["sklearn"]
 
 
-def test_daily_table_matches_pandas():
+def same(a, b):
+    """Equal to the last bit (a missing value matches a missing value)."""
+    return a != a if b is None else a == b
+
+
+def test_daily_table_matches_pandas_bit_for_bit():
+    """Not just close: boosted trees can split between two values one rounding step apart."""
     assert list(D) == list(FIXTURE["daily"])
     for day, want in FIXTURE["daily"].items():
         assert set(D[day]) == set(want)
         for col, v in want.items():
-            assert close(D[day][col], v), (day, col, D[day][col], v)
+            assert same(D[day][col], v), (day, col, D[day][col], v)
 
 
-def test_upwind_daily_matches_pandas():
+def test_upwind_daily_matches_pandas_bit_for_bit():
     assert list(UP) == ["north", "fujian", "southwest", "south"]
     for day, want in FIXTURE["up_daily"].items():
         for name, v in want.items():
-            assert close(UP[name][day], v), (day, name)
+            assert same(UP[name][day], v), (day, name)
 
 
 def test_features_match_pandas():
@@ -81,7 +98,10 @@ def test_features_match_pandas():
         x = pm.features(D, today, UP)
         assert list(x) == FULL  # same order as the training columns
         for name, got, want in zip(FULL, x.values(), row["features"]):
-            assert close(got, want), (row["today"], name, got, want)
+            if name in ("pm25_3d", "pm25_7d"):  # pandas' running window sum: equal to rounding only
+                assert close(got, want, rel=1e-13), (row["today"], name, got, want)
+            else:
+                assert got == want, (row["today"], name, got, want)
         v1 = pm.features(D, today)
         assert list(v1) == V1 and list(v1.values()) == list(x.values())[:25]
 

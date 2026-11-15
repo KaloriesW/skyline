@@ -9,6 +9,7 @@ import json
 import os
 import shutil
 import sys
+import time
 from datetime import date
 from pathlib import Path
 
@@ -40,41 +41,55 @@ ENV = [
     "CWA_TYPHOON_URL", "TYPHOON_CACHE_SECONDS", "TYPHOON_STALE_HOURS", "LANDSLIDE_API_URL", "PM25_MODEL_URL",
     "PM25_CACHE_SECONDS", "PM25_MAX_KM", "MCP_ALLOWED_HOSTS", "MCP_ALLOWED_ORIGINS",
 ]
-# Recorded Open-Meteo hourly rows + the model trained on them (see test_predict.py). The mocked Open-Meteo
-# answers with these rows, and "today" is pinned to a day inside them.
+# Recorded Open-Meteo hourly rows + models trained on the same city (see test_predict.py). The mocked
+# Open-Meteo answers with these rows, and "today" is pinned to a day inside them.
 PARITY = json.loads((HERE / "model" / "fixtures" / "taichung_parity.json").read_text(encoding="utf-8"))
 TODAY = date(2026, 11, 7)
-EXPECTED = airmodel.predict(PARITY["model"], PARITY["aq"]["hourly"], PARITY["wx"]["hourly"], TODAY)
+BLEND_MODEL = PARITY["model"]  # pm25 = blend (ridge + boosted trees, 33 features, needs the upwind points), pm10 = v1
+V1_MODEL = {**BLEND_MODEL, "chosen": {"pm25": "v1", "pm10": "v1"}, "warn_threshold": 31.5,
+            "targets": {"pm25": PARITY["v1_pm25"], "pm10": BLEND_MODEL["targets"]["pm10"]}}  # 25 features, no upwind
+UPWIND = airmodel.upwind_daily(PARITY["up"])
+EXPECTED = airmodel.predict(airmodel.load_model(BLEND_MODEL), PARITY["aq"]["hourly"], PARITY["wx"]["hourly"], UPWIND, TODAY)
+EXPECTED_V1 = airmodel.predict(airmodel.load_model(V1_MODEL), PARITY["aq"]["hourly"], PARITY["wx"]["hourly"], None, TODAY)
 AQ_HOST, WX_HOST = "air-quality-api.open-meteo.com", "api.open-meteo.com"
 TAICHUNG = {"id": "taichung", "name": "Taichung City", "name_zh": "臺中市", "lat": 24.1477, "lon": 120.6736}
 TAIPEI = {"id": "taipei", "name": "Taipei City", "name_zh": "臺北市", "lat": 25.0375, "lon": 121.5637}
-REPORT = {"city": {"id": "taichung"}, "chosen": {"pm25": "ridge", "pm10": "ridge"}, "n_test": 365,
-          "results": {"pm25": {"ridge": {"mae": 4.45}, "baseline": {"mae": 5.91}}}}
-SUMMARY = {"model": "ridge", "cities": [{**TAICHUNG, "n_train": 1007, "n_test": 365,
-                                         "pm25": {"baseline_mae": 5.91, "model_mae": 4.45, "improvement_pct": 24.7}}],
+REPORT = {"city": {"id": "taichung"}, "chosen": {"pm25": "blend", "pm10": "v1"}, "n_test": 365, "warn_threshold": 28.5,
+          "results": {"pm25": {"blend": {"mae": 4.38}, "baseline": {"mae": 5.91}}}}
+SUMMARY = {"model": "v2", "cities": [{**TAICHUNG, "n_train": 1002, "n_test": 365, "chosen": {"pm25": "blend", "pm10": "v1"},
+                                      "pm25": {"chosen": "blend", "baseline_mae": 5.906, "model_mae": 4.379,
+                                               "improvement_pct": 25.9}}],
            "missing": ["everything else"]}
 
 
 def model_dir(tmp_path, cities=("taichung", "taipei")):
-    """A model directory like ui/app/model: the real city list, the recorded model for `cities`, and a
-    report + summary for Taichung only."""
+    """A model directory like ui/app/model: the real city list, a blend model for Taichung, a v1 model
+    for the other `cities`, and a report + summary for Taichung only."""
     d = tmp_path / "model"
     (d / "models").mkdir(parents=True)
     (d / "metrics").mkdir()
     shutil.copy(HERE / "model" / "cities.json", d / "cities.json")
     for cid in cities:
-        (d / "models" / f"{cid}.json").write_text(json.dumps(PARITY["model"]), encoding="utf-8")
+        doc = BLEND_MODEL if cid == "taichung" else V1_MODEL
+        (d / "models" / f"{cid}.json").write_text(json.dumps(doc, separators=(",", ":")), encoding="utf-8")
     (d / "metrics" / "taichung.json").write_text(json.dumps(REPORT), encoding="utf-8")
     (d / "summary.json").write_text(json.dumps(SUMMARY), encoding="utf-8")
     return d
-TYPHOON_DOC = json.loads((HERE.parent / "server" / "fixtures" / "cwa_W-C0034-005.json").read_text(encoding="utf-8"))
+
+
+def meteo_answer(req):
+    """What the mocked Open-Meteo sends: the four upwind points (a list) for the multi-point request,
+    otherwise the recorded city rows."""
+    if req.url.host == WX_HOST:
+        return httpx.Response(200, json=PARITY["wx"])
+    return httpx.Response(200, json=PARITY["up"] if "," in req.url.params["latitude"] else PARITY["aq"])
 
 
 class Upstream:
     def __init__(self):
         self.requests = []
         self.model = lambda req: httpx.Response(200, json=PREDICTION)
-        self.meteo = lambda req: httpx.Response(200, json=PARITY["aq" if req.url.host == AQ_HOST else "wx"])
+        self.meteo = meteo_answer
 
     def __call__(self, req: httpx.Request) -> httpx.Response:
         self.requests.append(req)
@@ -288,6 +303,19 @@ def test_example_env_has_no_values_and_covers_every_setting():
 
 # ---------- /api/predict: local city models ----------
 
+def is_upwind(req):
+    return req.url.host == AQ_HOST and "," in req.url.params["latitude"]
+
+
+def city_calls(up):
+    """Requests for a city's own inputs (two per fresh answer)."""
+    return len([r for r in up.to(AQ_HOST) if not is_upwind(r)]) + len(up.to(WX_HOST))
+
+
+def upwind_calls(up):
+    return len([r for r in up.to(AQ_HOST) if is_upwind(r)])
+
+
 def meteo_calls(up):
     return len(up.to(AQ_HOST)) + len(up.to(WX_HOST))
 
@@ -299,21 +327,77 @@ def test_predict_without_coordinates_is_taichung(client, up):
     assert body == {**EXPECTED, "city": {**TAICHUNG, "distance_km": 0.0}}
     assert list(body) == ["date", "pm25", "pm25_range", "pm10", "pm10_range", "aqi", "category", "color", "bad_day",
                           "advice", "today", "baseline", "tomorrow_weather", "model", "city"]
-    assert body["date"] == "2026-11-08" and body["model"]["kind"] == "ridge"
+    assert body["date"] == "2026-11-08"
+    assert body["model"] == {"kind": "blend", "test_mae": BLEND_MODEL["test_mae"]["pm25"],
+                             "baseline_mae": BLEND_MODEL["baseline_mae"]["pm25"]}
     assert set(body["advice"]) == {"level", "title", "detail"}
     assert not up.to("model.test")  # no proxy involved
 
 
+def test_predict_matches_scikit_learn_through_the_route(client):
+    """The served numbers are the recorded pandas + scikit-learn predictions (blend for PM2.5, v1 for PM10)."""
+    want = PARITY["expected"][-1]
+    assert want["today"] == TODAY.isoformat()
+    body = client.get("/api/predict").json()
+    assert body["pm25"] == round(want["pm25"]["blend"], 1) and body["pm10"] == round(want["pm10"]["v1"], 1)
+    assert body["bad_day"] is (want["pm25"]["blend"] > BLEND_MODEL["warn_threshold"])
+    body = client.get("/api/predict?lat=25.04&lon=121.56").json()  # the v1 model in this test directory
+    assert body["pm25"] == round(want["pm25"]["v1"], 1) and body["model"]["kind"] == "v1"
+    assert body == {**EXPECTED_V1, "city": body["city"]}
+
+
+def test_bad_day_uses_the_citys_tuned_threshold(client, up, tmp_path):
+    p25 = PARITY["expected"][-1]["pm25"]["blend"]
+    for threshold, want in ((p25 - 0.05, True), (p25 + 0.05, False)):
+        d = model_dir(tmp_path / str(want))
+        (d / "models" / "taichung.json").write_text(json.dumps({**BLEND_MODEL, "warn_threshold": threshold}))
+        server.predict_state.model_dir = d
+        server.predict_state.reset()
+        assert client.get("/api/predict").json()["bad_day"] is want
+
+
 def test_predict_asks_open_meteo_like_the_team_app(client, up):
     client.get("/api/predict")
-    (aq,), (wx,) = up.to(AQ_HOST), up.to(WX_HOST)
-    assert aq.url.path == "/v1/air-quality" and dict(aq.url.params) == {
+    aq = [r for r in up.to(AQ_HOST) if not is_upwind(r)]
+    upwind = [r for r in up.to(AQ_HOST) if is_upwind(r)]
+    (wx,) = up.to(WX_HOST)
+    assert len(aq) == 1 and len(upwind) == 1
+    assert aq[0].url.path == "/v1/air-quality" and dict(aq[0].url.params) == {
         "latitude": "24.1477", "longitude": "120.6736", "timezone": "Asia/Taipei", "domains": "cams_global",
-        "past_days": "2", "forecast_days": "3", "hourly": "pm2_5,pm10"}
+        "past_days": "8", "forecast_days": "3", "hourly": "pm2_5,pm10"}
     assert wx.url.path == "/v1/forecast" and dict(wx.url.params) == {
-        "latitude": "24.1477", "longitude": "120.6736", "timezone": "Asia/Taipei", "past_days": "2", "forecast_days": "3",
+        "latitude": "24.1477", "longitude": "120.6736", "timezone": "Asia/Taipei", "past_days": "8", "forecast_days": "3",
         "hourly": "temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m,"
                   "surface_pressure,boundary_layer_height"}
+    assert upwind[0].url.path == "/v1/air-quality" and dict(upwind[0].url.params) == {
+        "latitude": "25.0,25.0,23.8,22.6", "longitude": "121.2,119.0,120.3,120.3", "timezone": "Asia/Taipei",
+        "domains": "cams_global", "hourly": "pm2_5", "past_days": "8", "forecast_days": "3"}
+
+
+def test_upwind_is_fetched_once_and_shared(client, up, tmp_path):
+    d = model_dir(tmp_path / "three", cities=("taichung", "taipei", "kaohsiung", "tainan"))
+    for cid in ("kaohsiung", "tainan"):  # two more cities whose model needs the upwind points
+        (d / "models" / f"{cid}.json").write_text(json.dumps(BLEND_MODEL, separators=(",", ":")))
+    server.predict_state.model_dir = d
+    server.predict_state.reset()
+    for q in ("", "?lat=22.62&lon=120.31", "?lat=22.99&lon=120.19"):
+        r = client.get("/api/predict" + q)
+        assert r.status_code == 200 and r.json()["model"]["kind"] == "blend"
+    assert city_calls(up) == 6 and upwind_calls(up) == 1  # three cities, one upwind request
+    # a v1 model does not need the upwind points at all
+    server.predict_state.upwind_cache = None
+    assert client.get("/api/predict?lat=25.04&lon=121.56").json()["model"]["kind"] == "v1"
+    assert city_calls(up) == 8 and upwind_calls(up) == 1
+    # the shared copy is reused for ten minutes, then fetched again
+    at, day, data = (time.time(), TODAY.isoformat(), UPWIND)
+    server.predict_state.upwind_cache = (at - 590, day, data)
+    server.predict_state.cache.clear()
+    client.get("/api/predict")
+    assert upwind_calls(up) == 1
+    server.predict_state.upwind_cache = (at - 610, day, data)
+    server.predict_state.cache.clear()
+    client.get("/api/predict")
+    assert upwind_calls(up) == 2
 
 
 def test_predict_picks_the_nearest_city(client, up):
@@ -355,9 +439,9 @@ def test_predict_is_cached_per_city(client, up):
     for _ in range(3):
         assert client.get("/api/predict").status_code == 200
     assert client.get("/api/predict?lat=24.15&lon=120.67").json()["city"]["id"] == "taichung"  # same city, same cache
-    assert meteo_calls(up) == 2
+    assert city_calls(up) == 2 and upwind_calls(up) == 1
     assert client.get("/api/predict?lat=25.04&lon=121.56").json()["city"]["id"] == "taipei"
-    assert meteo_calls(up) == 4
+    assert city_calls(up) == 4
     # the distance is per request, not from the cache
     assert client.get("/api/predict").json()["city"]["distance_km"] == 0.0
     assert client.get("/api/predict?lat=24.20&lon=120.70").json()["city"]["distance_km"] > 5
@@ -372,24 +456,34 @@ def test_predict_refetches_after_thirty_minutes_or_a_new_day(client, up, monkeyp
     client.get("/api/predict")
     age_cache("city:taichung", 1700)
     client.get("/api/predict")
-    assert meteo_calls(up) == 2            # still fresh
+    assert city_calls(up) == 2            # still fresh
     age_cache("city:taichung", 200)
     client.get("/api/predict")
-    assert meteo_calls(up) == 4            # older than 30 minutes
+    assert city_calls(up) == 4            # older than 30 minutes
     server.predict_state.today = lambda: date(2026, 11, 6)
     assert client.get("/api/predict").json()["date"] == "2026-11-07"  # a new local day never reuses yesterday's answer
-    assert meteo_calls(up) == 6
+    assert city_calls(up) == 6 and upwind_calls(up) == 2  # nor yesterday's upwind copy
     monkeypatch.setenv("PM25_CACHE_SECONDS", "0")
     client.get("/api/predict")
-    assert meteo_calls(up) == 8
+    assert city_calls(up) == 8
 
 
-@pytest.mark.parametrize("failure", ["http500", "http429", "network", "not-json", "no-hourly", "all-null"])
-def test_predict_serves_stale_on_failure_and_502_without_cache(client, up, failure):
+@pytest.mark.parametrize("failure", ["http500", "http429", "network", "not-json", "no-hourly", "all-null",
+                                     "upwind-down", "upwind-one-point"])
+def test_predict_serves_stale_on_failure_and_502_without_cache(client, up, failure, tmp_path):
+    d = model_dir(tmp_path / "two", cities=("taichung", "kaohsiung"))
+    (d / "models" / "kaohsiung.json").write_text(json.dumps(BLEND_MODEL, separators=(",", ":")))
+    server.predict_state.model_dir = d
+    server.predict_state.reset()
     assert client.get("/api/predict").status_code == 200
     age_cache("city:taichung", 3600)
+    server.predict_state.upwind_cache = None
 
     def broken(req):
+        if failure == "upwind-down":
+            return httpx.Response(503, text="unavailable") if is_upwind(req) else meteo_answer(req)
+        if failure == "upwind-one-point":  # a single location comes back as an object, not a list of four
+            return httpx.Response(200, json=PARITY["up"][0]) if is_upwind(req) else meteo_answer(req)
         if failure == "http500":
             return httpx.Response(500, text="Internal Server Error")
         if failure == "http429":
@@ -400,20 +494,21 @@ def test_predict_serves_stale_on_failure_and_502_without_cache(client, up, failu
             return httpx.Response(200, text="<html>error</html>")
         if failure == "no-hourly":
             return httpx.Response(200, json={"latitude": 24.1})
-        doc = PARITY["aq" if req.url.host == AQ_HOST else "wx"]["hourly"]
-        return httpx.Response(200, json={"hourly": {k: (v if k == "time" else [None] * len(v)) for k, v in doc.items()}})
+        doc = meteo_answer(req).json()
+        blank = lambda loc: {"hourly": {k: (v if k == "time" else [None] * len(v)) for k, v in loc["hourly"].items()}}  # noqa: E731
+        return httpx.Response(200, json=[blank(x) for x in doc] if isinstance(doc, list) else blank(doc))
 
     up.meteo = broken
     r = client.get("/api/predict")
     assert r.status_code == 200 and r.json() == {**EXPECTED, "city": {**TAICHUNG, "distance_km": 0.0}}
     assert r.headers["x-skyline-stale"] == "1" and int(r.headers["age"]) >= 3600
     # a city with nothing cached: a JSON error, and nothing about the upstream URL in it
-    r = client.get("/api/predict?lat=25.04&lon=121.56")
+    r = client.get("/api/predict?lat=22.62&lon=120.31")
     assert r.status_code == 502 and set(r.json()) == {"error"}
     assert "open-meteo" not in r.text and "latitude" not in r.text
     # and it recovers as soon as Open-Meteo answers
-    up.meteo = lambda req: httpx.Response(200, json=PARITY["aq" if req.url.host == AQ_HOST else "wx"])
-    r = client.get("/api/predict?lat=25.04&lon=121.56")
+    up.meteo = meteo_answer
+    r = client.get("/api/predict?lat=22.62&lon=120.31")
     assert r.status_code == 200 and "x-skyline-stale" not in r.headers
 
 
@@ -424,6 +519,15 @@ def test_predict_city_without_a_model_is_503(client, up, monkeypatch):
     assert meteo_calls(up) == 0 and not up.to("model.test")
 
 
+def test_old_format_model_file_counts_as_missing(client, up, tmp_path):
+    d = model_dir(tmp_path / "old")
+    (d / "models" / "taipei.json").write_text(json.dumps({"city": TAIPEI, "kind": "ridge", "features": [], "targets": {}}))
+    server.predict_state.model_dir = d
+    server.predict_state.reset()
+    assert client.get("/api/health").json()["features"]["pm25_cities"] == 1
+    assert client.get("/api/predict?lat=25.04&lon=121.56").status_code == 503
+
+
 # ---------- /api/predict: proxy fallback (Taichung model file missing AND PM25_MODEL_URL set) ----------
 
 PROXIED = {**PREDICTION, "city": {**TAICHUNG, "distance_km": 0.0}}
@@ -431,7 +535,7 @@ PROXIED = {**PREDICTION, "city": {**TAICHUNG, "distance_km": 0.0}}
 
 def test_proxy_is_not_used_when_the_local_model_exists(client, up, monkeypatch):
     monkeypatch.setenv("PM25_MODEL_URL", MODEL_URL)
-    assert client.get("/api/predict").json()["model"]["kind"] == "ridge"
+    assert client.get("/api/predict").json()["model"]["kind"] == "blend"
     assert not up.to("model.test")
 
 
@@ -506,10 +610,10 @@ def test_model_cities(client, monkeypatch):
     r = client.get("/api/model/cities")
     assert r.status_code == 200
     body = r.json()
-    assert body["default_city"] == "taichung" and body["max_km"] == 25 and body["model"] == "ridge"
+    assert body["default_city"] == "taichung" and body["max_km"] == 25 and body["model"] == "v2"
     assert len(body["cities"]) == 22
     by_id = {c["id"]: c for c in body["cities"]}
-    assert by_id["taichung"]["has_model"] is True and by_id["taichung"]["pm25"]["model_mae"] == 4.45
+    assert by_id["taichung"]["has_model"] is True and by_id["taichung"]["pm25"]["model_mae"] == 4.379
     assert by_id["taipei"]["has_model"] is True and "pm25" not in by_id["taipei"]  # a model but no summary row here
     assert by_id["kaohsiung"]["has_model"] is False
     for c in body["cities"]:
@@ -526,13 +630,21 @@ def test_committed_models_are_served(client, up):
     cities = client.get("/api/model/cities").json()["cities"]
     ready = [c for c in cities if c["has_model"]]
     assert any(c["id"] == "taichung" for c in ready)
+    assert client.get("/api/health").json()["features"]["pm25_cities"] == len(ready)
     for c in ready:
         report = client.get("/api/model?city=" + c["id"])
         assert report.status_code == 200 and report.json()["city"]["id"] == c["id"]
-        assert {"n_train", "n_test", "pm25", "pm10", "warnings"} <= set(c)
+        report = report.json()
+        assert {"trained_on", "tested_on", "cv_on", "n_train", "n_test", "features", "upwind", "chosen", "results",
+                "warn_threshold", "cv_warnings", "interval", "monthly", "failures", "test_dates", "series",
+                "bad_day_threshold", "data"} <= set(report)  # the team's v2 metrics shape
+        assert {"n_train", "n_test", "chosen", "pm25", "pm10", "warnings", "warn_threshold"} <= set(c)
         r = client.get(f"/api/predict?lat={c['lat']}&lon={c['lon']}")
         assert r.status_code == 200 and r.json()["city"]["id"] == c["id"] and r.json()["city"]["distance_km"] == 0.0
-        assert r.json()["model"]["test_mae"] == round(report.json()["results"]["pm25"]["ridge"]["mae"], 2)
+        kind = report["chosen"]["pm25"]
+        assert r.json()["model"] == {"kind": kind, "test_mae": round(report["results"]["pm25"][kind]["mae"], 2),
+                                     "baseline_mae": round(report["results"]["pm25"]["baseline"]["mae"], 2)}
+    assert upwind_calls(up) <= 1  # every city shares one upwind request
 
 
 # ---------- skyline_extras routes ----------
