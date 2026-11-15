@@ -2322,8 +2322,8 @@ function openModel() {
     '<p class="fine">' + tx('PM2.5 and PM10 columns are mean absolute error in µg/m³ (lower is better).', 'PM2.5 與 PM10 欄是平均絕對誤差（µg/m³），越低越好。') + '</p>' +
     '<div class="table-scroll"><table class="metrics"><tr><th>' + tx('Model', '模型') + '</th><th>PM2.5</th><th>PM10</th><th>' + tx('Bad days warned', '警示到的壞空氣日') + '</th><th>' + tx('False alarms', '誤報') + '</th></tr>' + rows + '</table></div>' +
     '<p class="fine">' + (v2
-      ? tx('✓ marks what Skyline uses for ' + esc(city) + '. Every choice was made by cross-validation inside the training years' + (m.cv_on ? ' (' + esc(m.cv_on) + ')' : '') + ', not on the test year. That picked “' + nameOf(ch) + '” for PM2.5 and “' + nameOf(ch10) + '” for PM10.',
-           '✓ 代表 Skyline 在' + esc(city) + '實際使用的模型。所有選擇都是在訓練年份內以交叉驗證決定' + (m.cv_on ? '（' + esc(m.cv_on) + '）' : '') + '，沒有用到測試年。結果 PM2.5 選了「' + nameOf(ch) + '」，PM10 選了「' + nameOf(ch10) + '」。') +
+      ? tx('✓ marks what Skyline uses for ' + esc(city) + '. Every choice was made by cross-validation inside the training years' + (m.cv_on ? ', ' + esc(m.cv_on) : '') + ', not on the test year. That picked “' + nameOf(ch) + '” for PM2.5 and “' + nameOf(ch10) + '” for PM10.',
+           '✓ 代表 Skyline 在' + esc(city) + '實際使用的模型。所有選擇都是在訓練年份內以交叉驗證決定' + (m.cv_on ? '，' + esc(m.cv_on) : '') + '，沒有用到測試年。結果 PM2.5 選了「' + nameOf(ch) + '」，PM10 選了「' + nameOf(ch10) + '」。') +
         (WT && WT.threshold < 35 ? tx(' The warning threshold is set lower than 35 on purpose: for a school, a missed bad-air day is worse than a false alarm, so Skyline warns when its forecast is above ' + num(WT.threshold, 1) + ' µg/m³.', '警示門檻刻意訂得比 35 低：對學校來說，漏報壞空氣日比誤報更糟，所以 Skyline 在預測高於 ' + num(WT.threshold, 1) + ' µg/m³ 時就會警示。') : '')
       : tx('The model is picked on a validation slice of the training data, not on the test year.', '模型是用訓練資料中的驗證區段挑選的，不是用測試年。')) + noWx + '</p>' +
     (monthBars ? '<h3>' + tx('Error by month (Skyline vs baseline)', '各月誤差（Skyline 與基準）') + '</h3><div class="mrows">' + monthBars + '</div>' : '') +
