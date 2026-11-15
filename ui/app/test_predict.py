@@ -9,7 +9,6 @@ of every model kind (v1, ridge, boosted, blend) for them.
 from __future__ import annotations
 
 import json
-import math
 import os
 import sys
 from datetime import date
@@ -39,12 +38,6 @@ KINDS = {  # every model kind for PM2.5; ridge and boosted are the two parts of 
 D = pm.daily_table(AQ, WX)
 UP = pm.upwind_daily(UP_RAW)
 TOLERANCE = 1e-6
-
-
-def close(a, b, rel=1e-9, abs_tol=1e-9):
-    if b is None or (isinstance(b, float) and math.isnan(b)):
-        return a != a
-    return math.isclose(a, b, rel_tol=rel, abs_tol=abs_tol)
 
 
 # ---------- parity with pandas / scikit-learn (recorded) ----------
@@ -161,7 +154,7 @@ def test_parity_live_when_pandas_and_sklearn_are_installed():
     rows = []
     for day in X.index[ok]:
         feats = pm.features(D, day.date(), UP)
-        np.testing.assert_allclose(list(feats.values()), X.loc[day].to_numpy(dtype=float), rtol=1e-9, atol=1e-9)
+        np.testing.assert_array_equal(list(feats.values()), X.loc[day].to_numpy(dtype=float))  # to the last bit
         rows.append(list(feats.values()))
     # fresh models on made-up rows shaped like the features -> export -> JSON -> plain Python
     rng = np.random.default_rng(0)
