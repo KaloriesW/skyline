@@ -996,10 +996,106 @@
    "notes": [
     "pm10: cross-validation chose ridge (test-year MAE 5.017); blend did better on the test year (4.470). The choice was not changed."
    ]
+  },
+  {
+   "id": "miaoli",
+   "name": "Miaoli County",
+   "name_zh": "苗栗縣",
+   "lat": 24.5649,
+   "lon": 120.8207,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "boosted",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "boosted",
+    "baseline_mae": 5.344,
+    "model_mae": 3.211,
+    "improvement_pct": 39.9,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 4.714,
+     "ridge": 4.849,
+     "boosted": 3.863,
+     "blend": 4.113,
+     "baseline": 6.155
+    },
+    "test_mae": {
+     "baseline": 5.344,
+     "v1": 3.69,
+     "ridge": 3.732,
+     "boosted": 3.211,
+     "blend": 3.235,
+     "blend_no_weather": 4.052
+    },
+    "best_on_test": "boosted"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 5.556,
+    "model_mae": 4.254,
+    "improvement_pct": 23.4,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 6.31,
+     "ridge": 6.83,
+     "boosted": 7.774,
+     "blend": 6.605,
+     "baseline": 6.366
+    },
+    "test_mae": {
+     "baseline": 5.556,
+     "v1": 4.254,
+     "ridge": 4.374,
+     "boosted": 4.123,
+     "blend": 3.854,
+     "blend_no_weather": 4.569
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 29.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 25,
+     "warned": 23,
+     "caught": 16,
+     "false_alarms": 7,
+     "missed": 9,
+     "precision": 0.696,
+     "recall": 0.64
+    },
+    "tuned": {
+     "threshold": 29.0,
+     "bad_days": 25,
+     "warned": 48,
+     "caught": 19,
+     "false_alarms": 29,
+     "missed": 6,
+     "precision": 0.396,
+     "recall": 0.76
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 25,
+     "warned": 25,
+     "caught": 9,
+     "false_alarms": 16,
+     "missed": 16,
+     "precision": 0.36,
+     "recall": 0.36
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose v1 (test-year MAE 4.254); blend did better on the test year (3.854). The choice was not changed."
+   ]
   }
  ],
  "missing": [
-  "miaoli",
   "changhua",
   "nantou",
   "yunlin",
