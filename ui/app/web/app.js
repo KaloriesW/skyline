@@ -527,17 +527,14 @@ DISTRICTS.forEach(function (d) {
   });
 });
 
-// Weather stations used for the "nearest source" rule
-var STATIONS = [{ name: 'CWA Xinyi station', lat: 25.0375, lon: 121.5637, cwa: true }];
-STATIONS.push({ name: 'CWA Taipei station', lat: 25.0377, lon: 121.5149, cwa: true });
-CITIES.forEach(function (c) { if (inTW(c[2], c[3]) && c[0] !== 'Taipei') STATIONS.push({ name: 'CWA ' + c[0].split(',')[0] + ' station', lat: c[2], lon: c[3], cwa: true }); });
-[['Alishan', 23.5100, 120.8050], ['Yushan', 23.4876, 120.9595], ['Sun Moon Lake', 23.8830, 120.9000], ['Hengchun', 22.0039, 120.7463], ['Tamsui', 25.1650, 121.4489], ['Banqiao', 24.9976, 121.4420], ['Hsinchu (Science Park)', 24.7800, 121.0000]].forEach(function (s) {
-  STATIONS.push({ name: 'CWA ' + s[0] + ' station', lat: s[1], lon: s[2], cwa: true });
-});
-AIRPORTS.forEach(function (a) {
-  var tw = a[2].indexOf('RC') === 0;
-  STATIONS.push({ name: (tw ? 'CWA ' : '') + 'METAR ' + a[2] + ' (' + a[1] + ')', lat: a[3], lon: a[4], cwa: tw });
-});
+// Points just off Taiwan's coast, clockwise from the north. The wave model has no value on land, so an
+// inland location reads waves at the nearest of these (each one checked against Open-Meteo Marine).
+var COAST = [
+  ['Keelung', 25.16, 121.75], ['Tamsui', 25.19, 121.40], ['Taoyuan', 25.12, 121.24], ['Hsinchu', 24.85, 120.92], ['Miaoli', 24.62, 120.75],
+  ['Taichung Port', 24.29, 120.50], ['Changhua', 24.07, 120.38], ['Yunlin', 23.78, 120.15], ['Chiayi', 23.38, 120.13], ['Tainan', 23.00, 120.14],
+  ['Kaohsiung', 22.61, 120.26], ['Donggang', 22.46, 120.43], ['Kenting', 21.94, 120.78], ['Taitung', 22.79, 121.20], ['Chenggong', 23.10, 121.38],
+  ['Hualien', 23.98, 121.63], ['Su’ao', 24.60, 121.87], ['Toucheng', 24.86, 121.84], ['Fulong', 25.02, 121.95]
+];
 
 var SKYLINES = (function () {
   var mk = function (hs, x0, w) { return hs.map(function (h, i) { return { x: x0 + i * (w + 6), y: 220 - h, w: w, h: h }; }); };
@@ -572,14 +569,14 @@ var SKYLINES = (function () {
 var WEATHER = (function () {
   var white = 'rgba(255,255,255,0.95)', whiteU = 'rgba(205,215,230,0.9)';
   return {
-    'clear-day': { label: 'Clear day', top: '#1550C4', mid: '#3F8EE8', bottom: '#86C3F4', sun: true, sx: 78, sy: 14, glow: 'rgba(255,245,215,0.45)', core: '#FFF1B8', clouds: [1, 'rgba(255,255,255,0.7)', 'rgba(230,236,245,0.6)', 0.6, 120], mtn: '#FFFFFF', temp: 27, headline: 'Sunny · UV high until 3 PM' },
-    'partly-cloudy': { label: 'Partly cloudy', top: '#1A58C4', mid: '#4A93E4', bottom: '#93C6F0', sun: true, sx: 76, sy: 16, glow: 'rgba(255,245,215,0.4)', core: '#FFF1B8', clouds: [4, white, whiteU, 0.92, 260], mtn: '#FFFFFF', temp: 24, headline: 'Thunderstorms likely 4–7 PM' },
-    'cloudy': { label: 'Cloudy', top: '#5F708A', mid: '#8695AA', bottom: '#AEB9C8', clouds: [7, 'rgba(236,240,246,0.95)', 'rgba(150,162,180,0.9)', 0.95, 300], mtn: '#DDE3EC', temp: 23, headline: 'Overcast · light rain after 6 PM' },
-    'rain': { label: 'Rain', top: '#344255', mid: '#4F5E73', bottom: '#6E7C92', clouds: [8, 'rgba(150,162,180,0.95)', 'rgba(80,92,110,0.95)', 0.95, 300], rain: true, mtn: '#9AA6B8', temp: 21, headline: 'Rain · 12 mm in the next hour' },
-    'thunderstorm': { label: 'Thunderstorm', top: '#141A26', mid: '#262E3D', bottom: '#3F4757', clouds: [9, 'rgba(90,98,115,0.97)', 'rgba(35,40,52,0.97)', 0.97, 300], rain: true, storm: true, mtn: '#6B7486', temp: 22, headline: 'Thunderstorm · lightning 3 km away' },
-    'clear-night': { label: 'Clear night', top: '#040A1E', mid: '#0C1A42', bottom: '#1E3068', stars: true, moon: true, clouds: [1, 'rgba(120,135,170,0.5)', 'rgba(60,70,100,0.5)', 0.5, 200], mtn: '#3A4C80', temp: 20, headline: 'Clear · low of 19° before dawn' },
-    'dawn': { label: 'Dawn', top: '#26346F', mid: '#B9799F', bottom: '#F5C08A', sun: true, sx: 22, sy: 46, glow: 'rgba(255,200,150,0.5)', core: '#FFD8A0', warm: true, stars: true, clouds: [3, 'rgba(255,205,200,0.85)', 'rgba(170,120,150,0.8)', 0.85, 200], mtn: '#6B4E7A', temp: 19, headline: 'Sunrise 6:12 AM · clear morning' },
-    'dusk': { label: 'Dusk', top: '#1C2054', mid: '#8F4C82', bottom: '#F0895C', sun: true, sx: 80, sy: 48, glow: 'rgba(255,170,110,0.5)', core: '#FFC48A', warm: true, clouds: [3, 'rgba(255,180,140,0.85)', 'rgba(140,80,110,0.85)', 0.85, 220], mtn: '#5A3A6A', temp: 23, headline: 'Sunset 5:18 PM · storms clearing' }
+    'clear-day': { label: 'Clear day', top: '#1550C4', mid: '#3F8EE8', bottom: '#86C3F4', sun: true, sx: 78, sy: 14, glow: 'rgba(255,245,215,0.45)', core: '#FFF1B8', clouds: [1, 'rgba(255,255,255,0.7)', 'rgba(230,236,245,0.6)', 0.6, 120], mtn: '#FFFFFF' },
+    'partly-cloudy': { label: 'Partly cloudy', top: '#1A58C4', mid: '#4A93E4', bottom: '#93C6F0', sun: true, sx: 76, sy: 16, glow: 'rgba(255,245,215,0.4)', core: '#FFF1B8', clouds: [4, white, whiteU, 0.92, 260], mtn: '#FFFFFF' },
+    'cloudy': { label: 'Cloudy', top: '#5F708A', mid: '#8695AA', bottom: '#AEB9C8', clouds: [7, 'rgba(236,240,246,0.95)', 'rgba(150,162,180,0.9)', 0.95, 300], mtn: '#DDE3EC' },
+    'rain': { label: 'Rain', top: '#344255', mid: '#4F5E73', bottom: '#6E7C92', clouds: [8, 'rgba(150,162,180,0.95)', 'rgba(80,92,110,0.95)', 0.95, 300], rain: true, mtn: '#9AA6B8' },
+    'thunderstorm': { label: 'Thunderstorm', top: '#141A26', mid: '#262E3D', bottom: '#3F4757', clouds: [9, 'rgba(90,98,115,0.97)', 'rgba(35,40,52,0.97)', 0.97, 300], rain: true, storm: true, mtn: '#6B7486' },
+    'clear-night': { label: 'Clear night', top: '#040A1E', mid: '#0C1A42', bottom: '#1E3068', stars: true, moon: true, clouds: [1, 'rgba(120,135,170,0.5)', 'rgba(60,70,100,0.5)', 0.5, 200], mtn: '#3A4C80' },
+    'dawn': { label: 'Dawn', top: '#26346F', mid: '#B9799F', bottom: '#F5C08A', sun: true, sx: 22, sy: 46, glow: 'rgba(255,200,150,0.5)', core: '#FFD8A0', warm: true, stars: true, clouds: [3, 'rgba(255,205,200,0.85)', 'rgba(170,120,150,0.8)', 0.85, 200], mtn: '#6B4E7A' },
+    'dusk': { label: 'Dusk', top: '#1C2054', mid: '#8F4C82', bottom: '#F0895C', sun: true, sx: 80, sy: 48, glow: 'rgba(255,170,110,0.5)', core: '#FFC48A', warm: true, clouds: [3, 'rgba(255,180,140,0.85)', 'rgba(140,80,110,0.85)', 0.85, 220], mtn: '#5A3A6A' }
   };
 })();
 
