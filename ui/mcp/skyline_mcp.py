@@ -97,12 +97,16 @@ def _fetch_json(url: str, params: dict[str, Any] | None = None) -> Any:
 
 
 async def _get(url: str, params: dict[str, Any] | None = None) -> Any:
-    try:
-        return await asyncio.to_thread(_fetch_json, url, params)
-    except urllib.error.HTTPError as e:
-        raise RuntimeError(f"{urllib.parse.urlparse(url).netloc} returned HTTP {e.code}") from e
-    except (urllib.error.URLError, TimeoutError) as e:
-        raise RuntimeError(f"Couldn't reach {urllib.parse.urlparse(url).netloc}: {e}") from e
+    host = urllib.parse.urlparse(url).netloc
+    for attempt in (1, 2):  # one retry for dropped connections; HTTP errors aren't retried
+        try:
+            return await asyncio.to_thread(_fetch_json, url, params)
+        except urllib.error.HTTPError as e:
+            raise RuntimeError(f"{host} returned HTTP {e.code}") from e
+        except (urllib.error.URLError, TimeoutError) as e:
+            if attempt == 2:
+                raise RuntimeError(f"Couldn't reach {host}: {e}") from e
+            await asyncio.sleep(1)
 
 
 def _km(a_lat: float, a_lon: float, b_lat: float, b_lon: float) -> float:
