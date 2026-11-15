@@ -2525,10 +2525,15 @@ function sw(path, label) {
 function setRow(label, small, control) {
   return '<div class="set-row"><span class="lbl">' + label + (small ? '<small>' + small + '</small>' : '') + '</span>' + control + '</div>';
 }
+// One-line status of a same-origin feature, for the Data sources card
+function featNote(feature, feedName) {
+  var st = apiState(feature, feedName);
+  return st === 'gone' ? 'Not connected on this server' : st === 'error' ? 'Couldn’t be reached' : st === 'loading' ? 'Checking…' : st === 'off' ? 'Turned off' : 'Connected';
+}
 function settingsView() {
   var cat = catalog(S.loc), byId = {};
   cat.forEach(function (t) { byId[t.id] = t; });
-  var n = S.pinCount, src = nearestSource(S.loc);
+  var n = S.pinCount;
   var swatches = [['#FFC24B', 'Sun yellow (default)'], ['#FF6B5A', 'Coral'], ['#4C8DFF', 'Sky blue'], ['#2FBF9B', 'Jade'], ['#C084FC', 'Orchid']];
   var isPreset = swatches.some(function (s) { return s[0].toLowerCase() === S.accent.toLowerCase(); });
   return '<div class="page light"><header><h1>Settings</h1><p class="lede">Everything in Skyline can be changed here, down to the colors. What you see now are the defaults.</p></header>' +
@@ -2536,7 +2541,6 @@ function settingsView() {
 
   '<section class="card" aria-labelledby="st-loc"><h2 id="st-loc">Location</h2>' +
     setRow(esc(S.loc.name), esc((S.loc.sub ? S.loc.sub + ' · ' : '') + fmtCoord(S.loc.lat, S.loc.lon)), '<button type="button" class="light-btn" data-action="open-search">Change</button>') +
-    setRow('Nearest source', esc(src.name + (src.dist ? ' · ' + src.dist : '')), '') +
   '</section>' +
 
   '<section class="card" aria-labelledby="st-home"><h2 id="st-home">Home screen</h2>' +
@@ -2552,14 +2556,12 @@ function settingsView() {
     '<a class="link" href="#stats">Customize All stats →</a>' +
   '</section>' +
 
-  '<section class="card" aria-labelledby="st-data"><h2 id="st-data">Data sources</h2><p class="hint">Each reading always comes from the closest enabled source. Turning off a model or map hides its tiles and prediction cards.</p>' +
-    setRow('Open-Meteo', 'Live conditions, forecast, air quality and waves at your coordinates. Off shows sample values.', sw('sources.openMeteo', 'Open-Meteo')) +
-    setRow('CWA weather stations', 'Observed conditions', sw('sources.cwa', 'CWA weather stations')) +
-    setRow('Windy Point Forecast', 'Forecasts at your exact point', sw('sources.windyPoint', 'Windy Point Forecast')) +
-    setRow('Windy Map Forecast', 'Live maps', sw('sources.windyMap', 'Windy Map Forecast')) +
-    setRow('Team PM2.5 model', 'Taiwan only', sw('sources.pm25', 'Team PM2.5 model')) +
-    setRow('Team landslide model', 'Taiwan only, satellite-based', sw('sources.landslide', 'Team landslide model')) +
-    setRow('CWA typhoon warnings', '', sw('sources.typhoon', 'CWA typhoon warnings')) +
+  '<section class="card" aria-labelledby="st-data"><h2 id="st-data">Data sources</h2><p class="hint">Every value in Skyline comes from one of these. Turning one off hides or empties what depends on it; nothing is filled in with made-up numbers.</p>' +
+    setRow('Open-Meteo', 'Live conditions, forecast, air quality, waves and the seasonal outlook at your coordinates', sw('sources.openMeteo', 'Open-Meteo')) +
+    setRow('Windy maps', 'Live map embeds', sw('sources.windyMap', 'Windy maps')) +
+    setRow('Team PM2.5 model', 'Next-day forecast for Taichung · ' + featNote('pm25', 'pm'), sw('sources.pm25', 'Team PM2.5 model')) +
+    setRow('Team landslide model', 'Not connected yet', sw('sources.landslide', 'Team landslide model')) +
+    setRow('CWA typhoon warnings', featNote('typhoon', 'ty'), sw('sources.typhoon', 'CWA typhoon warnings')) +
   '</section></div>' +
 
   '<div style="display:flex;flex-direction:column;gap:20px">' +
@@ -2570,7 +2572,7 @@ function settingsView() {
       '<input type="color" id="accent-custom" data-input="accent" value="' + S.accent + '" aria-label="Custom accent color"' + (isPreset ? '' : ' style="border:3px solid #0B1B3F"') + '></div></div>' +
     setRow('Risk color scale', '<span style="display:flex;gap:3px;margin-top:4px">' + pal().map(function (c) { return '<i style="display:block;width:18px;height:10px;border-radius:3px;background:' + c + '"></i>'; }).join('') + '</span>',
       seg('risk', 'Risk color scale', [['default', 'Default'], ['cb', 'Color-blind safe']])) +
-    setRow('Background', 'Follows the nearest station', seg('bgMode', 'Background', [['live', 'Live weather'], ['static', 'Static']])) +
+    setRow('Background', 'Follows live weather at your location', seg('bgMode', 'Background', [['live', 'Live weather'], ['static', 'Static']])) +
     setRow('Tile style', '', seg('tiles', 'Tile style', [['glass', 'Glass'], ['solid', 'Solid']])) +
     setRow('Fonts', '', seg('fonts', 'Fonts', [['default', 'Bricolage + Inter'], ['system', 'System']])) +
     '<div class="set-row"><label for="radius" class="lbl">Corner roundness<small id="radius-out">' + S.radius + ' px</small></label><input id="radius" class="plain" style="max-width:200px" type="range" min="6" max="36" value="' + S.radius + '" data-input="radius"></div>' +
@@ -2581,6 +2583,9 @@ function settingsView() {
   '</section>' +
 
   aiSettingsHTML() + mcpSettingsHTML() +
+  '<section class="card" aria-labelledby="st-sky"><h2 id="st-sky">Sky preview</h2><p class="hint">A preview control for demos and testing. It shows another sky on Home until you switch back or reload. Readings are never changed: they stay live.</p>' +
+    '<div class="set-row"><label for="demo-weather" class="lbl">Preview a sky<small>Default: live weather</small></label><select id="demo-weather" data-input="weather">' + skyOptions() + '</select></div>' +
+  '</section>' +
   '<section class="card" aria-labelledby="st-look"><h2 id="st-look">Motion</h2>' +
     setRow('Reduce motion', 'Stops drifting clouds, rain, lightning and map flow', sw('reduceMotion', 'Reduce motion')) +
   '</section>' +
@@ -2613,7 +2618,7 @@ function render() {
   document.querySelectorAll('[data-nav]').forEach(function (a) {
     if (a.dataset.nav === r.page) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
   });
-  if (r.page === 'home' && S.bgMode === 'live') SkyFX.start($('.hero'), wxKey(), !!S.reduceMotion || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches));
+  if (r.page === 'home' && S.bgMode === 'live' && wxKey()) SkyFX.start($('.hero'), wxKey(), !!S.reduceMotion || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches));
   else SkyFX.stop();
   if (r.page === 'predictions' && r.sub) updatePred();
   if (r.page === 'ask' && pendingAsk) { var pq = pendingAsk; pendingAsk = null; ask(pq); }
@@ -2683,6 +2688,8 @@ var ACTIONS = {
   'pin-up': function (el) { S.pins = moveIn(S.pins, el.dataset.id, -1); save(); rerender(); },
   'pin-down': function (el) { S.pins = moveIn(S.pins, el.dataset.id, 1); save(); rerender(); },
   'reset-theme': function () { THEME_KEYS.forEach(function (k) { S[k] = DEFAULTS[k]; }); save(); applyTheme(); render(); toast('Theme reset to default'); },
+  'retry-live': function () { retryLive(); },
+  'sky-live': function () { S.weather = 'live'; rerender(); },
   'ai-provider': function (el) { S.ai.provider = el.dataset.val; S.ai.chosen = true; aiModels = []; save(); rerender(); },
   'ai-recheck': function (el) { el.disabled = true; el.textContent = 'Checking…'; probeSkyAI(true); },
   'ai-preset': function (el) { S.ai.oaBase = el.dataset.base; aiModels = []; save(); rerender(); },
@@ -2745,7 +2752,7 @@ document.addEventListener('change', function (e) {
   if (!k) return;
   if (k === 'pinCount') { S.pinCount = +el.value; save(); rerender(); }
   else if (k === 'radius' || k === 'accent') { save(); rerender(); }
-  else if (k === 'weather') { S.weather = el.value; save(); rerender(); }
+  else if (k === 'weather') { S.weather = el.value; rerender(); }   // session only: not saved
 });
 document.addEventListener('submit', function (e) {
   if (e.target.id === 'ask-form') { e.preventDefault(); if (aiAbort) { aiAbort.abort(); return; } var i = $('#ask-input'); ask(i.value); i.value = ''; }
@@ -2967,10 +2974,9 @@ function setLocation(loc) {
   S.loc = { name: loc.name, sub: loc.sub || '', lat: +loc.lat, lon: +loc.lon, kind: loc.kind || 'Place' };
   S.recents = [S.loc].concat(S.recents.filter(function (x) { return !(Math.abs(x.lat - S.loc.lat) < 1e-4 && Math.abs(x.lon - S.loc.lon) < 1e-4); })).slice(0, 5);
   save(); closeSearch(true);
-  var src = nearestSource(S.loc);
   var r = route();
   if (r.page === 'home' || r.page === 'settings' || r.page === 'ask') rerender(); else render();
-  toast('Showing ' + S.loc.name + ' · nearest source: ' + src.name + (src.dist ? ' (' + src.dist + ')' : ''));
+  toast('Showing ' + S.loc.name);
 }
 function geolocate() {
   if (!navigator.geolocation) { toast('This browser can’t share your location.'); return; }
@@ -3232,6 +3238,9 @@ window.addEventListener('hashchange', render);
 applyTheme();
 render();
 startI18n();
+loadHealth();
+// Back online: retry whatever failed while the connection was down
+window.addEventListener('online', retryLive);
 // Refresh live feeds once their 10-minute cache runs out (only while the tab is visible)
 setInterval(function () { if (!document.hidden) loadLive(route().page); }, 60000);
 })();
