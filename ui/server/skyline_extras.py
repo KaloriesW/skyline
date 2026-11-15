@@ -46,7 +46,7 @@ log = logging.getLogger("skyline.extras")
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-DEFAULT_MODEL = "google/gemini-2.5-flash-lite"  # $0.10 / $0.40 per million tokens on OpenRouter (Nov 2026)
+DEFAULT_MODEL = "deepseek/deepseek-v4.1-flash"  # the model the shared key is known to serve; override with ASK_MODEL
 MAX_BODY_BYTES = 64 * 1024
 
 SYSTEM_PROMPT = """You are Skyline's weather assistant. Skyline is a weather app focused on Taiwan.
