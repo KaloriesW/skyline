@@ -70,7 +70,12 @@ HTML mockup: [mockup/index.html](mockup/index.html)
 - Opening a card shows a Taiwan map of that dataset, with a time slider underneath that runs from −72h through Now to +7d. Left of Now shows observed past data, and right of Now shows predictions with a confidence level. A side panel lists the value for each region.
 - **Map bases are always real imagery:** either **Satellite**, the default for By Skyline because the landslide model runs on satellite data, or a **Windy map** (Windy Map Forecast), the default for Others. Each map has a Satellite / Windy toggle.
 - Datasets sit on top as a soft **colored overlay**, e.g. a PM2.5 heat overlay or landslide hotspots.
-- For the real build, the satellite layer could come from tiles such as Sentinel-2, NASA GIBS, or Himawari. The mockup uses a drawn stand-in.
+- **The maps are real and zoomable:**
+  - **Windy** uses the official Windy embed with the matching layer: PM2.5 (CAMS), rain, thunderstorms, wind, waves or temperature. Windy's own timeline plays the forecast.
+  - **Satellite** is a Leaflet map on Esri World Imagery, with place labels, our colored overlay, the typhoon track and the user's pin. The overlay fades as you zoom in.
+  - The Home "Live map" tile is a live Windy embed.
+  - Card previews use a real satellite still of Taiwan.
+- **For production:** Esri imagery needs attribution and is fine for a demo. For long-term use, consider Sentinel-2 or Himawari tiles. To draw our own data on top of Windy's map, we'd need the Windy Map Forecast API, which needs a key.
 
 ## What Windy's API gives us
 - **Point Forecast:** temp, dewpoint, precip, convPrecip, snowPrecip, wind, windGust, **cape** (thunderstorm energy), ptype, low/mid/high clouds, rh, pressure, cbase, visibility, **weatherWarnings** (code 95 = thunderstorm, 96 = heavy thunderstorm or hail). Sea: waves, swell, currents (gfsWave etc.). Air quality: CAMS aqi, pm2p5, pm10, no2, o3.

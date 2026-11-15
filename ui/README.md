@@ -37,6 +37,7 @@ Then open http://localhost:8765.
 - 中文 / English switches the whole interface to Traditional Chinese, except the canned AI answers, which stay in English.
 - Turning off a data source in Settings (PM2.5 model, landslide model, typhoon warnings, Windy map) hides the tiles and prediction cards it powers.
 
+- **Maps:** prediction maps are real, zoomable maps, either the live Windy embed or Leaflet on Esri satellite imagery with our colored overlay. The Home "Live map" tile is a live Windy map.
 - **Sky:** clouds, rain and lightning are drawn on a canvas. You get layered clouds, rain at three depths with wind and splashes, branching lightning that lights the clouds, and lit windows at night. Lightning flashes at most twice per strike, with 3.5 seconds or more between strikes. Reduce motion turns all of it off.
 - **Ask AI** can use your own model (Settings → AI assistant):
   - **OpenAI-compatible:** OpenAI, OpenRouter, Ollama, LM Studio, or any `/v1/chat/completions` server.
