@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skyline Weather</title>
+<meta name="description" content="Skyline: a Taiwan weather app mockup with live sky backgrounds, PM2.5 and landslide predictions, and location search.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230B1B3F'/%3E%3Ccircle cx='20' cy='12' r='6' fill='%23FFC24B'/%3E%3Cpath d='M3 28h26v-4l-4-3-3 2-3-6-3 4-3-3-4 5-3-1-3 2z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="home">
+<!-- Shared SVG definitions for maps -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <clipPath id="sk-isl" clipPathUnits="userSpaceOnUse"><path d="M200,30 L235,45 L245,75 L238,120 L232,170 L228,230 L215,290 L200,340 L180,400 L160,460 L148,470 L140,440 L118,395 L100,350 L90,300 L95,250 L110,200 L130,150 L155,100 L175,60 Z"/></clipPath>
+    <radialGradient id="sk-ocean" cx="0.55" cy="0.45" r="0.8"><stop offset="0" stop-color="#0E3557"/><stop offset="1" stop-color="#05172E"/></radialGradient>
+    <linearGradient id="sk-windy" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2D4F8E"/><stop offset="0.5" stop-color="#2F7A8E"/><stop offset="1" stop-color="#3B5FA0"/></linearGradient>
+    <filter id="sk-tex" filterUnits="userSpaceOnUse" x="60" y="0" width="220" height="500">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="4" seed="7" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.10  0 0 0 0 0.20  0 0 0 0 0.08  1.6 0 0 0 -0.5"/>
+    </filter>
+    <filter id="sk-b3" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter>
+    <filter id="sk-b8" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8"/></filter>
+    <filter id="sk-b16" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="16"/></filter>
+  </defs>
+</svg>
+
+<header class="topbar">
+  <a class="brand" href="#home" aria-label="Skyline home">
+    <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><circle cx="20" cy="12" r="7" fill="var(--accent)"/><path d="M2 28h28v-4l-4-3-3 2-3-6-3 4-3-3-4 5-3-1-5 3z" fill="#fff"/></svg>
+    Skyline
+  </a>
+  <nav class="topnav" aria-label="Main">
+    <a href="#home" data-nav="home">Home</a>
+    <a href="#predictions" data-nav="predictions">Predictions</a>
+    <a href="#ask" data-nav="ask">Ask AI</a>
+    <a href="#settings" data-nav="settings">Settings</a>
+  </nav>
+  <button type="button" class="search-btn" data-action="open-search" aria-keyshortcuts="Meta+K Control+K /">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <span class="sb-text">Search any place, coordinates, airport…</span><span class="sb-short">Search</span>
+    <kbd>⌘K</kbd>
+  </button>
+</header>
+
+<main id="app"></main>
+
+<nav class="tabbar" aria-label="Main">
+  <a href="#home" data-nav="home"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Home</a>
+  <a href="#predictions" data-nav="predictions"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Predictions</a>
+  <a href="#ask" data-nav="ask"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg>Ask AI</a>
+  <a href="#settings" data-nav="settings"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>Settings</a>
+</nav>
+
+<div class="search-overlay" id="search" hidden>
+  <div class="search-panel" role="dialog" aria-modal="true" aria-labelledby="search-title">
+    <h2 id="search-title" class="sr-only">Search for a location</h2>
+    <div class="search-field">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A5A7A" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <label for="q" class="sr-only">Place, coordinates, airport code or university</label>
+      <input id="q" type="search" data-input="q" autocomplete="off" spellcheck="false"
+        placeholder="City, district, postal code, 25.03, 121.56, TPE, or a university"
+        role="combobox" aria-expanded="true" aria-controls="results" aria-autocomplete="list">
+      <button type="button" class="close" data-action="close-search">Esc</button>
+    </div>
+    <div class="search-body" id="search-body"></div>
+    <div class="s-actions">
+      <button type="button" data-action="geolocate"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Use my location</button>
+      <button type="button" data-action="worldwide" id="ww-btn" hidden></button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>
