@@ -2,8 +2,9 @@
 
   GET  /                        the web UI (web/index.html) and its assets (web/app.js, web/styles.css, ...)
   GET  /api/health              what is switched on: {ok, version, features: {ask, typhoon, landslide, pm25, pm25_cities, mcp}}
-  GET  /api/predict?lat=&lon=   next-day PM2.5 / PM10 from the nearest city's model (model/predict.py; 30-minute
-                                cache per city, stale on failure). No lat/lon: Taichung.
+  GET  /api/predict?lat=&lon=   next-day PM2.5 / PM10 from the nearest city's model (model/predict.py: ridge and
+                                boosted trees as plain numbers; 30-minute cache per city, stale on failure).
+                                No lat/lon: Taichung.
   GET  /api/model?city=<id>     that city's test-year report; GET /api/model/cities lists every city and its scores
   GET  /api/ask/status, POST /api/ask, GET /api/typhoon, GET /api/landslide     from ui/server/skyline_extras.py
   POST /mcp                     the Skyline MCP server (ui/mcp/skyline_mcp.py), when the `mcp` package is installed
@@ -153,6 +154,7 @@ class Predict:
 
     def reset(self) -> None:
         self.cache: Dict[str, Tuple[float, str, Any]] = {}  # key -> (fetched at, local date or proxy url, body)
+        self.upwind_cache: Optional[Tuple[float, str, Any]] = None  # (fetched at, local date, daily upwind PM2.5)
         self.client: Optional[httpx.AsyncClient] = None
         self.locks: Dict[str, asyncio.Lock] = {}
         self._models: Optional[airmodel.Models] = None
@@ -167,6 +169,22 @@ class Predict:
         if key not in self.locks:
             self.locks[key] = asyncio.Lock()
         return self.locks[key]
+
+    async def upwind(self, today: str) -> Any:
+        """Daily PM2.5 at the four upwind points: one request, shared by every city for ten minutes."""
+        def fresh() -> Optional[Any]:
+            hit = self.upwind_cache
+            ok = hit and hit[1] == today and time.time() - hit[0] < airmodel.UPWIND_CACHE_SECONDS
+            return hit[2] if ok else None
+
+        data = fresh()
+        if data is None:
+            async with self.lock("upwind"):
+                data = fresh()
+                if data is None:
+                    data = await airmodel.fetch_upwind(self.http())
+                    self.upwind_cache = (time.time(), today, data)
+        return data
 
     def http(self) -> httpx.AsyncClient:
         if self.client is None:
@@ -223,8 +241,9 @@ async def _predict_local(city: dict, city_block: dict, model: dict) -> JSONRespo
 
     async def produce() -> Any:
         try:
+            up = await st.upwind(today.isoformat()) if airmodel.needs_upwind(model) else None
             aq, wx = await airmodel.fetch_inputs(st.http(), city["lat"], city["lon"])
-            body = airmodel.predict(model, aq, wx, today)
+            body = airmodel.predict(model, aq, wx, up, today)
         except airmodel.UpstreamError as e:
             log.warning("PM2.5 inputs for %s failed: %s", city["id"], e)
             return JSONResponse({"error": f"Weather source unavailable ({e})"}, status_code=502)
