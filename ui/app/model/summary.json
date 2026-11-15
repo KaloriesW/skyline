@@ -1288,10 +1288,106 @@
    "notes": [
     "pm10: cross-validation chose v1 (test-year MAE 4.719); blend did better on the test year (4.466). The choice was not changed."
    ]
+  },
+  {
+   "id": "yunlin",
+   "name": "Yunlin County",
+   "name_zh": "雲林縣",
+   "lat": 23.6992,
+   "lon": 120.5263,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 5.469,
+    "model_mae": 3.51,
+    "improvement_pct": 35.8,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.418,
+     "ridge": 5.372,
+     "boosted": 5.337,
+     "blend": 5.149,
+     "baseline": 7.026
+    },
+    "test_mae": {
+     "baseline": 5.469,
+     "v1": 3.861,
+     "ridge": 3.747,
+     "boosted": 3.768,
+     "blend": 3.51,
+     "blend_no_weather": 4.129
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 5.675,
+    "model_mae": 4.575,
+    "improvement_pct": 19.4,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 7.541,
+     "ridge": 7.783,
+     "boosted": 10.962,
+     "blend": 8.958,
+     "baseline": 7.3
+    },
+    "test_mae": {
+     "baseline": 5.675,
+     "v1": 4.575,
+     "ridge": 4.454,
+     "boosted": 4.517,
+     "blend": 4.004,
+     "blend_no_weather": 4.472
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 26.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 50,
+     "warned": 39,
+     "caught": 31,
+     "false_alarms": 8,
+     "missed": 19,
+     "precision": 0.795,
+     "recall": 0.62
+    },
+    "tuned": {
+     "threshold": 26.0,
+     "bad_days": 50,
+     "warned": 124,
+     "caught": 49,
+     "false_alarms": 75,
+     "missed": 1,
+     "precision": 0.395,
+     "recall": 0.98
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 50,
+     "warned": 50,
+     "caught": 27,
+     "false_alarms": 23,
+     "missed": 23,
+     "precision": 0.54,
+     "recall": 0.54
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose v1 (test-year MAE 4.575); blend did better on the test year (4.004). The choice was not changed."
+   ]
   }
  ],
  "missing": [
-  "yunlin",
   "chiayi_county",
   "pingtung",
   "yilan",
