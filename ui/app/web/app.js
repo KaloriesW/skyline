@@ -579,8 +579,8 @@ var DATASETS = [
 var KEY = 'skyline-v1', OLD_KEY = 'skyline-mockup-v1';
 var DEFAULTS = {
   loc: { name: 'Xinyi District', sub: 'Taipei · 110 信義區', lat: 25.0330, lon: 121.5654, kind: 'District' },
-  weather: 'live', dataV: 2, uiV: 2, layout: null,
-  accent: '#FFC24B', risk: 'default', bgMode: 'live', fonts: 'default', radius: 18, skyline: 'city', mapBase: 'auto',
+  weather: 'live', dataV: 2, uiV: 3, layout: null,
+  accent: '#FFC24B', risk: 'default', bgMode: 'live', fonts: 'system', radius: 18, skyline: 'city', mapBase: 'auto',
   reduceMotion: false, units: 'C', lang: 'en',
   sources: { openMeteo: true, windyMap: true, pm25: true, landslide: true, typhoon: true },
   recents: [], predBase: {}, predT: NOW,
@@ -601,7 +601,7 @@ try {
     S.dataV = DEFAULTS.dataV;
     // Settings saved before the widget dashboard: the old grid order, sizes, hidden tiles, pinned items and
     // tile style are not carried over (they are not in DEFAULTS), and the old default corner radius becomes the new one.
-    if (saved.uiV !== DEFAULTS.uiV) { if (saved.radius === 24) S.radius = DEFAULTS.radius; migrated = true; }
+    if (saved.uiV !== DEFAULTS.uiV) { if (saved.radius === 24) S.radius = DEFAULTS.radius; if (saved.uiV < 3 && saved.fonts === 'default') S.fonts = 'system'; migrated = true; }   // v3: the system font (SF on Apple devices) is the new default
     S.uiV = DEFAULTS.uiV;
     if (S.layout != null && !Array.isArray(S.layout)) S.layout = null;
     if (migrated) localStorage.setItem(KEY, JSON.stringify(S));
@@ -1860,7 +1860,7 @@ var TILES = {
     head: function () { return '<div class="chips">' + MAP_LAYERS.map(function (o) { return '<button type="button" data-layer="' + o[0] + '" class="' + (MAP_LAYER === o[0] ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>'; },
     render: function () {
       var lay = MAP_LAYERS.filter(function (o) { return o[0] === MAP_LAYER; })[0] || MAP_LAYERS[0];
-      return '<div class="map-wrap">' + windyFrame('Windy map of ' + S.loc.name, windyURL(lay[2], inTW(S.loc.lat, S.loc.lon) ? 8 : 6, 0, true)) + '</div>';
+      return '<div class="map-wrap">' + windyFrame('Windy map of ' + S.loc.name, windyURL(lay[2], inTW(S.loc.lat, S.loc.lon) ? 8 : 6, 0, true)) + '<button type="button" class="map-hit" data-action="open-map" aria-label="Open the map"></button></div>';
     }
   }
 };
@@ -1924,7 +1924,7 @@ function tileView(id) {
   var label = typeof t.label === 'function' ? t.label() : (t.label || t.title), age = na ? '' : tileAge(t, id);
   var right = !na && t.head ? t.head() : '';
   if (!right && (t.source || age)) right = '<em class="src' + (age ? ' stale' : '') + '">' + [t.source, age].filter(Boolean).join(' · ') + '</em>';
-  return { cls: 'tile size-' + t.size + (gold ? ' gold' : '') + (t.open && !na ? ' clickable' : '') + (na && na.st !== 'loading' ? ' is-na' : ''),
+  return { cls: 'tile size-' + t.size + (gold ? ' gold' : '') + (!na ? ' clickable' : '') + (na && na.st !== 'loading' ? ' is-na' : ''),
     head: Icons.ui(t.icon) + '<span>' + label + '</span>' + right, body: body, na: !!na };
 }
 function paintTile(el, v) {
@@ -2041,7 +2041,7 @@ function heroHTML(first) {
       '<span class="dot" style="background:' + esc(p.color) + ';color:' + esc(p.color) + '"></span><span class="tag">' + (ta.kind === 'model' ? 'Tomorrow' : 'CAMS forecast · Tomorrow') + '</span>' +
       tx(catName + ' air · PM2.5 ≈ ' + p.pm25 + ' µg/m³', '空氣' + catName + ' · PM2.5 ≈ ' + p.pm25 + ' µg/m³') + (ta.kind === 'model' ? ' · ' + esc(cityName(ta.city)) : '') + '</button>';
   }
-  return '<button type="button" class="place" data-action="open-search" aria-label="Location: ' + esc(L.name) + '. Change location">' +
+  return '<div class="hero-main"><button type="button" class="place" data-action="open-search" aria-label="Location: ' + esc(L.name) + '. Change location">' +
       '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>' +
       '<span>' + esc(L.name) + '</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>' +
     (L.sub ? '<div class="place-sub">' + esc(L.sub) + '</div>' : '') +
@@ -2049,7 +2049,7 @@ function heroHTML(first) {
                 : '<div class="temp na" aria-label="Temperature not available">—</div>') +
     '<div class="cond">' + cond + '</div>' +
     '<div class="hl"' + (hl ? ' aria-label="Today: high ' + fmtT(hl.hi) + ', low ' + fmtT(hl.lo) + '"><span>H:' + fmtT(hl.hi) + '</span><span>L:' + fmtT(hl.lo) + '</span>' : '>&nbsp;') + '</div>' +
-    pill + '<div class="chips">' + chips + '</div>' +
+    pill + '<div class="chips">' + chips + '</div></div>' +
     (S.skyline === 'city' ? skylineHTML(skylineFor(L)) : '');
 }
 function footHTML() {
@@ -2088,14 +2088,23 @@ function syncCompact() {
   $('#compactTemp').textContent = w.live ? fmtT(w.temp) : '—';
   $('#compactCond').textContent = w.live ? w.label : '';
 }
+// One scroll progress drives the whole collapse (CSS reads --p, --c, --bar, --y): the big title fades and
+// shrinks while the compact one in the top bar fades in at the same pace, then the bar's glass appears.
+var scrollQueued = false;
 function onScroll() {
-  var y = window.scrollY || 0, home = document.body.dataset.page === 'home', hero = $('#hero');
-  if (home && hero) {
-    hero.style.opacity = String(clamp(1 - y / 300, 0, 1));
-    hero.style.transform = reduced() ? '' : 'translateY(' + (y * 0.3).toFixed(1) + 'px) scale(' + (1 - clamp(y / 2400, 0, 0.1)).toFixed(4) + ')';
-  }
-  $('#topbar').classList.toggle('scrolled', y > (home ? 170 : 8));
-  $('#topbar').classList.toggle('show-compact', home && y > 170);
+  if (scrollQueued) return;
+  scrollQueued = true;
+  requestAnimationFrame(function () {
+    scrollQueued = false;
+    var y = Math.max(0, window.scrollY || 0), home = document.body.dataset.page === 'home';
+    var p = home ? clamp((y - 20) / 170, 0, 1) : 0, c = home ? clamp((p - 0.35) / 0.5, 0, 1) : 0;
+    var r = document.documentElement.style;
+    r.setProperty('--y', (reduced() ? 0 : y).toFixed(1) + 'px');
+    r.setProperty('--p', p.toFixed(3));
+    r.setProperty('--c', c.toFixed(3));
+    r.setProperty('--bar', (home ? c : clamp(y / 16, 0, 1)).toFixed(3));
+    document.body.classList.toggle('hero-gone', home && p > 0.7);
+  });
 }
 window.addEventListener('scroll', onScroll, { passive: true });
 
@@ -2115,10 +2124,11 @@ document.addEventListener('click', function (e) {
   var hm = e.target.closest('[data-hmode]');
   if (hm) { HOURLY_MODE = hm.dataset.hmode; rerenderTile('hourly'); return; }
   var ml = e.target.closest('[data-layer]');
-  if (ml) { MAP_LAYER = ml.dataset.layer; rerenderTile('map'); return; }
+  if (ml) { MAP_LAYER = ml.dataset.layer; rerenderTile('map'); refreshMapPanel(); return; }
   if (e.target.closest('button,a,iframe')) return;
   var t = e.target.closest('.tile.clickable');
-  if (t && TILES[t.dataset.id].open) TILES[t.dataset.id].open();
+  if (!t) return;
+  if (TILES[t.dataset.id].open) TILES[t.dataset.id].open(); else openDetail(t);
 });
 var dragEl = null, lastMove = 0;
 document.addEventListener('dragstart', function (e) {
@@ -2182,6 +2192,406 @@ function closeSheet() {
   return true;
 }
 $('#sheetBackdrop').addEventListener('click', function (e) { if (e.target.id === 'sheetBackdrop') closeSheet(); });
+
+/* ============================================================
+   Widget details: tap a widget and an Apple-style popover opens beside it (a bottom sheet on phones)
+   with that widget's day-by-day chart and a few plain-language lines. The data is the same
+   Open-Meteo and CAMS feeds the tiles read; nothing is invented.
+   ============================================================ */
+var POP = null;   // { id, el, date, mode }
+function dayKeys(h) {
+  var out = [], last = '';
+  h.time.forEach(function (t) { var d = t.slice(0, 10); if (d !== last) { out.push(d); last = d; } });
+  return out;
+}
+function dayVals(h, key, date) {
+  var i0 = h.time.indexOf(date + 'T00:00'), out = [], i, v;
+  for (i = 0; i < 24; i++) { v = i0 < 0 ? null : h[key][i0 + i]; out.push(isNum(v) ? v : null); }
+  return out;
+}
+function known(a) { return a.filter(function (v) { return v != null; }); }
+function peak(a) { var k = known(a); return k.length ? Math.max.apply(null, k) : null; }
+function low(a) { var k = known(a); return k.length ? Math.min.apply(null, k) : null; }
+function mean(a) { var k = known(a); return k.length ? sumOf(k) / k.length : null; }
+function longDate(date) {
+  try { return new Date(date + 'T12:00:00').toLocaleDateString(S.lang === 'zh' ? 'zh-TW' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }); } catch (e) { return date; }
+}
+function dayWord(c, date) {
+  var d = c.w.daily.time, i = d.indexOf(date);
+  return i === c.di ? 'today' : i === c.di - 1 ? 'yesterday' : i === c.di + 1 ? 'tomorrow' : 'on ' + weekdayOf(date);
+}
+function prevDate(dates, date) { var i = dates.indexOf(date); return i > 0 ? dates[i - 1] : null; }
+function smoothPath(p) {
+  var d = 'M' + p[0][0].toFixed(1) + ',' + p[0][1].toFixed(1), i, p0, p1, p2, p3;
+  for (i = 0; i < p.length - 1; i++) {
+    p0 = p[i - 1] || p[i]; p1 = p[i]; p2 = p[i + 1]; p3 = p[i + 2] || p2;
+    d += 'C' + (p1[0] + (p2[0] - p0[0]) / 6).toFixed(1) + ',' + (p1[1] + (p2[1] - p0[1]) / 6).toFixed(1) + ' ' +
+      (p2[0] - (p3[0] - p1[0]) / 6).toFixed(1) + ',' + (p2[1] - (p3[1] - p1[1]) / 6).toFixed(1) + ' ' + p2[0].toFixed(1) + ',' + p2[1].toFixed(1);
+  }
+  return d;
+}
+// A 24-hour chart. o: { lo, hi, ticks: [[value, label]], color(v), bars, ref (a second, quieter series), marks (H/L), now (hour index), label }
+function popChart(vals, o) {
+  var W = 300, H = o.h || 124, L = 2, R = 34, T = 12, B = 18, pw = W - L - R, ph = H - T - B, lo = o.lo, hi = o.hi;
+  var X = function (j) { return L + pw * j / 23; }, Y = function (v) { return T + ph * (1 - (clamp(v, lo, hi) - lo) / ((hi - lo) || 1)); };
+  var s = '<svg class="pop-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(o.label || 'Chart') + '">', pts = [];
+  (o.ticks || []).forEach(function (t) {
+    var y = Y(t[0]);
+    s += '<line class="g" x1="' + L + '" x2="' + (W - R) + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '"/><text class="ax" x="' + (W - R + 6) + '" y="' + (y + 3).toFixed(1) + '">' + esc(t[1]) + '</text>';
+  });
+  [0, 6, 12, 18].forEach(function (j) { s += '<text class="ax" x="' + X(j).toFixed(1) + '" y="' + (H - 4) + '" text-anchor="middle">' + hhLabel(j) + '</text>'; });
+  vals.forEach(function (v, j) { if (v != null) pts.push([X(j), Y(v), v, j]); });
+  if (!pts.length) return s + '<text class="ax" x="' + W / 2 + '" y="' + H / 2 + '" text-anchor="middle">' + tx('No data for this day', '這天沒有資料') + '</text></svg>';
+  if (o.bars) {
+    var bw = pw / 24 * 0.62, y0 = Y(lo);
+    pts.forEach(function (p) { s += '<rect x="' + (p[0] - bw / 2).toFixed(1) + '" y="' + p[1].toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(0.5, y0 - p[1]).toFixed(1) + '" rx="1.5" fill="' + (o.color ? o.color(p[2]) : '#8EC5FF') + '" opacity=".92"/>'; });
+  } else {
+    if (o.ref) {
+      var rp = []; o.ref.forEach(function (v, j) { if (v != null) rp.push([X(j), Y(v)]); });
+      if (rp.length > 1) s += '<path d="' + smoothPath(rp) + '" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.6" stroke-dasharray="2 4" stroke-linecap="round"/>';
+    }
+    s += '<defs><linearGradient id="popg" gradientUnits="userSpaceOnUse" x1="' + pts[0][0].toFixed(1) + '" x2="' + (pts[pts.length - 1][0] + 0.01).toFixed(2) + '" y1="0" y2="0">' +
+      pts.map(function (p, k) { return '<stop offset="' + (pts.length > 1 ? k / (pts.length - 1) : 0).toFixed(3) + '" stop-color="' + (o.color ? o.color(p[2]) : '#fff') + '"/>'; }).join('') + '</linearGradient></defs>' +
+      '<path d="' + (pts.length > 1 ? smoothPath(pts) : 'M' + pts[0][0] + ',' + pts[0][1]) + '" fill="none" stroke="url(#popg)" stroke-width="3" stroke-dasharray="4 4.5" stroke-linecap="round"/>';
+  }
+  if (o.marks && pts.length > 2) {
+    var mx = pts[0], mn = pts[0];
+    pts.forEach(function (p) { if (p[2] > mx[2]) mx = p; if (p[2] < mn[2]) mn = p; });
+    s += '<text class="mk" x="' + mx[0].toFixed(1) + '" y="' + (mx[1] - 6).toFixed(1) + '" text-anchor="middle">H</text><text class="mk" x="' + mn[0].toFixed(1) + '" y="' + (mn[1] + 13).toFixed(1) + '" text-anchor="middle">L</text>';
+  }
+  if (o.now != null && vals[o.now] != null) s += '<circle cx="' + X(o.now).toFixed(1) + '" cy="' + Y(vals[o.now]).toFixed(1) + '" r="4" fill="#fff" stroke="rgba(0,0,0,.35)" stroke-width="1.5"/>';
+  return s + '</svg>';
+}
+function popBig(value, sub) { return '<div class="pop-big"><b>' + value + '</b>' + (sub ? '<span>' + sub + '</span>' : '') + '</div>'; }
+function popSec(title, text) { return '<div class="pop-sec"><h4>' + title + '</h4><p>' + text + '</p></div>'; }
+function popRow(label, value) { return '<div class="pop-row"><span>' + label + '</span><b>' + value + '</b></div>'; }
+function popMapBtn(layer, label) { return '<button type="button" class="pop-btn" data-pop-map="' + layer + '">' + Icons.ui('map', 15) + '<span>' + label + '</span></button>'; }
+function cmpLine(c, date, noun, a, b, tol) {
+  if (a == null || b == null) return '';
+  var d = a - b;
+  return Math.abs(d) < tol ? 'The ' + noun + ' ' + dayWord(c, date) + ' is about the same as the day before.' : 'The ' + noun + ' ' + dayWord(c, date) + ' is ' + (d > 0 ? 'higher' : 'lower') + ' than the day before.';
+}
+function uvLevel(v) { return v < 3 ? 'Low' : v < 6 ? 'Moderate' : v < 8 ? 'High' : v < 11 ? 'Very High' : 'Extreme'; }
+function uvColor(v) { return v < 3 ? '#3ad06e' : v < 6 ? '#f5d33b' : v < 8 ? '#ff8c32' : v < 11 ? '#ff4545' : '#a35cd6'; }
+function beaufort(k) {
+  var s = [1, 6, 12, 20, 29, 39, 50, 62, 75, 89, 103, 118], n = 0;
+  while (n < s.length && k >= s[n]) n++;
+  return ['Calm', 'Light air', 'Light breeze', 'Gentle breeze', 'Moderate breeze', 'Fresh breeze', 'Strong breeze', 'Near gale', 'Gale', 'Strong gale', 'Storm', 'Violent storm', 'Hurricane'][n];
+}
+function nowIdx(c, date) { return date === c.w.daily.time[c.di] ? c.now.hh : null; }
+function hoursRange(vals, test) {
+  var f = -1, l = -1;
+  vals.forEach(function (v, i) { if (v != null && test(v)) { if (f < 0) f = i; l = i; } });
+  return f < 0 ? null : hhLabel(f) + ' to ' + hhLabel(l + 1);
+}
+function moonInfo() {
+  var syn = 29.530588853, ref = Date.UTC(2000, 0, 6, 18, 14), p = ((((Date.now() - ref) / 86400000) % syn) + syn) % syn / syn, lit = (1 - Math.cos(2 * Math.PI * p)) / 2;
+  var name = p < 0.03 || p > 0.97 ? 'New Moon' : p < 0.22 ? 'Waxing Crescent' : p < 0.28 ? 'First Quarter' : p < 0.47 ? 'Waxing Gibbous' : p < 0.53 ? 'Full Moon' : p < 0.72 ? 'Waning Gibbous' : p < 0.78 ? 'Last Quarter' : 'Waning Crescent';
+  var fmt = function (days) { return new Date(Date.now() + days * 86400000).toLocaleDateString(S.lang === 'zh' ? 'zh-TW' : 'en-US', { month: 'long', day: 'numeric' }); };
+  return { name: name, lit: Math.round(lit * 100), full: fmt(((0.5 - p + 1) % 1) * syn), fresh: fmt(((1 - p) % 1) * syn) };
+}
+
+var DETAIL = {
+  hourly: {
+    title: 'Conditions', icon: 'cloud', days: 'wx', modes: [['actual', 'Actual'], ['feels', 'Feels Like']],
+    render: function (c, st) {
+      var h = c.w.hourly, feels = st.mode === 'feels', key = feels ? 'apparent_temperature' : 'temperature_2m', d = c.w.daily, k = d.time.indexOf(st.date);
+      var vals = dayVals(h, key, st.date).map(function (v) { return v == null ? null : tU(v); }), now = nowIdx(c, st.date);
+      var codes = dayVals(h, 'weather_code', st.date), isDay = dayVals(h, 'is_day', st.date), icons = '';
+      for (var i = 0; i < 24; i += 2) icons += '<span>' + (codes[i] == null ? '' : Icons.art(Icons.wmo(codes[i], !!isDay[i]).art, 17)) + '</span>';
+      var headVal = now != null ? (feels ? c.cur.apparent_temperature : c.cur.temperature_2m) : d.temperature_2m_max[k];
+      var sub = now != null ? (feels ? 'Actual: ' + num(tU(c.cur.temperature_2m)) + '°' : 'Feels like: ' + num(tU(c.cur.apparent_temperature)) + '°') : 'High · Low ' + num(tU(d.temperature_2m_min[k])) + '°';
+      var pop = dayVals(h, 'precipitation_probability', st.date);
+      return popBig(num(tU(headVal)) + '°', sub) + '<div class="pop-icons">' + icons + '</div>' +
+        popChart(vals, { lo: Math.floor(Math.min(low(vals) == null ? 0 : low(vals), 100) / 3) * 3 - 3, hi: Math.ceil((peak(vals) == null ? 30 : peak(vals)) / 3) * 3 + 3, ticks: null, color: function (v) { return tcol(S.units === 'F' ? (v - 32) * 5 / 9 : v); }, marks: true, now: now, label: 'Temperature by hour' }) +
+        (feels ? '<p class="pop-note">What the temperature feels like, as a result of humidity, sunlight or wind.</p>' : '<p class="pop-note">The measured air temperature.</p>') +
+        popSec('Chance of Precipitation', dayWord(c, st.date).replace(/^./, function (ch) { return ch.toUpperCase(); }) + '’s chance: ' + num(d.precipitation_probability_max[k]) + '%') +
+        popChart(pop, { lo: 0, hi: 100, ticks: [[0, '0%'], [50, '50%'], [100, '100%']], bars: true, h: 96, label: 'Chance of precipitation by hour' });
+    }
+  },
+
+  daily: {
+    title: '10-Day Forecast', icon: 'calendar', days: 'wx',
+    render: function (c, st) {
+      var h = c.w.hourly, d = c.w.daily, k = d.time.indexOf(st.date), t = dayVals(h, 'temperature_2m', st.date).map(function (v) { return v == null ? null : tU(v); });
+      return popBig(num(tU(d.temperature_2m_max[k])) + '° / ' + num(tU(d.temperature_2m_min[k])) + '°', (WMO_TEXT[d.weather_code[k]] || '')) +
+        popChart(t, { lo: Math.floor((low(t) == null ? 0 : low(t)) / 3) * 3 - 3, hi: Math.ceil((peak(t) == null ? 30 : peak(t)) / 3) * 3 + 3, color: function (v) { return tcol(S.units === 'F' ? (v - 32) * 5 / 9 : v); }, marks: true, now: nowIdx(c, st.date), label: 'Temperature by hour' }) +
+        '<div class="pop-rows">' + popRow('Chance of rain', num(d.precipitation_probability_max[k]) + '%') + popRow('Rain total', num(d.precipitation_sum[k], 1) + ' mm') +
+        popRow('Strongest wind', num(d.wind_speed_10m_max[k]) + ' km/h') + popRow('Peak UV index', num(d.uv_index_max[k]) + ' · ' + uvLevel(d.uv_index_max[k])) +
+        (d.sunrise[k] ? popRow('Sunrise · Sunset', timeLabel(d.sunrise[k]) + ' · ' + timeLabel(d.sunset[k])) : '') + '</div>';
+    }
+  },
+
+  aqi: {
+    title: 'Air Quality', icon: 'leaf', days: 'air',
+    render: function (c, st) {
+      var a = c.a, v = dayVals(a.hourly, 'us_aqi', st.date), pm = dayVals(a.hourly, 'pm2_5', st.date), now = st.date === c.w.daily.time[c.di] ? c.now.hh : null;
+      var big = now != null && v[now] != null ? v[now] : peak(v), cat = aqiCat(big == null ? 0 : big), dates = dayKeys(a.hourly), pd = prevDate(dates, st.date);
+      var cmp = pd ? cmpLine(c, st.date, 'average PM2.5', mean(pm), mean(dayVals(a.hourly, 'pm2_5', pd)), 2) : '';
+      return popBig(big == null ? '--' : num(big), '<span style="color:' + cat[2] + '">' + tx(shortCat(cat[1]), zh(shortCat(cat[1]))) + '</span>') +
+        popChart(v, { lo: 0, hi: 200, ticks: [[50, '50'], [100, '100'], [150, '150']], color: function (x) { return aqiCat(x)[2]; }, now: now, label: 'US AQI by hour' }) +
+        '<p class="pop-note">' + cat[3] + '</p>' +
+        popSec('About this reading', 'US AQI from Copernicus CAMS model estimates for ' + esc(S.loc.name) + ', not a station reading. ' + (mean(pm) == null ? '' : 'PM2.5 averages ' + num(mean(pm), 1) + ' µg/m³ ' + dayWord(c, st.date) + '. ') + cmp) +
+        popMapBtn('pm2p5', 'Open PM2.5 map');
+    }
+  },
+
+  wind: {
+    title: 'Wind', icon: 'wind', days: 'wx',
+    render: function (c, st) {
+      var h = c.w.hourly, v = dayVals(h, 'wind_speed_10m', st.date), dir = dayVals(h, 'wind_direction_10m', st.date), now = nowIdx(c, st.date), dates = dayKeys(h), pd = prevDate(dates, st.date);
+      var sp = now != null ? c.cur.wind_speed_10m : mean(v), dg = now != null ? c.cur.wind_direction_10m : dir[12], arrows = '', i;
+      for (i = 1; i < 24; i += 3) arrows += '<span>' + (dir[i] == null ? '' : '<i style="transform:rotate(' + (dir[i] + 180) + 'deg)">↑</i>' + hhLabel(i)) + '</span>';
+      var cmp = pd ? cmpLine(c, st.date, 'average wind', mean(v), mean(dayVals(h, 'wind_speed_10m', pd)), 2) : '';
+      return popBig(num(sp) + '<small> km/h</small>', beaufort(sp) + (dg == null ? '' : ' · from ' + compass(dg))) +
+        popChart(v, { lo: 0, hi: Math.max(20, Math.ceil((peak(v) || 0) / 10) * 10), ticks: [[0, '0'], [Math.max(20, Math.ceil((peak(v) || 0) / 10) * 10) / 2, String(Math.max(20, Math.ceil((peak(v) || 0) / 10) * 10) / 2)]], color: function () { return '#8EC5FF'; }, now: now, label: 'Wind speed by hour' }) +
+        '<div class="pop-arrows">' + arrows + '</div>' +
+        popSec('Wind', (now != null && isNum(c.cur.wind_gusts_10m) ? 'Gusts reach ' + num(c.cur.wind_gusts_10m) + ' km/h right now. ' : '') + 'Average ' + num(mean(v)) + ' km/h ' + dayWord(c, st.date) + ', strongest ' + num(peak(v)) + ' km/h. ' + cmp) + popMapBtn('wind', 'Open wind map');
+    }
+  },
+
+  uv: {
+    title: 'UV Index', icon: 'sun', days: 'wx',
+    render: function (c, st) {
+      var h = c.w.hourly, v = dayVals(h, 'uv_index', st.date).map(function (x) { return x == null ? null : Math.round(x * 10) / 10; }), now = nowIdx(c, st.date), dates = dayKeys(h), pd = prevDate(dates, st.date);
+      var big = now != null && v[now] != null ? v[now] : peak(v), strong = hoursRange(v, function (x) { return x >= 3; }), future = st.date > c.w.daily.time[c.di];
+      var cmp = pd ? cmpLine(c, st.date, 'peak UV index', peak(v), peak(dayVals(h, 'uv_index', pd)), 0.5) : '';
+      var line = strong ? 'Levels of Moderate or higher ' + (future ? 'are expected' : 'were reached') + ' from ' + strong + '.' : 'The UV index stays Low all day.';
+      return popBig(num(Math.round(big || 0)), uvLevel(big || 0)) +
+        popChart(v, { lo: 0, hi: 11, ticks: [[3, 'Mod'], [6, 'High'], [8, 'V.High'], [11, 'Ext']], color: uvColor, now: now, label: 'UV index by hour' }) +
+        popSec(now != null ? 'Now, ' + timeLabel(c.cur.time) : 'Peak ' + dayWord(c, st.date), (now != null && peak(v) != null && c.now.hh > 18 ? 'Low for the rest of the day. ' : '') + line) +
+        popSec('Daily Comparison', cmp || 'No earlier day to compare with.') +
+        popSec('About the UV index', 'UV from the sun can burn skin even on cloudy days. From 3 up, wear sunscreen and a hat; at 8 and above, avoid midday sun. Scale from the World Health Organization.');
+    }
+  },
+
+  sunrise: {
+    title: 'Sunrise & Sunset', icon: 'sunrise', days: 'wx',
+    render: function (c, st) {
+      var d = c.w.daily, k = d.time.indexOf(st.date);
+      if (!d.sunrise[k] || !d.sunset[k]) return '<p class="pop-note">No sunrise data for this day.</p>';
+      var len = pt(d.sunset[k]).mins - pt(d.sunrise[k]).mins, pl = k > 0 && d.sunrise[k - 1] ? pt(d.sunset[k - 1]).mins - pt(d.sunrise[k - 1]).mins : null, diff = pl == null ? null : len - pl;
+      var f = function (m) { return Math.floor(m / 60) + ' h ' + (m % 60) + ' min'; };
+      return popBig(timeLabel(d.sunrise[k]), 'Sunrise · Sunset ' + timeLabel(d.sunset[k])) +
+        '<div class="pop-rows">' + popRow('Daylight', f(len)) + popRow('Solar noon', timeLabel('2000-01-01T' + ('0' + Math.floor((pt(d.sunrise[k]).mins + len / 2) / 60)).slice(-2) + ':' + ('0' + Math.round((pt(d.sunrise[k]).mins + len / 2) % 60)).slice(-2))) + '</div>' +
+        popSec('Daily Comparison', diff == null ? 'No earlier day to compare with.' : Math.abs(diff) < 1 ? 'Daylight ' + dayWord(c, st.date) + ' is about the same as the day before.' : 'Daylight ' + dayWord(c, st.date) + ' is ' + Math.abs(diff) + ' min ' + (diff > 0 ? 'longer' : 'shorter') + ' than the day before.');
+    }
+  },
+
+  feels: {
+    title: 'Feels Like', icon: 'thermo', days: 'wx',
+    render: function (c, st) {
+      var h = c.w.hourly, act = dayVals(h, 'temperature_2m', st.date).map(function (v) { return v == null ? null : tU(v); }), fl = dayVals(h, 'apparent_temperature', st.date).map(function (v) { return v == null ? null : tU(v); }), now = nowIdx(c, st.date);
+      var big = now != null ? c.cur.apparent_temperature : peak(dayVals(h, 'apparent_temperature', st.date)), lo = Math.floor(Math.min(low(act) == null ? 0 : low(act), low(fl) == null ? 0 : low(fl)) / 3) * 3 - 3, hi = Math.ceil(Math.max(peak(act) || 0, peak(fl) || 0) / 3) * 3 + 3;
+      return popBig(num(tU(big)) + '°', now != null ? 'Actual: ' + num(tU(c.cur.temperature_2m)) + '°' : 'Highest feels-like') +
+        popChart(fl, { lo: lo, hi: hi, ref: act, color: function (v) { return tcol(S.units === 'F' ? (v - 32) * 5 / 9 : v); }, now: now, label: 'Feels-like temperature by hour' }) +
+        '<p class="pop-note">The dotted line is the actual temperature. Feels-like adds humidity, sunshine and wind.</p>' +
+        popSec('Why it differs', now != null ? (Math.abs(c.cur.apparent_temperature - c.cur.temperature_2m) < 2 ? 'Right now it feels close to the actual temperature.' : c.cur.apparent_temperature > c.cur.temperature_2m ? 'High humidity slows sweat evaporating, so the heat feels stronger.' : 'Wind carries heat away from skin, so it feels cooler.') : 'In humid, still air it feels warmer than the thermometer says; wind makes it feel cooler.');
+    }
+  },
+
+  humidity: {
+    title: 'Humidity', icon: 'drop', days: 'wx',
+    render: function (c, st) {
+      var h = c.w.hourly, v = dayVals(h, 'relative_humidity_2m', st.date), dp = dayVals(h, 'dew_point_2m', st.date), now = nowIdx(c, st.date), dates = dayKeys(h), pd = prevDate(dates, st.date);
+      var d0 = now != null && isNum(c.cur.dew_point_2m) ? c.cur.dew_point_2m : mean(dp), feel = d0 == null ? '' : d0 < 10 ? 'dry' : d0 < 16 ? 'comfortable' : d0 < 21 ? 'humid' : 'oppressive';
+      return popBig(num(now != null ? c.cur.relative_humidity_2m : mean(v)) + '%', d0 == null ? '' : 'Dew point ' + num(tU(d0)) + '°') +
+        popChart(v, { lo: 0, hi: 100, ticks: [[25, '25%'], [50, '50%'], [75, '75%']], color: function () { return '#7cc6ff'; }, now: now, label: 'Relative humidity by hour' }) +
+        popSec('The air feels ' + (feel || '--'), 'The dew point is the temperature at which air is full of water. Under 10° feels dry, 10–16° comfortable, 16–21° humid and above 21° oppressive. ' + (pd ? cmpLine(c, st.date, 'average humidity', mean(v), mean(dayVals(h, 'relative_humidity_2m', pd)), 3) : ''));
+    }
+  },
+
+  visibility: {
+    title: 'Visibility', icon: 'eye', days: 'wx',
+    render: function (c, st) {
+      var h = c.w.hourly, v = dayVals(h, 'visibility', st.date).map(function (x) { return x == null ? null : x / 1000; }), now = nowIdx(c, st.date), top = Math.max(20, Math.ceil((peak(v) || 0) / 10) * 10);
+      var big = now != null ? (isNum(c.cur.visibility) ? c.cur.visibility / 1000 : v[now]) : mean(v), pm = c.a && now != null ? c.a.current.pm2_5 : null;
+      return popBig(num(big, big < 10 ? 1 : 0) + '<small> km</small>', big >= 20 ? 'Perfectly clear' : big >= 10 ? 'Clear' : big >= 5 ? 'Light haze' : 'Low visibility') +
+        popChart(v, { lo: 0, hi: top, ticks: [[top / 2, String(top / 2)], [top, String(top)]], color: function () { return '#c9d4e3'; }, now: now, label: 'Visibility in km by hour' }) +
+        popSec('What limits it', 'Fog, rain and haze scatter light. Fine particles (PM2.5) are a main cause of haze in Taiwan' + (pm != null ? ': PM2.5 is ' + num(pm, 1) + ' µg/m³ right now' : '') + '.');
+    }
+  },
+
+  pressure: {
+    title: 'Pressure', icon: 'gauge', days: 'wx',
+    render: function (c, st) {
+      var h = c.w.hourly, v = dayVals(h, 'pressure_msl', st.date), now = nowIdx(c, st.date), a = known(v), mn = Math.floor((a.length ? Math.min.apply(null, a) : 1000) - 1), mx = Math.ceil((a.length ? Math.max.apply(null, a) : 1020) + 1);
+      var later = h.pressure_msl[Math.min(h.time.length - 1, c.hi + 3)], tr = later - c.cur.pressure_msl > 0.6 ? 'rising' : later - c.cur.pressure_msl < -0.6 ? 'falling' : 'steady';
+      return popBig(num(now != null ? c.cur.pressure_msl : mean(v)) + '<small> hPa</small>', now != null ? tr.charAt(0).toUpperCase() + tr.slice(1) : '') +
+        popChart(v, { lo: mn, hi: mx, ticks: [[mn + (mx - mn) / 2, String(Math.round(mn + (mx - mn) / 2))]], color: function () { return '#d6c9ff'; }, now: now, label: 'Sea-level pressure by hour' }) +
+        popSec('What it means', 'Falling pressure usually brings clouds and rain; rising pressure brings clearer, calmer weather. Typhoons show up as a steep drop. Normal sea-level pressure is about 1013 hPa.');
+    }
+  },
+
+  clouds: {
+    title: 'Cloud Cover', icon: 'cloud', days: 'wx',
+    render: function (c, st) {
+      var h = c.w.hourly, v = dayVals(h, 'cloud_cover', st.date), now = nowIdx(c, st.date), i = c.hi;
+      return popBig(num(now != null ? c.cur.cloud_cover : mean(v)) + '%', now != null ? (c.cur.cloud_cover < 15 ? 'Clear skies' : c.cur.cloud_cover < 40 ? 'Mostly clear' : c.cur.cloud_cover < 70 ? 'Partly cloudy' : c.cur.cloud_cover < 90 ? 'Mostly cloudy' : 'Overcast') : '') +
+        popChart(v, { lo: 0, hi: 100, ticks: [[25, '25%'], [50, '50%'], [75, '75%']], color: function () { return '#c9d4e3'; }, now: now, label: 'Cloud cover by hour' }) +
+        (now != null && isNum(h.cloud_cover_low[i]) ? '<div class="pop-rows">' + popRow('Low clouds', num(h.cloud_cover_low[i]) + '%') + popRow('Middle clouds', num(h.cloud_cover_mid[i]) + '%') + popRow('High clouds', num(h.cloud_cover_high[i]) + '%') + '</div>' : '') +
+        popSec('About cloud cover', 'Low clouds are the ones that bring drizzle and block the sun; thin high clouds let most sunlight through.');
+    }
+  },
+
+  moon: {
+    title: 'Moon', icon: 'moon', days: null,
+    render: function () {
+      var m = moonInfo();
+      return popBig(m.name, m.lit + '% illuminated') + '<div class="pop-rows">' + popRow('Next full moon', m.full) + popRow('Next new moon', m.fresh) + '</div>' +
+        popSec('About the moon', 'The moon takes about 29.5 days to go from one new moon to the next. Tides are highest around full and new moons.');
+    }
+  },
+
+  precip: { panel: 'rain' },
+  map: { panel: true }
+};
+// PM tiles share the air-quality day view, with their own series and limits
+function pmDetail(key, title, ticks, hi, bp) {
+  return {
+    title: title, icon: 'drop', days: 'air',
+    render: function (c, st) {
+      var a = c.a, v = dayVals(a.hourly, key, st.date), now = st.date === c.w.daily.time[c.di] ? c.now.hh : null, big = now != null && v[now] != null ? v[now] : mean(v);
+      var cat = aqiCat(subIndex(big || 0, bp)), pd = prevDate(dayKeys(a.hourly), st.date);
+      return popBig(num(big, 1) + '<small> µg/m³</small>', '<span style="color:' + cat[2] + '">' + tx(shortCat(cat[1]), zh(shortCat(cat[1]))) + '</span>') +
+        popChart(v, { lo: 0, hi: hi, ticks: ticks, color: function (x) { return aqiCat(subIndex(x, bp))[2]; }, now: now, label: title + ' by hour' }) +
+        popSec('Daily average', num(mean(v), 1) + ' µg/m³ ' + dayWord(c, st.date) + '. ' + (pd ? cmpLine(c, st.date, 'average ' + title, mean(v), mean(dayVals(a.hourly, key, pd)), key === 'pm2_5' ? 2 : 3) : '')) +
+        popSec('About ' + title, key === 'pm2_5' ? 'Particles under 2.5 micrometres wide go deep into the lungs. The US 24-hour guideline is 35 µg/m³; Taiwan’s is 35 as well.' : 'Particles under 10 micrometres wide (dust, pollen, smoke). The US 24-hour guideline is 150 µg/m³.') +
+        popMapBtn('pm2p5', 'Open PM2.5 map');
+    }
+  };
+}
+DETAIL.pm25 = pmDetail('pm2_5', 'PM2.5', [[9, '9'], [35, '35'], [55, '55']], 80, PM25_BP);
+DETAIL.pm10 = pmDetail('pm10', 'PM10', [[54, '54'], [154, '154']], 200, PM10_BP);
+DETAIL.pmtrend = DETAIL.pm25;
+DETAIL.pollutants = {
+  title: 'Pollutants', icon: 'leaf', days: null,
+  render: function (c) {
+    var cur = c && c.a && c.a.current, rows = [['Ozone (O₃)', 'ozone', 'µg/m³'], ['Nitrogen dioxide (NO₂)', 'nitrogen_dioxide', 'µg/m³'], ['Sulphur dioxide (SO₂)', 'sulphur_dioxide', 'µg/m³'], ['Carbon monoxide (CO)', 'carbon_monoxide', 'µg/m³'], ['Dust', 'dust', 'µg/m³']];
+    return '<div class="pop-rows">' + rows.map(function (r) { return cur && isNum(cur[r[1]]) ? popRow(r[0], num(cur[r[1]], 1) + ' ' + r[2]) : ''; }).join('') + '</div>' +
+      popSec('Where it comes from', 'Traffic and industry add nitrogen dioxide and carbon monoxide; sunshine turns them into ozone on warm afternoons; dust blows in from deserts and building sites. Values are CAMS model estimates for the nearest grid point.');
+  }
+};
+
+// Anything without its own view gets the tile's value, a short explanation and its source
+function genericDetail(id) {
+  var t = TILES[id], el = POP.el, big = el.querySelector('.big'), note = el.querySelector('.note');
+  return { title: t.title, icon: t.icon, days: null, render: function () {
+    return (big ? popBig(big.innerHTML, '') : '') + (note ? '<p class="pop-note">' + note.innerHTML + '</p>' : '') + popSec('About this widget', esc(t.desc)) + (t.source ? popRow('Source', esc(t.source)) : '');
+  } };
+}
+function popDays(dates, sel) {
+  var i = Math.max(0, dates.indexOf(sel)), start = clamp(i - 3, 0, Math.max(0, dates.length - 7)), ini = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  return '<div class="pop-days">' + dates.slice(start, start + 7).map(function (d) {
+    return '<button type="button" data-pop-date="' + d + '" class="' + (d === sel ? 'on' : '') + '" aria-pressed="' + (d === sel) + '" aria-label="' + longDate(d) + '"><small>' + ini[new Date(d + 'T12:00:00').getDay()] + '</small><b>' + pt(d).d + '</b></button>';
+  }).join('') + '</div><div class="pop-date"><button type="button" data-pop-step="-1" aria-label="Previous day"' + (i <= 0 ? ' disabled' : '') + '>‹</button><span>' + longDate(sel) + '</span><button type="button" data-pop-step="1" aria-label="Next day"' + (i >= dates.length - 1 ? ' disabled' : '') + '>›</button></div>';
+}
+function popModes(modes, sel) {
+  return '<div class="pop-seg">' + modes.map(function (m) { return '<button type="button" data-pop-mode="' + m[0] + '" class="' + (m[0] === sel ? 'on' : '') + '" aria-pressed="' + (m[0] === sel) + '">' + m[1] + '</button>'; }).join('') + '</div>';
+}
+function popDates(d, c) {
+  if (d.days === 'wx') return dayKeys(c.w.hourly);
+  if (d.days === 'air') return c.a ? dayKeys(c.a.hourly) : [];
+  return null;
+}
+function renderPop() {
+  if (!POP) return;
+  var c = wctx(), d = POP.def, dates = c ? popDates(d, c) : null;
+  if (!c && d.days) return closePop();
+  $('#popBody').innerHTML = '<div class="pop-head">' + Icons.ui(d.icon, 15) + '<h3>' + d.title + '</h3><button type="button" class="pop-x" data-pop-close aria-label="Close">×</button></div>' +
+    (dates && dates.length ? popDays(dates, POP.date) : '') + (d.modes ? popModes(d.modes, POP.mode) : '') + '<div class="pop-main">' + d.render(c, POP) + '</div>';
+  placePop();
+}
+function openDetail(el) {
+  var id = el.dataset.id, c = wctx(), d = DETAIL[id] || null;
+  if (d && d.panel) { openMapPanel(typeof d.panel === 'string' ? d.panel : null); return; }
+  if (!d) { POP = { id: id, el: el, def: null }; d = genericDetail(id); }
+  var dates = c ? popDates(d, c) : null, today = c ? c.w.daily.time[c.di] : '';
+  POP = { id: id, el: el, def: d, mode: d.modes ? d.modes[0][0] : null, date: dates && dates.length ? (dates.indexOf(today) >= 0 ? today : dates[0]) : today };
+  var pop = $('#pop'), bd = $('#popBackdrop');
+  pop.hidden = false; bd.hidden = false;
+  renderPop();
+  requestAnimationFrame(function () { pop.classList.add('open'); });
+}
+function closePop() {
+  if (!POP) return false;
+  POP = null;
+  var pop = $('#pop'); pop.classList.remove('open'); $('#popBackdrop').hidden = true;
+  setTimeout(function () { if (!POP) pop.hidden = true; }, reduced() ? 0 : 220);
+  return true;
+}
+function placePop() {
+  var pop = $('#pop'), el = POP && POP.el;
+  if (!el || !document.contains(el)) return closePop();
+  var vw = window.innerWidth, vh = window.innerHeight, r = el.getBoundingClientRect();
+  if (vw < 760) { pop.classList.add('as-sheet'); pop.style.left = pop.style.top = pop.style.width = ''; return; }
+  pop.classList.remove('as-sheet');
+  var W = Math.min(344, vw - 32); pop.style.width = W + 'px';
+  var ph = pop.offsetHeight, side = r.right + 14 + W <= vw - 12 ? 'right' : (r.left - 14 - W >= 12 ? 'left' : 'right');
+  var left = side === 'right' ? r.right + 14 : r.left - 14 - W;
+  left = clamp(left, 12, vw - 12 - W);
+  var top = clamp(r.top + r.height / 2 - ph / 2, 66, Math.max(66, vh - ph - 12));
+  pop.style.left = left + 'px'; pop.style.top = top + 'px'; pop.dataset.side = side;
+  pop.style.setProperty('--ay', clamp(r.top + r.height / 2 - top, 24, Math.max(24, ph - 24)) + 'px');
+  if (r.bottom < 56 || r.top > vh - 20) closePop();
+}
+$('#pop').addEventListener('click', function (e) {
+  var b = e.target.closest('button'); if (!b || !POP) return;
+  var c = wctx(), dates = c ? popDates(POP.def, c) : null;
+  if (b.dataset.popDate) POP.date = b.dataset.popDate;
+  else if (b.dataset.popStep && dates) POP.date = dates[clamp(dates.indexOf(POP.date) + (+b.dataset.popStep), 0, dates.length - 1)];
+  else if (b.dataset.popMode) POP.mode = b.dataset.popMode;
+  else if (b.dataset.popMap) { closePop(); openMapPanel(b.dataset.popMap); return; }
+  else if (b.hasAttribute('data-pop-close')) { closePop(); return; }
+  else return;
+  renderPop();
+});
+$('#popBackdrop').addEventListener('click', closePop);
+window.addEventListener('scroll', function () { if (POP) placePop(); }, { passive: true });
+window.addEventListener('resize', function () { if (POP) placePop(); });
+
+/* ============================================================
+   Map panel: the map opens on the right of the page, as Apple's Precipitation widget does
+   ============================================================ */
+function mapSummary(layer, c) {
+  if (!c) return '';
+  if (layer === 'rain') {
+    var h = c.w.hourly.precipitation, past = sumOf(h.slice(Math.max(0, c.hi - 23), c.hi + 1)), next = sumOf(h.slice(c.hi + 1, c.hi + 25));
+    return 'Last 24 h ' + num(past, 1) + ' mm · next 24 h ' + num(next, 1) + ' mm';
+  }
+  if (layer === 'wind') return num(c.cur.wind_speed_10m) + ' km/h from ' + compass(c.cur.wind_direction_10m) + (isNum(c.cur.wind_gusts_10m) ? ' · gusts ' + num(c.cur.wind_gusts_10m) : '');
+  if (layer === 'pm2p5') return c.a ? 'PM2.5 ' + num(c.a.current.pm2_5, 1) + ' µg/m³ · AQI ' + num(c.a.current.us_aqi) + ' ' + aqiCat(c.a.current.us_aqi)[1] : 'Air quality is loading';
+  return num(tU(c.cur.temperature_2m)) + '° · feels like ' + num(tU(c.cur.apparent_temperature)) + '°';
+}
+function mapPanelHTML() {
+  var c = wctx(), lay = MAP_LAYERS.filter(function (o) { return o[0] === MAP_LAYER; })[0] || MAP_LAYERS[0];
+  return '<header class="mp-head"><div><h2>' + esc(S.loc.name) + '</h2><p>' + esc(mapSummary(lay[0], c)) + '</p></div>' +
+    '<button type="button" class="mp-x" data-action="close-map" aria-label="Close map">×</button></header>' +
+    '<div class="mp-chips" role="group" aria-label="Map layer">' + MAP_LAYERS.map(function (o) { return '<button type="button" data-maplayer="' + o[0] + '" class="' + (MAP_LAYER === o[0] ? 'on' : '') + '" aria-pressed="' + (MAP_LAYER === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div>' +
+    '<div class="mp-map">' + windyFrame('Windy map of ' + S.loc.name, windyURL(lay[2], inTW(S.loc.lat, S.loc.lon) ? 8 : 6, 0, true)) + '</div>' +
+    '<p class="mp-src">Map: <a href="https://www.windy.com" target="_blank" rel="noopener">Windy.com</a> · ' + (lay[0] === 'pm2p5' ? 'Copernicus CAMS' : 'ECMWF') + '</p>';
+}
+function openMapPanel(layer) {
+  if (layer) MAP_LAYER = layer;
+  closePop();
+  var p = $('#mapPanel');
+  p.innerHTML = mapPanelHTML(); p.hidden = false;
+  document.body.classList.add('map-open');
+  requestAnimationFrame(function () { p.classList.add('open'); });
+  rerenderTile('map');
+}
+function closeMapPanel() {
+  var p = $('#mapPanel');
+  if (p.hidden) return false;
+  p.classList.remove('open'); document.body.classList.remove('map-open');
+  setTimeout(function () { if (!document.body.classList.contains('map-open')) { p.hidden = true; p.innerHTML = ''; } }, reduced() ? 0 : 420);
+  return true;
+}
+function refreshMapPanel() { if (document.body.classList.contains('map-open')) { $('#mapPanel').innerHTML = mapPanelHTML(); rerenderTile('map'); } }
+$('#mapPanel').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-maplayer]');
+  if (b) { MAP_LAYER = b.dataset.maplayer; refreshMapPanel(); }
+});
 function openGallery() {
   var on = layoutIds();
   var card = function (id) {
@@ -3094,7 +3504,7 @@ function settingsView() {
     setRow('Risk color scale', '<span style="display:flex;gap:3px;margin-top:4px">' + pal().map(function (c) { return '<i style="display:block;width:18px;height:10px;border-radius:3px;background:' + c + '"></i>'; }).join('') + '</span>',
       seg('risk', 'Risk color scale', [['default', 'Default'], ['cb', 'Color-blind safe']])) +
     setRow('Sky', 'Follows live weather at your location, on every screen', seg('bgMode', 'Sky', [['live', 'Live weather'], ['static', 'Static']])) +
-    setRow('Fonts', '', seg('fonts', 'Fonts', [['default', 'Bricolage + Inter'], ['system', 'System']])) +
+    setRow('Fonts', '', seg('fonts', 'Fonts', [['system', 'System (SF on Apple)'], ['default', 'Bricolage + Inter']])) +
     '<div class="set-row"><label for="radius" class="lbl">Corner roundness<small id="radius-out">' + S.radius + ' px</small></label><input id="radius" class="plain" style="max-width:200px" type="range" min="6" max="36" value="' + S.radius + '" data-input="radius"></div>' +
     setRow('Skyline art', 'Taiwan city silhouettes under the temperature on Home', seg('skyline', 'Skyline art', [['city', 'Follow my city'], ['off', 'Off']])) +
     setRow('Map base', 'Default for prediction maps', seg('mapBase', 'Map base', [['auto', 'Auto'], ['sat', 'Satellite'], ['windy', 'Windy']])) +
@@ -3133,7 +3543,7 @@ function render() {
   document.body.dataset.page = r.page;
   destroyLive();
   loadLive(r.page); applyLiveSets();
-  if (key !== lastRoute) { closeSheet(); setEditing(false); }
+  if (key !== lastRoute) { closeSheet(); closePop(); closeMapPanel(); setEditing(false); }
   // Home already on screen (a feed arrived, the location or unit changed): update it in place, so
   // widgets keep their state and nothing re-animates. Otherwise build the page.
   if (r.page === 'home' && key === lastRoute && $('#grid')) homeUpdate(false);
@@ -3176,6 +3586,8 @@ function rerender() {
 var ACTIONS = {
   'open-search': function () { openSearch(); },
   'close-search': function () { closeSearch(); },
+  'open-map': function () { openMapPanel(); },
+  'close-map': function () { closeMapPanel(); },
   'edit-widgets': function () { setEditing(!editing); },
   'done-widgets': function () { setEditing(false); },
   'add-widget': function () { openGallery(); },
@@ -3468,7 +3880,7 @@ document.addEventListener('keydown', function (e) {
   var typing = /INPUT|TEXTAREA|SELECT/.test((e.target.tagName || '')) || e.target.isContentEditable;
   if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) { e.preventDefault(); open ? closeSearch() : openSearch(); return; }
   if (!open && e.key === '/' && !typing) { e.preventDefault(); openSearch(); return; }
-  if (!open && e.key === 'Escape') { if (!closeSheet()) setEditing(false); return; }
+  if (!open && e.key === 'Escape') { if (!closePop() && !closeSheet() && !closeMapPanel()) setEditing(false); return; }
   if (!open) return;
   if (e.key === 'Escape') { e.preventDefault(); closeSearch(); return; }
   if (e.target.id === 'q') {
