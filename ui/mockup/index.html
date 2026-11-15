@@ -2257,7 +2257,7 @@ function drawSat(d, t) {
   });
   if (d.id === 'typhoon' && tyStorm()) drawTy(L, t);
   else if (d.id === 'typhoon') {
-    L.polyline(TYPHOON_TRACK,{ color: '#FFC24B', weight: 3, dashArray: '8 8' }).addTo(live.marks);
+    L.polyline(TYPHOON_TRACK, { color: '#FFC24B', weight: 3, dashArray: '8 8' }).addTo(live.marks);
     var k = t / 11 * (TYPHOON_TRACK.length - 1), i0 = Math.min(TYPHOON_TRACK.length - 2, Math.floor(k)), f = k - i0;
     var a = TYPHOON_TRACK[i0], b = TYPHOON_TRACK[i0 + 1], pos = [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
     L.circle(pos, { radius: 70000 + t * 4000, color: '#fff', weight: 2, fillColor: '#EF4444', fillOpacity: 0.25 }).addTo(live.marks);
@@ -2963,7 +2963,7 @@ function render() {
   document.querySelectorAll('[data-nav]').forEach(function (a) {
     if (a.dataset.nav === r.page) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
   });
-  if (r.page === 'home' && S.bgMode === 'live') SkyFX.start($('.hero'), wxKey(),!!S.reduceMotion || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches));
+  if (r.page === 'home' && S.bgMode === 'live') SkyFX.start($('.hero'), wxKey(), !!S.reduceMotion || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches));
   else SkyFX.stop();
   if (r.page === 'predictions' && r.sub) updatePred();
   if (r.page === 'ask' && pendingAsk) { var pq = pendingAsk; pendingAsk = null; ask(pq); }
