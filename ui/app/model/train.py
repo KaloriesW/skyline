@@ -524,6 +524,7 @@ def main() -> int:
               f"ridge {r['pm10']['ridge']['mae']:.2f}; validation picks {metrics['validation_choice']}; "
               f"bad days {w['bad_days']}, warned {w['warned']}, caught {w['caught']}", flush=True)
         done.append(cid)
+        write_summary(cities, args.out_dir)  # after every city, so an interrupted run leaves a correct summary
 
     rows = write_summary(cities, args.out_dir)
     print(f"\ntrained now: {done or 'none'}\nalready done (skipped): {skipped or 'none'}\nfailed: {failed or 'none'}")
