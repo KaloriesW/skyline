@@ -60,7 +60,7 @@ def test_sums_follow_numpy_and_pandas_order():
     assert pm._series_mean([1.0, float("nan"), 2.0]) == 1.5 and pm._series_mean([float("nan")]) != pm._series_mean([1.0])
     nan = float("nan")
     got = pm._rolling_mean([1.0, 2.0, 4.0, nan, 5.0, 5.0, 5.0, 0.1, 0.2, 0.3], 3)
-    assert got[:2] != got[:2] or all(v != v for v in got[:2])        # no full window yet
+    assert all(v != v for v in got[:2])                               # no full window yet
     assert got[2] == 7.0 / 3 and all(v != v for v in got[3:6])       # a gap empties the windows that hold it
     assert got[6] == 5.0                                              # one repeated value: exactly that value
     assert abs(got[9] - 0.2) < 1e-15 and len(got) == 10
