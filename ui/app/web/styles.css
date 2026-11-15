@@ -389,3 +389,24 @@ input[type=range].plain{width:100%;accent-color:#1E5BC6}
   .search-panel{max-width:none;max-height:none;border-radius:0}
   .toast{bottom:96px}
 }
+
+/* ---------- States with no value: loading, not connected, unavailable ---------- */
+.temp.na{opacity:.55}
+.chip.act{border:0;cursor:pointer;text-decoration:none;font:inherit;font-size:13px;font-weight:700;background:rgba(255,255,255,.26);color:#fff}
+.chip.act:hover{background:rgba(255,255,255,.38)}
+.day.na .dh,.day.na .dl{opacity:.55}
+.pin.na .v{opacity:.5}
+.na-body{display:flex;flex-direction:column;gap:8px;align-items:flex-start;flex:1}
+.tile .val.na-h{font-size:24px;line-height:1.2;opacity:.85}
+.tile-retry{min-height:36px;padding:0 14px;border-radius:999px;border:1px solid currentColor;background:transparent;color:inherit;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.thumb-peak.na{background:rgba(5,23,46,.88)}
+.pcard.na .thumb svg{filter:grayscale(.6) brightness(.7)}
+.pm-na{max-width:640px;padding:28px;border-radius:24px;background:var(--panel);display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.pm-na h2{margin:0;font-size:24px}
+.pm-na p{margin:0;font-size:15px;line-height:1.5;opacity:.9}
+.region b.none{background:rgba(255,255,255,.14);color:inherit}
+.chat-empty{padding:28px;border-radius:20px;border:1px dashed #C5D2EC;color:#34466B}
+.chat-empty h2{margin:0 0 6px;font-size:18px;color:#0B1B3F}
+.chat-empty p{margin:0;font-size:15px;line-height:1.5}
+.msg .ai-fine{display:inline-block;margin-top:8px;font-size:13px;opacity:.75}
+.set-row select{min-height:44px;max-width:220px;border-radius:12px;border:1px solid #C5D2EC;padding:0 12px;background:#fff;color:#0B1B3F;font:inherit}

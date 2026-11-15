@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Skyline">
+  <rect width="512" height="512" fill="#0B1B3F"/>
+  <g transform="translate(77 77) scale(0.7)">
+    <circle cx="320" cy="192" r="96" fill="#FFC24B"/>
+    <path d="M48 448h416v-64l-64-48-48 32-48-96-48 64-48-48-64 80-48-16-48 32z" fill="#fff"/>
+  </g>
+</svg>
