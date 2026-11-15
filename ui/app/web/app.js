@@ -566,20 +566,6 @@ var SKYLINES = (function () {
   };
 })();
 
-var WEATHER = (function () {
-  var white = 'rgba(255,255,255,0.95)', whiteU = 'rgba(205,215,230,0.9)';
-  return {
-    'clear-day': { label: 'Clear day', top: '#1550C4', mid: '#3F8EE8', bottom: '#86C3F4', sun: true, sx: 78, sy: 14, glow: 'rgba(255,245,215,0.45)', core: '#FFF1B8', clouds: [1, 'rgba(255,255,255,0.7)', 'rgba(230,236,245,0.6)', 0.6, 120], mtn: '#FFFFFF' },
-    'partly-cloudy': { label: 'Partly cloudy', top: '#1A58C4', mid: '#4A93E4', bottom: '#93C6F0', sun: true, sx: 76, sy: 16, glow: 'rgba(255,245,215,0.4)', core: '#FFF1B8', clouds: [4, white, whiteU, 0.92, 260], mtn: '#FFFFFF' },
-    'cloudy': { label: 'Cloudy', top: '#5F708A', mid: '#8695AA', bottom: '#AEB9C8', clouds: [7, 'rgba(236,240,246,0.95)', 'rgba(150,162,180,0.9)', 0.95, 300], mtn: '#DDE3EC' },
-    'rain': { label: 'Rain', top: '#344255', mid: '#4F5E73', bottom: '#6E7C92', clouds: [8, 'rgba(150,162,180,0.95)', 'rgba(80,92,110,0.95)', 0.95, 300], rain: true, mtn: '#9AA6B8' },
-    'thunderstorm': { label: 'Thunderstorm', top: '#141A26', mid: '#262E3D', bottom: '#3F4757', clouds: [9, 'rgba(90,98,115,0.97)', 'rgba(35,40,52,0.97)', 0.97, 300], rain: true, storm: true, mtn: '#6B7486' },
-    'clear-night': { label: 'Clear night', top: '#040A1E', mid: '#0C1A42', bottom: '#1E3068', stars: true, moon: true, clouds: [1, 'rgba(120,135,170,0.5)', 'rgba(60,70,100,0.5)', 0.5, 200], mtn: '#3A4C80' },
-    'dawn': { label: 'Dawn', top: '#26346F', mid: '#B9799F', bottom: '#F5C08A', sun: true, sx: 22, sy: 46, glow: 'rgba(255,200,150,0.5)', core: '#FFD8A0', warm: true, stars: true, clouds: [3, 'rgba(255,205,200,0.85)', 'rgba(170,120,150,0.8)', 0.85, 200], mtn: '#6B4E7A' },
-    'dusk': { label: 'Dusk', top: '#1C2054', mid: '#8F4C82', bottom: '#F0895C', sun: true, sx: 80, sy: 48, glow: 'rgba(255,170,110,0.5)', core: '#FFC48A', warm: true, clouds: [3, 'rgba(255,180,140,0.85)', 'rgba(140,80,110,0.85)', 0.85, 220], mtn: '#5A3A6A' }
-  };
-})();
-
 var MAP_PLACES = [
   { name: 'Taipei', x: 205, y: 55 }, { name: 'Taichung', x: 125, y: 190 }, { name: 'Nantou', x: 165, y: 230 },
   { name: 'Hualien', x: 225, y: 215 }, { name: 'Chiayi', x: 110, y: 290 }, { name: 'Kaohsiung', x: 118, y: 385 }, { name: 'Taitung', x: 195, y: 350 }
@@ -605,8 +591,6 @@ var DATASETS = [
     labels: ['< +0.5 °C', '+0.5–1 °C', '+1–1.5 °C', '+1.5 °C or more'], legend: ['< +0.5 °C', '+0.5–1 °C', '+1–1.5 °C', '+1.5 °C or more'] }
 ];
 
-var PIN_IDS = ['thunder', 'pm25', 'wind', 'landslide', 'rain', 'humidity', 'uv', 'pressure', 'visibility', 'waves'];
-
 /* ============================================================
    State (saved in localStorage when available)
    ============================================================ */
@@ -615,18 +599,16 @@ var PIN_IDS = ['thunder', 'pm25', 'wind', 'landslide', 'rain', 'humidity', 'uv',
 var KEY = 'skyline-v1', OLD_KEY = 'skyline-mockup-v1';
 var DEFAULTS = {
   loc: { name: 'Xinyi District', sub: 'Taipei · 110 信義區', lat: 25.0330, lon: 121.5654, kind: 'District' },
-  weather: 'live', dataV: 2, pinCount: 3, pins: PIN_IDS.slice(), order: null, spans: {}, hidden: {},
-  accent: '#FFC24B', risk: 'default', bgMode: 'live', tiles: 'glass', fonts: 'default', radius: 24, skyline: 'city', mapBase: 'auto',
+  weather: 'live', dataV: 2, uiV: 2, layout: null,
+  accent: '#FFC24B', risk: 'default', bgMode: 'live', fonts: 'default', radius: 18, skyline: 'city', mapBase: 'auto',
   reduceMotion: false, units: 'C', lang: 'en',
   sources: { openMeteo: true, windyMap: true, pm25: true, landslide: true, typhoon: true },
   recents: [], predBase: {}, predT: NOW,
   ai: { provider: 'builtin', oaBase: 'https://openrouter.ai/api/v1', oaModel: '', claudeModel: 'claude-opus-5-5', remember: false }
 };
-var THEME_KEYS = ['accent', 'risk', 'bgMode', 'tiles', 'fonts', 'radius', 'skyline', 'mapBase'];
+var THEME_KEYS = ['accent', 'risk', 'bgMode', 'fonts', 'radius', 'skyline', 'mapBase'];
 function clone(o) { return JSON.parse(JSON.stringify(o)); }
 var S = clone(DEFAULTS);
-// ?demo=1 puts the sky preview picker back on Home (it is always in Settings).
-var DEMO_UI = /[?&]demo=1(&|$)/.test(location.search || '');
 try {
   var savedRaw = localStorage.getItem(KEY), migrated = false;
   if (savedRaw == null) { savedRaw = localStorage.getItem(OLD_KEY); migrated = savedRaw != null; }
@@ -637,6 +619,11 @@ try {
     S.ai = Object.assign(clone(DEFAULTS.ai), saved.ai || {});
     if (S.ai.provider === 'demo') S.ai.provider = 'builtin';   // the old "Demo" provider is now the built-in summary
     S.dataV = DEFAULTS.dataV;
+    // Settings saved before the widget dashboard: the old grid order, sizes, hidden tiles, pinned items and
+    // tile style are not carried over (they are not in DEFAULTS), and the old default corner radius becomes the new one.
+    if (saved.uiV !== DEFAULTS.uiV) { if (saved.radius === 24) S.radius = DEFAULTS.radius; migrated = true; }
+    S.uiV = DEFAULTS.uiV;
+    if (S.layout != null && !Array.isArray(S.layout)) S.layout = null;
     if (migrated) localStorage.setItem(KEY, JSON.stringify(S));
   }
 } catch (e) { /* storage unavailable: run with defaults */ }
@@ -644,7 +631,7 @@ try {
 S.weather = 'live';
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 
-var editing = false, dragId = null, chat = null, lastRoute = '', pendingAsk = null;
+var editing = false, chat = null, lastRoute = '', pendingAsk = null;
 
 /* ============================================================
    Helpers
@@ -723,353 +710,81 @@ function applyTheme() {
   r.setProperty('--accent', S.accent);
   r.setProperty('--accent-ink', inkFor(S.accent));
   r.setProperty('--r', S.radius + 'px');
-  document.body.classList.toggle('solid-tiles', S.tiles === 'solid');
   document.body.classList.toggle('system-fonts', S.fonts === 'system');
   document.body.classList.toggle('reduce-motion', !!S.reduceMotion);
 }
 function themeIsDefault() { return THEME_KEYS.every(function (k) { return S[k] === DEFAULTS[k]; }); }
 
 /* ============================================================
-   Sky background
+   Sky
+   The background is the team dashboard's: a gradient per "mood" (styles.css) plus the canvas
+   effects in sky.js. The mood comes from the live weather at S.loc. Until the weather is known,
+   or with Background set to Static, the mood is 'neutral': a plain gradient that implies no weather.
    ============================================================ */
-function cloudBg(c, under) {
-  return 'radial-gradient(ellipse 34% 46% at 28% 58%, ' + c + ' 0%, rgba(0,0,0,0) 70%), radial-gradient(ellipse 30% 54% at 50% 42%, ' + c + ' 0%, rgba(0,0,0,0) 70%), radial-gradient(ellipse 26% 42% at 72% 55%, ' + c + ' 0%, rgba(0,0,0,0) 70%), radial-gradient(ellipse 58% 26% at 50% 78%, ' + under + ' 0%, rgba(0,0,0,0) 75%)';
+var MOODS = [['clear-day', 'Clear day'], ['partly-day', 'Partly cloudy'], ['cloudy-day', 'Cloudy'], ['rain', 'Rain'], ['storm', 'Thunderstorm'], ['fog', 'Fog'],
+  ['dawn', 'Dawn'], ['dusk', 'Dusk'], ['clear-night', 'Clear night'], ['partly-night', 'Partly cloudy night'], ['cloudy-night', 'Cloudy night']];
+var NIGHT_MOODS = { 'clear-night': 1, 'partly-night': 1, 'cloudy-night': 1 };
+function moodLabel(k) { for (var i = 0; i < MOODS.length; i++) if (MOODS[i][0] === k) return MOODS[i][1]; return ''; }
+function previewOn() { return S.weather !== 'live' && !!moodLabel(S.weather); }
+function clockMins(iso) { return +String(iso).substr(11, 2) * 60 + +String(iso).substr(14, 2); }
+// Mood for live weather: the weather code first, then sunrise/sunset (within 40 minutes), then day or night.
+function liveMood(wx) {
+  var c = wx.current, dy = wx.daily, di = wxIdx(wx).di, day = !!c.is_day, kind = Icons.wmo(c.weather_code, day).kind;
+  if (kind === 'thunder') return 'storm';
+  if (kind === 'rain' || kind === 'drizzle' || kind === 'snow') return 'rain';
+  if (kind === 'fog') return 'fog';
+  var m = clockMins(c.time);
+  if (dy.sunset[di] && Math.abs(m - clockMins(dy.sunset[di])) < 40) return 'dusk';
+  if (dy.sunrise[di] && Math.abs(m - clockMins(dy.sunrise[di])) < 40) return 'dawn';
+  if (kind === 'cloud') return day ? 'cloudy-day' : 'cloudy-night';
+  if (kind === 'partly') return day ? 'partly-day' : 'partly-night';
+  return day ? 'clear-day' : 'clear-night';
 }
-/* ============================================================
-   Sky effects (canvas): layered clouds, rain, lightning.
-   Back canvas (behind the skyline): clouds, cloud lighting, bolts.
-   Front canvas (in front of skyline and text): rain, splashes, haze.
-   Flashes are capped at 2 per strike with ≥3.5 s between strikes
-   (under the 3-flashes-per-second photosensitivity limit), and
-   Reduce motion draws a single still frame with no lightning.
-   ============================================================ */
-var SkyFX = (function () {
-  var FX = {
-    'clear-day':     { cu: 2, size: [220, 340], light: [255, 255, 255, 0.82], shade: [170, 190, 215, 0.45], drift: 5 },
-    'partly-cloudy': { cu: 6, size: [280, 560], light: [255, 255, 255, 0.97], shade: [146, 164, 194, 0.72], drift: 7 },
-    'cloudy':        { deck: 1, cu: 5, size: [380, 700], light: [228, 233, 241, 0.98], shade: [112, 124, 145, 0.9], drift: 9, haze: 0.14 },
-    'rain':          { deck: 1, cu: 4, size: [420, 760], light: [146, 156, 172, 0.98], shade: [48, 57, 72, 0.96], drift: 14, rain: 1, wind: 0.12, haze: 0.32 },
-    'thunderstorm':  { deck: 1, cu: 4, size: [460, 820], light: [96, 104, 120, 0.99], shade: [12, 15, 23, 0.98], drift: 22, rain: 1.7, wind: 0.24, haze: 0.4, lightning: 1 },
-    'clear-night':   { cu: 2, size: [240, 400], light: [118, 132, 168, 0.42], shade: [24, 30, 56, 0.55], drift: 4 },
-    'dawn':          { cu: 4, size: [260, 500], light: [255, 204, 194, 0.95], shade: [116, 82, 126, 0.8], drift: 5, hl: -1 },
-    'dusk':          { cu: 4, size: [260, 500], light: [255, 176, 130, 0.95], shade: [96, 56, 94, 0.86], drift: 5, hl: 1 }
-  };
-  var st = null;
-
-  function rng(seed) {
-    return function () {
-      seed = (seed + 0x6D2B79F5) | 0;
-      var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
-  function rgba(c, a) { return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + (a == null ? c[3] : a).toFixed(3) + ')'; }
-
-  // One cloud, drawn once to an offscreen canvas: many soft puffs, lit from the sun side,
-  // shaded underneath, with a flat fading base (cumulus) or a ragged sheet (deck).
-  function sprite(w, h, f, seed, flat, dpr) {
-    var c = document.createElement('canvas');
-    c.width = Math.ceil(w * dpr); c.height = Math.ceil(h * dpr);
-    var g = c.getContext('2d'); g.scale(dpr, dpr);
-    var R = rng(seed), base = h * (flat ? 0.86 : 0.8), n = Math.round(w / (flat ? 8 : 11)), hl = f.hl || 0;
-    for (var i = 0; i < n; i++) {
-      var x = w * (0.07 + 0.86 * R()), d = Math.abs(x / w - 0.5) * 2;
-      var hf = flat ? 0.6 + 0.4 * R() : Math.max(0.06, 1 - Math.pow(d, 1.5));
-      var r = flat ? h * (0.13 + 0.15 * R()) : h * (0.12 + 0.17 * R()) * (0.5 + 0.5 * hf);
-      var y = flat ? h * (0.22 + 0.55 * R()) : base - r * 0.5 - R() * h * 0.52 * hf;
-      var gr = g.createRadialGradient(x + hl * r * 0.45, y - r * 0.5, r * 0.04, x, y, r);
-      gr.addColorStop(0, rgba(f.light, f.light[3]));
-      gr.addColorStop(0.55, rgba(f.light, f.light[3] * 0.8));
-      gr.addColorStop(1, rgba(f.light, 0));
-      g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
-    }
-    g.globalCompositeOperation = 'source-atop';
-    // inner billows: darker pockets give the cloud body texture
-    for (var k = 0; k < n * 0.6; k++) {
-      var bx = w * (0.1 + 0.8 * R()), by = h * (0.35 + 0.5 * R()), br = h * (0.06 + 0.12 * R());
-      var bg = g.createRadialGradient(bx, by, 0, bx, by, br);
-      bg.addColorStop(0, rgba(f.shade, f.shade[3] * 0.35)); bg.addColorStop(1, rgba(f.shade, 0));
-      g.fillStyle = bg; g.fillRect(bx - br, by - br, br * 2, br * 2);
-    }
-    // underside shading
-    var lg = g.createLinearGradient(0, h * (flat ? 0.15 : 0.3), 0, base);
-    lg.addColorStop(0, rgba(f.shade, 0)); lg.addColorStop(1, rgba(f.shade, f.shade[3]));
-    g.fillStyle = lg; g.fillRect(0, 0, w, h);
-    // flat, softly fading base
-    g.globalCompositeOperation = 'destination-out';
-    var fb = g.createLinearGradient(0, base - h * 0.04, 0, base + h * (flat ? 0.14 : 0.1));
-    fb.addColorStop(0, 'rgba(0,0,0,0)'); fb.addColorStop(1, 'rgba(0,0,0,1)');
-    g.fillStyle = fb; g.fillRect(0, base - h * 0.04, w, h);
-    return c;
-  }
-
-  function layoutClouds(s) {
-    var f = s.f, W = s.W, H = s.H, R = rng(11), out = [];
-    if (f.deck) {
-      // overlapping sheets make a full overcast deck
-      for (var row = 0; row < 3; row++) {
-        for (var col = 0; col < 3; col++) {
-          var w = W * (0.55 + 0.2 * R()), h = H * (0.2 + 0.08 * R());
-          out.push({ img: sprite(w, h, f, 100 + row * 7 + col, true, s.dpr), w: w, h: h,
-            x: col * W * 0.42 - W * 0.12 + R() * 60, y: -H * 0.08 + row * H * 0.1, v: f.drift * (0.6 + row * 0.25) });
-        }
-      }
-    }
-    for (var i = 0; i < f.cu; i++) {
-      var cw = Math.min(W * 0.75, f.size[0] + R() * (f.size[1] - f.size[0])), ch = cw * (0.5 + 0.12 * R());
-      out.push({ img: sprite(cw, ch, f, 300 + i * 13, false, s.dpr), w: cw, h: ch,
-        x: R() * (W + cw) - cw, y: H * (f.deck ? 0.12 + 0.24 * R() : 0.02 + 0.34 * R()), v: f.drift * (0.8 + 0.8 * R()) });
-    }
-    out.sort(function (a, b) { return a.y - b.y; });
-    s.clouds = out;
-  }
-
-  function size(s) {
-    var dpr = Math.min(2, window.devicePixelRatio || 1);
-    var bw = s.back.clientWidth, bh = s.back.clientHeight;
-    var pin = s.hero.querySelector('.pinned-wrap');
-    var fh = pin ? pin.offsetTop : s.hero.clientHeight;
-    s.front.style.height = fh + 'px';
-    [[s.back, bw, bh], [s.front, bw, fh]].forEach(function (a) { a[0].width = Math.round(a[1] * dpr); a[0].height = Math.round(a[2] * dpr); });
-    s.dpr = dpr; s.W = bw; s.H = bh; s.FH = fh;
-    s.bctx.setTransform(dpr, 0, 0, dpr, 0, 0); s.fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    layoutClouds(s);
-    if (s.f.rain) seedRain(s);
-  }
-
-  function seedRain(s) {
-    var R = Math.random, n = Math.min(1500, Math.round(s.f.rain * 420 * (s.W * s.FH) / (1280 * 700)));
-    s.drops = [];
-    for (var i = 0; i < n; i++) { var d = { z: i % 10 < 5 ? 0.3 : i % 10 < 8 ? 0.6 : 1 }; respawn(s, d, true); s.drops.push(d); }
-    s.splash = [];
-    s.curtains = [0, 1, 2].map(function (i) { return { x: R() * s.W, w: 140 + R() * 260, a: 0.04 + R() * 0.05 }; });
-  }
-  function respawn(s, d, anywhere) {
-    var wind = s.f.wind || 0;
-    d.y = anywhere ? Math.random() * s.FH : -Math.random() * s.FH * 0.25;
-    d.x = Math.random() * (s.W + s.FH * wind) - s.FH * wind;
-    d.v = (680 + 1150 * d.z) * (s.f.lightning ? 1.1 : 1);
-    d.len = (12 + 36 * d.z) * (s.f.lightning ? 1.15 : 1);
-    d.gy = d.z >= 0.6 ? s.FH * (0.8 + 0.2 * Math.random()) : Infinity;
-  }
-
-  // Lightning: midpoint-displacement bolt with branches
-  function boltPath(x0, y0, x1, y1, R) {
-    var pts = [[x0, y0], [x1, y1]], disp = Math.hypot(x1 - x0, y1 - y0) * 0.2;
-    for (var k = 0; k < 7; k++) {
-      var np = [pts[0]];
-      for (var i = 1; i < pts.length; i++) {
-        var a = pts[i - 1], b = pts[i], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1, off = (R() - 0.5) * disp;
-        np.push([(a[0] + b[0]) / 2 - dy / L * off, (a[1] + b[1]) / 2 + dx / L * off], b);
-      }
-      pts = np; disp *= 0.52;
-    }
-    return pts;
-  }
-  function makeStrike(s) {
-    var R = Math.random, W = s.W, H = s.H, now = performance.now();
-    var cloudToGround = R() < 0.55;
-    var x0 = W * (0.12 + 0.76 * R()), y0 = H * (0.16 + 0.08 * R());
-    var ev = { t0: now, x: x0, y: y0, paths: [], peaks: [[0, 1]] };
-    if (R() < 0.7) ev.peaks.push([140 + R() * 120, 0.55 + R() * 0.4]);   // a second return stroke
-    if (cloudToGround) {
-      var x1 = x0 + (R() - 0.5) * W * 0.25, y1 = H * 1.05;
-      var main = boltPath(x0, y0, x1, y1, R);
-      ev.paths.push({ pts: main, w: 2.2 });
-      var nb = 3 + Math.floor(R() * 4);
-      for (var b = 0; b < nb; b++) {
-        var i = Math.floor(R() * main.length * 0.7), p = main[i];
-        var ang = Math.atan2(y1 - y0, x1 - x0) + (R() < 0.5 ? -1 : 1) * (0.35 + R() * 0.6);
-        var len = (0.12 + R() * 0.3) * (y1 - y0);
-        var br = boltPath(p[0], p[1], p[0] + Math.cos(ang) * len, p[1] + Math.sin(ang) * len, R);
-        ev.paths.push({ pts: br, w: 0.9 });
-        if (R() < 0.4) {
-          var q = br[Math.floor(br.length * (0.3 + R() * 0.4))], a2 = ang + (R() - 0.5) * 1.2;
-          ev.paths.push({ pts: boltPath(q[0], q[1], q[0] + Math.cos(a2) * len * 0.45, q[1] + Math.sin(a2) * len * 0.45, R), w: 0.5 });
-        }
-      }
-    } else {
-      // in-cloud flash: sometimes a faint horizontal spider bolt inside the base
-      ev.y = H * (0.06 + 0.2 * R());
-      if (R() < 0.5) ev.paths.push({ pts: boltPath(x0 - W * 0.12, ev.y + 20, x0 + W * 0.12, ev.y + 10 + R() * 30, R), w: 0.7, faint: true });
-    }
-    s.strike = ev;
-    s.nextStrike = now + 3500 + R() * 7000;
-  }
-  function flashLevel(ev, now) {
-    var t = now - ev.t0, I = 0;
-    ev.peaks.forEach(function (p) { if (t >= p[0]) I = Math.max(I, p[1] * Math.exp(-(t - p[0]) / 75)); });
-    return t > 1000 ? 0 : I;
-  }
-  function strokePath(g, pts) { g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (var i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]); g.stroke(); }
-
-  function drawBack(s, now, dt) {
-    var g = s.bctx, W = s.W, H = s.H, f = s.f;
-    g.globalCompositeOperation = 'source-over';
-    g.clearRect(0, 0, W, H);
-    if (f.deck) {
-      var tg = g.createLinearGradient(0, 0, 0, H * 0.6);
-      tg.addColorStop(0, rgba(f.shade, 0.75)); tg.addColorStop(1, rgba(f.shade, 0));
-      g.fillStyle = tg; g.fillRect(0, 0, W, H * 0.6);
-    }
-    s.clouds.forEach(function (c) {
-      c.x += c.v * dt;
-      if (c.x > W) c.x = -c.w;
-      g.drawImage(c.img, c.x, c.y, c.w, c.h);
-    });
-    var ev = s.strike, I = ev ? flashLevel(ev, now) : 0;
-    s.flash = I;
-    if (I > 0.01) {
-      // light the clouds from inside, around the strike
-      g.globalCompositeOperation = 'source-atop';
-      var rg = g.createRadialGradient(ev.x, ev.y, 0, ev.x, ev.y, W * 0.5);
-      rg.addColorStop(0, 'rgba(232,236,255,' + (0.85 * I).toFixed(3) + ')');
-      rg.addColorStop(0.4, 'rgba(190,200,240,' + (0.35 * I).toFixed(3) + ')');
-      rg.addColorStop(1, 'rgba(190,200,240,0)');
-      g.fillStyle = rg; g.fillRect(0, 0, W, H);
-      // and the air behind them, a little
-      g.globalCompositeOperation = 'source-over';
-      g.fillStyle = 'rgba(200,210,255,' + (0.16 * I).toFixed(3) + ')'; g.fillRect(0, 0, W, H);
-      if (ev.paths.length) {
-        g.globalCompositeOperation = 'lighter'; g.lineJoin = 'round'; g.lineCap = 'round';
-        [[12, '120,140,255', 0.08], [5, '170,190,255', 0.3], [2, '220,228,255', 0.7], [0.9, '255,255,255', 1]].forEach(function (pass) {
-          ev.paths.forEach(function (p) {
-            g.lineWidth = p.w * pass[0];
-            g.strokeStyle = 'rgba(' + pass[1] + ',' + (pass[2] * I * (p.faint ? 0.45 : 1)).toFixed(3) + ')';
-            strokePath(g, p.pts);
-          });
-        });
-      }
-      g.globalCompositeOperation = 'source-over';
-    } else if (ev && now - ev.t0 > 1000) s.strike = null;
-  }
-
-  function drawFront(s, now, dt, still) {
-    var g = s.fctx, W = s.W, H = s.FH, f = s.f;
-    g.clearRect(0, 0, W, H);
-    if (!f.rain && !f.haze) return;
-    var wind = f.wind || 0;
-    if (f.rain) {
-      // drifting rain curtains
-      s.curtains.forEach(function (c) {
-        c.x += (40 + wind * 300) * dt; if (c.x - c.w > W + H * wind) c.x = -c.w - H * wind;
-        g.save(); g.setTransform(s.dpr, 0, wind * s.dpr, s.dpr, c.x * s.dpr, 0);
-        var cg = g.createLinearGradient(-c.w / 2, 0, c.w / 2, 0);
-        cg.addColorStop(0, 'rgba(190,200,215,0)'); cg.addColorStop(0.5, 'rgba(190,200,215,' + (c.a * f.rain).toFixed(3) + ')'); cg.addColorStop(1, 'rgba(190,200,215,0)');
-        g.fillStyle = cg; g.fillRect(-c.w / 2, 0, c.w, H); g.restore();
-      });
-    }
-    if (f.haze) {
-      var hz = g.createLinearGradient(0, H * 0.5, 0, H);
-      var hc = s.flash > 0.01 ? [175 + 60 * s.flash, 185 + 55 * s.flash, 205 + 50 * s.flash] : [150, 160, 176];
-      hz.addColorStop(0, 'rgba(' + hc.map(Math.round).join(',') + ',0)');
-      hz.addColorStop(1, 'rgba(' + hc.map(Math.round).join(',') + ',' + f.haze.toFixed(3) + ')');
-      g.fillStyle = hz; g.fillRect(0, H * 0.5, W, H * 0.5);
-    }
-    if (!f.rain) return;
-    var lit = s.flash || 0;
-    [0.3, 0.6, 1].forEach(function (z) {
-      g.beginPath();
-      s.drops.forEach(function (d) {
-        if (d.z !== z) return;
-        if (!still) {
-          d.y += d.v * dt; d.x += d.v * wind * dt;
-          if (d.y >= d.gy) { addSplash(s, d.x, d.gy); respawn(s, d, false); return; }
-          if (d.y - d.len > H) { respawn(s, d, false); return; }
-        }
-        g.moveTo(d.x, d.y); g.lineTo(d.x - wind * d.len, d.y - d.len);
-      });
-      var a = (0.09 + 0.3 * z) * (still ? 0.6 : 1) + lit * 0.35 * z;
-      g.strokeStyle = 'rgba(' + (205 + 50 * lit | 0) + ',' + (216 + 39 * lit | 0) + ',235,' + Math.min(0.9, a).toFixed(3) + ')';
-      g.lineWidth = 0.6 + 0.9 * z; g.lineCap = 'round'; g.stroke();
-    });
-    if (still) return;
-    g.fillStyle = 'rgba(215,225,240,0.55)';
-    for (var i = s.splash.length - 1; i >= 0; i--) {
-      var p = s.splash[i]; p.life -= dt;
-      if (p.life <= 0) { s.splash.splice(i, 1); continue; }
-      p.vy += 900 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
-      g.globalAlpha = Math.min(1, p.life / 0.25); g.fillRect(p.x, p.y, 1.4, 1.4);
-    }
-    g.globalAlpha = 1;
-  }
-  function addSplash(s, x, y) {
-    if (s.splash.length > 400) return;
-    for (var k = 0; k < 2 + (Math.random() * 2 | 0); k++) s.splash.push({ x: x, y: y, vx: (Math.random() - 0.5) * 120, vy: -60 - Math.random() * 110, life: 0.22 + Math.random() * 0.18 });
-  }
-
-  function frame(now) {
-    var s = st; if (!s) return;
-    var dt = Math.min(0.05, (now - (s.last || now)) / 1000); s.last = now;
-    if (s.f.lightning && !s.strike && now >= s.nextStrike) makeStrike(s);
-    drawBack(s, now, dt);
-    drawFront(s, now, dt, false);
-    s.raf = requestAnimationFrame(frame);
-  }
-
-  function start(hero, weather, still) {
-    stop();
-    var back = hero && hero.querySelector('.wx-back'), front = hero && hero.querySelector('.wx-front');
-    if (!back || !front) return;
-    var s = st = { hero: hero, back: back, front: front, bctx: back.getContext('2d'), fctx: front.getContext('2d'),
-      f: FX[weather] || FX['partly-cloudy'], clouds: [], drops: [], splash: [], strike: null, flash: 0,
-      nextStrike: performance.now() + 1500 + Math.random() * 2500 };
-    size(s);
-    s.ro = new ResizeObserver(function () { if (st === s) { size(s); if (still) paintStill(s); } });
-    s.ro.observe(hero);
-    if (still) paintStill(s); else s.raf = requestAnimationFrame(frame);
-  }
-  function paintStill(s) { drawBack(s, performance.now(), 0); drawFront(s, 0, 0, true); }
-  function stop() {
-    if (!st) return;
-    cancelAnimationFrame(st.raf);
-    if (st.ro) st.ro.disconnect();
-    st = null;
-  }
-  return { start: start, stop: stop, rng: rng };
-})();
-
-function skyLayers(b) {
-  var h = '<div class="sky" aria-hidden="true">';
-  if (b.stars) h += '<div class="stars sk-stars"></div>';
-  if (b.moon) h += '<div class="moon"></div>';
-  if (b.sun) {
-    var x = b.sx + '%', y = b.sy + '%';
-    h += '<div class="sun-glow" style="left:' + x + ';top:' + y + ';background:radial-gradient(circle,' + b.glow + ' 0%,rgba(255,240,200,0) 60%)"></div>' +
-      '<div class="sun sk-flare" style="left:' + x + ';top:' + y + ';background:radial-gradient(circle,#FFFFFF 0%,#FFFBEA 18%,' + b.core + ' 34%,rgba(255,210,120,0) 70%)"></div>' +
-      '<div class="streak" style="left:' + x + ';top:' + y + '"></div>';
-    var ks = [0.35, 0.62, 0.9, 1.25, 1.6], sizes = [40, 90, 24, 140, 60];
-    var cols = b.warm
-      ? ['rgba(255,190,120,0.22)', 'rgba(255,140,90,0.12)', 'rgba(255,220,160,0.3)', 'rgba(255,150,120,0.08)', 'rgba(255,200,140,0.15)']
-      : ['rgba(160,220,255,0.22)', 'rgba(140,255,200,0.12)', 'rgba(255,230,160,0.3)', 'rgba(180,160,255,0.08)', 'rgba(140,200,255,0.16)'];
-    ks.forEach(function (k, i) {
-      var gx = b.sx + (50 - b.sx) * k * 1.2, gy = b.sy + (55 - b.sy) * k * 1.2, s = sizes[i];
-      h += '<div class="flare-ghost" style="left:' + gx + '%;top:' + gy + '%;width:' + s + 'px;height:' + s + 'px;margin:' + (-s / 2) + 'px 0 0 ' + (-s / 2) + 'px;background:radial-gradient(circle,' + cols[i] + ' 0%,rgba(255,255,255,0) 72%);' + (i === 3 ? 'border:1px solid rgba(200,230,255,0.18)' : '') + '"></div>';
-    });
-  }
-  h += '<canvas class="wx-back" aria-hidden="true"></canvas>';
-  return h + '</div>';
+// What the sky shows now: a preview pick (Settings) wins, then live weather, else neutral.
+function skyState() {
+  if (previewOn()) return { mood: S.weather, day: !NIGHT_MOODS[S.weather], wind: 6, haze: 0 };
+  var wx = S.bgMode === 'live' ? liveWx() : null;
+  if (!wx) return { mood: 'neutral', day: true, wind: 0, haze: 0 };
+  var c = wx.current, air = liveAir(), pm = air && isNum(air.current.pm2_5) ? air.current.pm2_5 : 12;
+  return { mood: liveMood(wx), day: !!c.is_day, haze: Math.max(0, Math.min(0.6, (pm - 12) / 70)),
+    wind: -(c.wind_speed_10m || 0) * Math.sin((c.wind_direction_10m || 0) * Math.PI / 180) };
 }
-function litShare() { return { 'clear-night': 0.42, 'dusk': 0.34, 'thunderstorm': 0.38, 'rain': 0.28, 'dawn': 0.16, 'cloudy': 0.1 }[wxKey()] || 0; }
-function litWindows(city) {
-  var share = litShare();
+function applySky() {
+  var s = skyState();
+  document.body.dataset.mood = s.mood;
+  document.body.dataset.day = s.day ? '1' : '0';
+  if (window.Sky) Sky.start({ mood: s.mood, wind: s.wind, haze: s.haze, reduce: !!S.reduceMotion });
+}
+
+// ----- city silhouettes (ours), drawn over the sky at the foot of the Home hero -----
+var MTN_TINT = { 'clear-day': '#FFFFFF', 'partly-day': '#FFFFFF', 'cloudy-day': '#DDE3EC', rain: '#9AA6B8', storm: '#6B7486', fog: '#EEF1F4',
+  'clear-night': '#3A4C80', 'partly-night': '#3A4C80', 'cloudy-night': '#55607A', dawn: '#6B4E7A', dusk: '#5A3A6A', neutral: '#9FB4DA' };
+// Share of windows that are lit: most at night and in storms, none on a clear day
+function litShare(mood, day) {
+  if (mood === 'rain') return day ? 0.24 : 0.4;
+  return { 'clear-night': 0.42, 'partly-night': 0.42, 'cloudy-night': 0.4, dusk: 0.34, storm: 0.38, dawn: 0.16, fog: 0.18, 'cloudy-day': 0.1 }[mood] || 0;
+}
+function seededRandom(seed) {
+  return function () { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
+}
+function litWindows(city, share) {
   if (!share) return '';
-  var R = SkyFX.rng(7), w = '';
+  var R = seededRandom(7), w = '';
   city.blds.forEach(function (r) {
     for (var y = r.y + 7; y < 210; y += 9) for (var x = r.x + 5; x <= r.x + r.w - 8; x += 7) if (R() < share) w += '<rect x="' + x + '" y="' + y + '" width="3" height="4"/>';
   });
-  return '<g fill="#FFD58A" fill-opacity="0.72">' + w + '</g>';
+  return '<g fill="#FFD58A" fill-opacity="0.78">' + w + '</g>';
 }
-function skylineSVG(city, b) {
+function skylineSVG(city) {
+  var s = skyState(), share = litShare(s.mood, s.day), lit = share >= 0.24;
   var blds = city.blds.map(function (r) { return '<rect x="' + r.x + '" y="' + r.y + '" width="' + r.w + '" height="' + r.h + '" rx="2"/>'; }).join('');
-  return '<svg class="skyline" viewBox="0 0 1200 220" preserveAspectRatio="xMidYMax slice" role="img" aria-label="' + esc(city.label) + '">' +
-    '<path d="' + city.mtnFar + '" fill="' + b.mtn + '" fill-opacity="0.35"/>' +
-    '<path d="' + city.mtnNear + '" fill="#0B1B3F" fill-opacity="0.4"/>' +
-    '<g fill="#0B1B3F" fill-opacity="0.82">' + blds + '</g>' + litWindows(city) +
-    (city.landmark ? '<path d="' + city.landmark + '" fill="#0B1B3F" fill-opacity="0.95"/>' : '') +
-    (city.glass ? '<clipPath id="lm-clip"><rect x="' + city.glassClip[0] + '" y="' + city.glassClip[1] + '" width="' + city.glassClip[2] + '" height="' + city.glassClip[3] + '"/></clipPath><path clip-path="url(#lm-clip)" d="' + city.glass + '" fill="' + (litShare() >= 0.28 ? '#FFD58A' : '#C7D6EE') + '" fill-opacity="' + (litShare() >= 0.28 ? 0.62 : 0.42) + '"/>' : '') +
-    '<rect x="0" y="214" width="1200" height="8" fill="#0B1B3F"/></svg>';
+  return '<div class="skyline-wrap"><svg class="skyline" viewBox="0 0 1200 220" preserveAspectRatio="xMidYMax slice" role="img" aria-label="' + esc(city.label) + '">' +
+    '<path d="' + city.mtnFar + '" fill="' + (MTN_TINT[s.mood] || MTN_TINT.neutral) + '" fill-opacity="0.3"/>' +
+    '<path class="sil" d="' + city.mtnNear + '" fill-opacity="0.42"/>' +
+    '<g class="sil" fill-opacity="0.84">' + blds + '</g>' + litWindows(city, share) +
+    (city.landmark ? '<path class="sil" d="' + city.landmark + '" fill-opacity="0.96"/>' : '') +
+    (city.glass ? '<clipPath id="lm-clip"><rect x="' + city.glassClip[0] + '" y="' + city.glassClip[1] + '" width="' + city.glassClip[2] + '" height="' + city.glassClip[3] + '"/></clipPath><path clip-path="url(#lm-clip)" d="' + city.glass + '" fill="' + (lit ? '#FFD58A' : '#C7D6EE') + '" fill-opacity="' + (lit ? 0.62 : 0.42) + '"/>' : '') +
+    '<rect class="sil" x="0" y="214" width="1200" height="8"/></svg></div>';
 }
 
 /* ============================================================
@@ -1097,22 +812,26 @@ function getJSON(url) {
   var ac = window.AbortController ? new AbortController() : null;
   var tm = setTimeout(function () { if (ac) ac.abort(); }, 15000);
   return fetch(url, ac ? { signal: ac.signal } : {}).then(function (r) {
-    if (!r.ok) { var e = new Error('HTTP ' + r.status); e.status = r.status; throw e; }
+    if (!r.ok) {
+      // Keep the error body: /api/predict answers 404 with { error, nearest } away from every city model
+      var e = new Error('HTTP ' + r.status); e.status = r.status;
+      return r.json().then(function (b) { e.body = b; throw e; }, function () { throw e; });
+    }
     return r.json();
   }).then(function (d) { clearTimeout(tm); return d; }, function (e) { clearTimeout(tm); throw e; });
 }
 // One cached feed per name. Fresh for its ttl (LIVE_TTL unless given). A failed refresh keeps the
 // last good data (err is set, so screens can say how old it is) and is retried after RETRY_GAP.
 function feed(name, url, ok, ttl) {
-  var f = FEEDS[name] || (FEEDS[name] = { t: 0, tried: 0, d: null, busy: false, err: false, code: 0 }), now = Date.now();
+  var f = FEEDS[name] || (FEEDS[name] = { t: 0, tried: 0, d: null, busy: false, err: false, code: 0, body: null }), now = Date.now();
   if (f.busy || now - f.t < (ttl || LIVE_TTL) || now - f.tried < RETRY_GAP) return;
   f.busy = true; f.tried = now;
   getJSON(url).then(function (d) {
     f.busy = false;
-    if (ok(d)) { f.d = d; f.t = Date.now(); f.err = false; f.code = 200; }
+    if (ok(d)) { f.d = d; f.t = Date.now(); f.err = false; f.code = 200; f.body = null; }
     else { f.err = true; f.code = 0; }
     liveArrived();
-  }, function (e) { f.busy = false; f.err = true; f.code = (e && e.status) || 0; liveArrived(); });
+  }, function (e) { f.busy = false; f.err = true; f.code = (e && e.status) || 0; f.body = (e && e.body) || null; liveArrived(); });
 }
 // The last good data of a feed, however old (feedState says whether it is current)
 function feedData(name) { var f = FEEDS[name]; return f && f.d ? f.d : null; }
@@ -1138,6 +857,13 @@ function liveAir() { return liveOn() ? feedData('air@' + ptKey(S.loc)) : null; }
 function omState(prefix) { return liveOn() ? feedState(prefix + '@' + ptKey(S.loc)) : 'off'; }
 function wxState() { return omState('wx'); }
 function isNum(v) { return typeof v === 'number' && isFinite(v); }
+// Where "now" is in a forecast response. The request includes yesterday (the tiles need the last
+// 24 hours), so the current hour and today are not at index 0.
+function wxIdx(wx) {
+  var t = String(wx.current.time || '');
+  return { hi: Math.max(0, wx.hourly.time.indexOf(t.slice(0, 13) + ':00')), di: Math.max(0, wx.daily.time.indexOf(t.slice(0, 10))) };
+}
+function airIdx(a) { return Math.max(0, a.hourly.time.indexOf(String(a.current.time || '').slice(0, 13) + ':00')); }
 
 // ----- server features -----
 // /api/health lists what this server has, so a missing feature shows "Not connected yet" at once
@@ -1165,7 +891,29 @@ function apiState(feature, feedName) {
   return feedState(feedName);
 }
 function tyState() { return apiState('typhoon', 'ty'); }
-function pmData() { return S.sources.pm25 && feat('pm25') !== false ? feedData('pm') : null; }
+
+// ----- Skyline PM2.5 city models (/api/predict?lat=&lon=, /api/model?city=) -----
+// The server answers from the nearest of its per-city models, and names it (city). Away from every
+// modelled city it answers 404 with { error, nearest }.
+function pmFeed() { return 'pm@' + ptKey(S.loc); }
+function pmData() {
+  if (!S.sources.pm25 || feat('pm25') === false) return null;
+  var d = feedData(pmFeed());
+  if (!d) return null;
+  // A server from before the city models answers for Taichung whatever the coordinates: believe it only near Taichung
+  if (!d.city && km(S.loc.lat, S.loc.lon, 24.1477, 120.6736) > 25) return null;
+  return d;
+}
+// As apiState, and 'gone' when the answer cannot be used for this location
+function pmState() { var st = apiState('pm25', pmFeed()); return (st === 'ok' || st === 'stale') && !pmData() ? 'gone' : st; }
+// The nearest modelled city named by a 404, or null
+function pmNearest() { var f = FEEDS[pmFeed()]; return f && f.body && f.body.nearest && typeof f.body.nearest === 'object' ? f.body.nearest : null; }
+function modelFeed() { var p = pmData(); return p ? 'model@' + ((p.city && p.city.id) || 'taichung') : ''; }
+// The test report (metrics.json) of the city model that answered, or null
+function modelMetrics() { var n = modelFeed(); return n ? feedData(n) : null; }
+function modelState() { var n = modelFeed(); return n ? feedState(n) : 'gone'; }
+// An official station reading, when the server sends one with the prediction
+function stationData() { var p = pmData(); return p && p.station && typeof p.station === 'object' && p.station.aqi != null ? p.station : null; }
 
 // ----- waves -----
 // Nearest COAST point to a place: [name, lat, lon, km away]
@@ -1211,15 +959,20 @@ function monthName(iso) { return new Date(String(iso).slice(0, 10) + 'T12:00:00'
 function fmtAnom(k) { var v = S.units === 'F' ? k * 1.8 : k; return (v > 0.04 ? '+' : v < -0.04 ? '−' : '') + Math.abs(v).toFixed(1) + '°'; }
 
 function loadLive(page) {
+  var L = S.loc, k = ptKey(L);
   if (liveOn()) {
-    var L = S.loc, k = ptKey(L), q = '?latitude=' + L.lat.toFixed(3) + '&longitude=' + L.lon.toFixed(3) + '&timezone=auto';
-    feed('wx@' + k, OM_WX + q + '&forecast_days=7&forecast_hours=24' +
-      '&current=temperature_2m,apparent_temperature,relative_humidity_2m,dew_point_2m,precipitation,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_gusts_10m,wind_direction_10m,is_day,visibility' +
-      '&hourly=temperature_2m,precipitation_probability,weather_code,cape,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,pressure_msl' +
-      '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,uv_index_max,sunrise,sunset',
-      function (d) { return !!(d && d.current && isNum(d.current.temperature_2m) && d.hourly && Array.isArray(d.hourly.time) && d.daily && Array.isArray(d.daily.time) && d.daily.time.length); });
-    feed('air@' + k, OM_AIR + q + '&forecast_hours=24&current=pm2_5,pm10,us_aqi&hourly=pm2_5',
-      function (d) { return !!(d && d.current && isNum(d.current.pm2_5)); });
+    var q = '?latitude=' + L.lat.toFixed(3) + '&longitude=' + L.lon.toFixed(3) + '&timezone=auto';
+    // The two responses the widgets read. Same variables as the team server's /api/weather asked
+    // for Taichung (skyline/backend/sources.py), for these coordinates, plus what our storm,
+    // cloud-layer and visibility readings need (cape, cloud_cover_low/mid/high, current dew point and visibility).
+    feed('wx@' + k, OM_WX + q + '&past_days=1&forecast_days=10' +
+      '&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m,dew_point_2m,visibility' +
+      '&hourly=temperature_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,is_day,visibility,uv_index,dew_point_2m,relative_humidity_2m,cloud_cover,wind_speed_10m,wind_direction_10m,pressure_msl,cape,cloud_cover_low,cloud_cover_mid,cloud_cover_high' +
+      '&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max',
+      function (d) { return !!(d && d.current && isNum(d.current.temperature_2m) && d.hourly && Array.isArray(d.hourly.time) && Array.isArray(d.hourly.temperature_2m) && d.daily && Array.isArray(d.daily.time) && d.daily.time.length); });
+    feed('air@' + k, OM_AIR + q + '&domains=cams_global&past_days=2&forecast_days=4' +
+      '&current=us_aqi,pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide,dust&hourly=pm2_5,pm10,us_aqi,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide,dust',
+      function (d) { return !!(d && d.current && isNum(d.current.pm2_5) && d.hourly && Array.isArray(d.hourly.time) && Array.isArray(d.hourly.pm2_5) && Array.isArray(d.hourly.pm10)); });
     var seaVars = '&current=wave_height,wave_direction,swell_wave_height';
     feed('sea@' + k, seaURL(L.lat.toFixed(3), L.lon.toFixed(3), seaVars), isSea);
     // No sea point at the location itself (inland): read the nearest point on Taiwan's coast instead
@@ -1241,15 +994,19 @@ function loadLive(page) {
   // Same-origin feeds wait for /api/health, then skip whatever the server says it does not have
   if (HEALTH.state === 'checking') { loadHealth().then(function () { loadLive(route().page); liveArrived(); }); return; }
   if (!SAME_ORIGIN) return;
-  if (S.sources.pm25 && feat('pm25') !== false) feed('pm', '/api/predict', function (d) { return !!(d && isNum(d.pm25)); });
+  if (S.sources.pm25 && feat('pm25') !== false) {
+    feed(pmFeed(), '/api/predict?lat=' + L.lat.toFixed(4) + '&lon=' + L.lon.toFixed(4), function (d) { return !!(d && isNum(d.pm25) && isNum(d.pm10) && isNum(d.aqi)); });
+    var mf = modelFeed();
+    if (mf) feed(mf, '/api/model?city=' + encodeURIComponent(mf.slice(6)), function (d) { return !!(d && d.chosen && d.results && d.results.pm25 && d.results.warnings); }, 6 * 3600000);
+  }
   if (S.sources.typhoon && feat('typhoon') !== false) feed('ty', '/api/typhoon', function (d) { return !!(d && typeof d.active === 'boolean'); });
 }
 // A feed arrived (or failed): redraw once things settle, without interrupting a drag or an open picker.
 function liveArrived() {
   clearTimeout(liveTimer);
   liveTimer = setTimeout(function () {
-    var ae = document.activeElement, r = route();
-    if (dragId || (ae && ae.id === 'demo-weather' && r.page === 'home')) { liveArrived(); return; }
+    var r = route();
+    if (dragEl) { liveArrived(); return; }
     loadLive(r.page);   // starts any follow-up request (the coast point for an inland location)
     var ch = applyLiveSets();
     if (r.page === 'home') rerender();
@@ -1275,29 +1032,6 @@ function hourLabel(iso) { var h = +String(iso).substr(11, 2); return (h % 12 || 
 function weekdayOf(iso) { return new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' }); }
 function fmtVis(m) { return m >= 10000 ? Math.round(m / 1000) + ' km' : (m / 1000).toFixed(1) + ' km'; }
 function pmLevel(v) { return (v >= 15.5) + (v >= 35.5) + (v >= 54.5); }
-// Which background matches the live weather code, day/night and sunrise/sunset
-function liveCond(wx) {
-  var c = wx.current, code = c.weather_code, dy = wx.daily;
-  if (code >= 95) return 'thunderstorm';
-  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return 'rain';
-  if (code === 3 || code === 45 || code === 48 || (code >= 71 && code <= 86)) return 'cloudy';
-  var local = Date.now() + (wx.utc_offset_seconds || 0) * 1000;
-  var near = function (a) { var v = a && Date.parse(a[0] + ':00Z'); return isNum(v) && Math.abs(local - v) <= 40 * 60000; };
-  if (near(dy.sunrise)) return 'dawn';
-  if (near(dy.sunset)) return 'dusk';
-  if (c.is_day === 0) return 'clear-night';
-  return code === 2 ? 'partly-cloudy' : 'clear-day';
-}
-// The background in use: a preview pick (Settings) wins, then live weather. null while the weather
-// is not known yet, so no particular sky is implied.
-function wxKey() {
-  if (S.weather !== 'live' && Object.prototype.hasOwnProperty.call(WEATHER, S.weather)) return S.weather;
-  var wx = liveWx();
-  return wx ? liveCond(wx) : null;
-}
-// Plain backdrop for "weather not known": no sun, clouds, rain or night
-var SKY_UNKNOWN = { label: '', top: '#163A7A', mid: '#1F4C94', bottom: '#2A5AA8', mtn: '#9FB4DA' };
-function previewOn() { return S.weather !== 'live' && Object.prototype.hasOwnProperty.call(WEATHER, S.weather); }
 function liveHeadline(wx) {
   var c = wx.current;
   return wmoText(c.weather_code) + (isNum(c.apparent_temperature) ? ' · feels like ' + fmtT(c.apparent_temperature) : '');
@@ -1334,15 +1068,15 @@ function liveTiles(all, L) {
   function set(id, o) { var t = by[id]; if (!t) return; for (var key in o) t[key] = o[key]; t.live = true; }
   try {
     if (wx) {
-      var c = wx.current, h = wx.hourly, dy = wx.daily, n = h.time.length, i, hours = [], tag = liveTag('wx@' + k), OM = 'Open-Meteo' + tag;
+      var c = wx.current, h = wx.hourly, dy = wx.daily, ix = wxIdx(wx), h0 = ix.hi, d0 = ix.di, n = Math.min(h.time.length, h0 + 24), i, hours = [], tag = liveTag('wx@' + k), OM = 'Open-Meteo' + tag;
       // "Now" is only true of fresh data: an old first hour is labelled with its clock time instead
       var old = Date.now() - FEEDS['wx@' + k].t > 45 * 60000;
-      for (i = 0; i < Math.min(10, n); i++) hours.push({ t: i || old ? hourLabel(h.time[i]) : 'Now', temp: fmtT(i ? h.temperature_2m[i] : c.temperature_2m), c: WEEK_COL[wmoKind(h.weather_code[i])], rain: Math.round(h.precipitation_probability[i] || 0) + '%' });
+      for (i = h0; i < Math.min(n, h0 + 10); i++) hours.push({ t: i > h0 || old ? hourLabel(h.time[i]) : 'Now', temp: fmtT(i > h0 ? h.temperature_2m[i] : c.temperature_2m), rain: Math.round(h.precipitation_probability[i] || 0) + '%' });
       set('hourly', { hours: hours, src: OM });
       set('week', { src: OM });
-      // Same scoring as the MCP tool get_thunderstorm_risk
-      var top = 0, topI = 0, capeMax = 0;
-      for (i = 0; i < n; i++) {
+      // Same scoring as the MCP tool get_thunderstorm_risk, over the next 24 hours
+      var top = 0, topI = h0, capeMax = 0;
+      for (i = h0; i < n; i++) {
         var cape = h.cape[i] || 0, pop = h.precipitation_probability[i] || 0, code = h.weather_code[i];
         var sc = (code === 96 || code === 99 ? 3 : code === 95 ? 2 : 0) + (cape >= 2500 ? 2 : cape >= 1000 ? 1 : 0) + (pop >= 60 ? 1 : 0);
         if (sc > top) { top = sc; topI = i; }
@@ -1351,34 +1085,34 @@ function liveTiles(all, L) {
       var lvl = top >= 5 ? 3 : top >= 3 ? 2 : top >= 2 ? 1 : 0;
       set('thunder', { value: ['Low', 'Moderate', 'High', 'Severe'][lvl], sub: 'CAPE up to ' + Math.round(capeMax).toLocaleString('en-US') + ' J/kg in 24 h' + (lvl ? ' · peak around ' + hourLabel(h.time[topI]) : ''), meter: [8, 38, 70, 92][lvl] + '%', src: 'Open-Meteo · CAPE + weather codes' + tag });
       var sd = [];
-      for (i = 0; i < Math.min(3, dy.time.length); i++) if (dy.weather_code[i] >= 95) sd.push(i ? weekdayOf(dy.time[i]) : 'Today');
+      for (i = 0; i < 3 && d0 + i < dy.time.length; i++) if (dy.weather_code[d0 + i] >= 95) sd.push(i ? weekdayOf(dy.time[d0 + i]) : 'Today');
       set('storms', { value: sd.length ? sd.length + (sd.length > 1 ? ' days' : ' day') : 'None', sub: sd.length ? 'Thunderstorms forecast: ' + sd.join(', ') : 'No thunderstorms in the 3-day forecast', src: OM });
       if (isNum(c.wind_speed_10m)) set('wind', { value: Math.round(c.wind_speed_10m) + ' km/h', sub: 'Gusts ' + Math.round(c.wind_gusts_10m || 0) + ' km/h · from ' + compass(c.wind_direction_10m || 0), src: OM });
-      if (isNum(dy.precipitation_sum[0])) set('rain', { value: (dy.precipitation_sum[0] < 10 ? dy.precipitation_sum[0].toFixed(1) : Math.round(dy.precipitation_sum[0])) + ' mm', sub: 'Chance of rain today: ' + Math.round(dy.precipitation_probability_max[0] || 0) + '%', src: OM });
-      if (isNum(c.cloud_cover)) set('clouds', { value: Math.round(c.cloud_cover) + '%', sub: 'Low ' + Math.round(h.cloud_cover_low[0] || 0) + '% · Mid ' + Math.round(h.cloud_cover_mid[0] || 0) + '% · High ' + Math.round(h.cloud_cover_high[0] || 0) + '%', src: OM });
+      if (isNum(dy.precipitation_sum[d0])) set('rain', { value: (dy.precipitation_sum[d0] < 10 ? dy.precipitation_sum[d0].toFixed(1) : Math.round(dy.precipitation_sum[d0])) + ' mm', sub: 'Chance of rain today: ' + Math.round(dy.precipitation_probability_max[d0] || 0) + '%', src: OM });
+      if (isNum(c.cloud_cover)) set('clouds', { value: Math.round(c.cloud_cover) + '%', sub: 'Low ' + Math.round(h.cloud_cover_low[h0] || 0) + '% · Mid ' + Math.round(h.cloud_cover_mid[h0] || 0) + '% · High ' + Math.round(h.cloud_cover_high[h0] || 0) + '%', src: OM });
       if (isNum(c.relative_humidity_2m)) set('humidity', { value: Math.round(c.relative_humidity_2m) + '%', sub: isNum(c.dew_point_2m) ? 'Dew point ' + fmtT(c.dew_point_2m) : '', src: OM });
       if (isNum(c.pressure_msl)) {
-        var dp = n > 3 && isNum(h.pressure_msl[3]) && isNum(h.pressure_msl[0]) ? h.pressure_msl[3] - h.pressure_msl[0] : 0;
+        var dp = isNum(h.pressure_msl[h0 + 3]) && isNum(h.pressure_msl[h0]) ? h.pressure_msl[h0 + 3] - h.pressure_msl[h0] : 0;
         set('pressure', { value: Math.round(c.pressure_msl) + ' hPa', sub: dp <= -1 ? 'Falling over the next 3 hours' : dp >= 1 ? 'Rising over the next 3 hours' : 'Steady over the next 3 hours', src: OM });
       }
       if (isNum(c.visibility)) {
         var vmin = c.visibility;
-        h.visibility.forEach(function (v) { if (isNum(v) && v < vmin) vmin = v; });
+        for (i = h0; i < n; i++) if (isNum(h.visibility[i]) && h.visibility[i] < vmin) vmin = h.visibility[i];
         set('visibility', { value: fmtVis(c.visibility), sub: 'Lowest in the next 24 h: ' + fmtVis(vmin), src: OM });
       }
-      var uv = dy.uv_index_max[0];
+      var uv = dy.uv_index_max[d0];
       if (isNum(uv)) set('uv', { value: String(Math.round(uv)), sub: (uv < 3 ? 'Low' : uv < 6 ? 'Moderate' : uv < 8 ? 'High' : uv < 11 ? 'Very high' : 'Extreme') + ' at today’s peak', src: OM });
     }
-    var nearTc = !!pm && km(L.lat, L.lon, 24.15, 120.67) <= 30; // the team model forecasts Taichung only
+    var nearTc = !!pm;   // a Skyline city model answered for this location
     if (air) {
-      var p = air.current.pm2_5, hp = (air.hourly && air.hourly.pm2_5) || [], pk = -1, atag = liveTag('air@' + k);
+      var a0 = airIdx(air), p = air.current.pm2_5, hp = air.hourly.pm2_5.slice(a0, a0 + 24), ht = air.hourly.time.slice(a0, a0 + 24), pk = -1, atag = liveTag('air@' + k);
       hp.forEach(function (v, j) { if (isNum(v) && (pk < 0 || v > hp[pk])) pk = j; });
       var cat = DATASETS[0].labels[pmLevel(p)];
       set('pm25', { value: (p < 10 ? p.toFixed(1) : Math.round(p)) + ' µg/m³',
-        sub: nearTc ? cat + ' · tomorrow ' + pm.pm25 + ' µg/m³ (team model)' : cat + (pk >= 0 ? ' · peaks ' + Math.round(hp[pk]) + ' µg/m³ around ' + hourLabel(air.hourly.time[pk]) : ''),
-        meter: Math.min(96, Math.round(p / 75 * 100)) + '%', src: (nearTc ? 'Team model + Open-Meteo CAMS' : 'Open-Meteo CAMS') + atag });
+        sub: nearTc ? cat + ' · tomorrow ' + pm.pm25 + ' µg/m³ (team model)' : cat + (pk >= 0 ? ' · peaks ' + Math.round(hp[pk]) + ' µg/m³ around ' + hourLabel(ht[pk]) : ''),
+        src: (nearTc ? 'Team model + Open-Meteo CAMS' : 'Open-Meteo CAMS') + atag });
     } else if (nearTc) {
-      set('pm25', { value: pm.pm25 + ' µg/m³', sub: 'Tomorrow’s average, ' + esc(pm.category || '') + ' (team model)', meter: Math.min(96, Math.round(pm.pm25 / 75 * 100)) + '%', src: 'Team PM2.5 model' + liveTag('pm') });
+      set('pm25', { value: pm.pm25 + ' µg/m³', sub: 'Tomorrow’s average, ' + esc(pm.category || '') + ' (team model)', src: 'Team PM2.5 model' + liveTag(pmFeed()) });
     }
     if (sea) set('waves', { value: sea.cur.wave_height.toFixed(1) + ' m', src: 'Open-Meteo Marine' + liveTag(sea.feed),
       sub: (isNum(sea.cur.swell_wave_height) ? 'Swell ' + sea.cur.swell_wave_height.toFixed(1) + ' m · ' : '') + (isNum(sea.cur.wave_direction) ? 'from ' + compass(sea.cur.wave_direction) + ' · ' : '') +
@@ -1394,7 +1128,7 @@ function liveTiles(all, L) {
     if (tv.state === 'active' || tv.state === 'none') set('typhoon', { src: tv.src });
   } catch (e) { /* malformed feed: whatever was not set gets a state below */ }
   all.forEach(function (t) {
-    if (t.live || t.id === 'map') return;
+    if (t.live) return;
     t.na = tileNA(t); t.value = '—'; t.sub = t.na.h === '—' ? t.na.msg : t.na.h;
   });
 }
@@ -1459,12 +1193,11 @@ function tyTileHTML(tv) {
     art = '<polyline points="' + tv.ty.pts.map(function (p) { return X(p.ll).toFixed(1) + ',' + Y(p.ll).toFixed(1); }).join(' ') + '" fill="none" stroke="#FFC24B" stroke-width="' + u(5) + '" stroke-dasharray="' + u(12) + ' ' + u(10) + '"/>' +
       '<circle cx="' + X(c).toFixed(1) + '" cy="' + Y(c).toFixed(1) + '" r="' + u(26) + '" fill="#EF4444" fill-opacity="0.3" stroke="#fff" stroke-width="' + u(3) + '"/><circle cx="' + X(c).toFixed(1) + '" cy="' + Y(c).toFixed(1) + '" r="' + u(7) + '" fill="#fff"/>';
   }
-  return '<div style="display:flex;gap:16px;align-items:center;flex:1">' +
-    '<svg width="120" height="96" viewBox="0 0 300 240" aria-hidden="true" style="flex:none;border-radius:14px;background:#0A2A48">' +
-      '<g' + fit + '><g transform="translate(40,10) scale(0.42)"><path d="' + ISL + '" fill="#2F5A49"/></g>' + art + '</g></svg>' +
+  return '<div class="ty"><svg width="108" height="86" viewBox="0 0 300 240" aria-hidden="true">' +
+      '<g' + fit + '><g transform="translate(40,10) scale(0.42)"><path d="' + ISL + '" fill="#3F7A63"/></g>' + art + '</g></svg>' +
     (tv.state === 'active'
-      ? '<div><div class="val" style="font-size:26px">' + esc(tv.title) + '</div><p class="sub">' + esc(tv.sub) + '</p></div></div>'
-      : '<div><div class="val" style="font-size:26px">No active typhoon</div><p class="sub">No tropical cyclone is being tracked near Taiwan right now.</p></div></div>');
+      ? '<div><div class="ty-t">' + esc(tv.title) + '</div><p class="note">' + esc(tv.sub) + '</p></div></div>'
+      : '<div><div class="ty-t">No active typhoon</div><p class="note">No tropical cyclone is being tracked near Taiwan right now.</p></div></div>');
 }
 // Real track on the satellite map
 function drawTy(L, t) {
@@ -1522,15 +1255,17 @@ function liveSet(d) {
     var air = feedData('regAir');
     if (!air) return null;
     lv = regLevels(air, function (h, i) { return h.pm2_5[i]; }, [15.5, 35.5, 54.5]);
-    var pm = pmData(), pmSt = apiState('pm25', 'pm');
+    var pm = pmData(), pmSt = pmState();
     var note = 'PM2.5 at seven cities from the Copernicus CAMS model, via Open-Meteo. These are model estimates, not station readings. The forecast ends about four days ahead, so later steps repeat the last value.';
+    var cid = pm ? ((pm.city && pm.city.id) || 'taichung') : '', cn = pm ? ((pm.city && pm.city.name) || 'Taichung') : '';
     if (pm) {
-      MAP_PLACES.forEach(function (p, i) { if (p.name === 'Taichung') lv[7][i] = pmLevel(pm.pm25); });
-      note += ' Team model, Taichung, ' + esc(pm.date || 'tomorrow') + ': ' + pm.pm25 + ' µg/m³ (' + esc(pm.category || '') + ').';
-    } else if (pmSt === 'gone') note += ' The team PM2.5 model isn’t connected on this server.';
+      // The city model that answered for S.loc replaces the CAMS level for tomorrow when it is one of the seven map cities
+      MAP_PLACES.forEach(function (p, i) { if (p.name.toLowerCase() === cid) lv[7][i] = pmLevel(pm.pm25); });
+      note += ' Team model, ' + esc(cn) + ', ' + esc(pm.date || 'tomorrow') + ': ' + pm.pm25 + ' µg/m³ (' + esc(pm.category || '') + ').';
+    } else if (pmSt === 'gone' && !pmNearest()) note += ' The team PM2.5 model isn’t connected on this server.';
     else if (pmSt === 'error') note += ' The team PM2.5 model couldn’t be reached.';
-    src = (pm ? 'Team model (Taichung) + Open-Meteo CAMS' : 'Open-Meteo CAMS') + liveTag('regAir');
-    return { lv: lv, sig: 'pm25:' + FEEDS.regAir.t + ':' + (pm ? FEEDS.pm.t : pmSt) + src, basis: model, note: note, src: src };
+    src = (pm ? 'Team model (' + cn + ') + Open-Meteo CAMS' : 'Open-Meteo CAMS') + liveTag('regAir');
+    return { lv: lv, sig: 'pm25:' + FEEDS.regAir.t + ':' + (pm ? FEEDS[pmFeed()].t + cid : pmSt) + src, basis: model, note: note, src: src };
   }
   if (d.id === 'waves') {
     var seas = feedData('regSea');
@@ -1593,50 +1328,40 @@ function lvlText(d, l) { return l == null ? d.none : d.labels[l]; }
 /* ============================================================
    Tiles (every value comes from liveTiles; nothing here is a reading)
    ============================================================ */
-var WEEK_COL = { sun: '#FFC24B', cloud: '#E2E8F0', rain: '#7DD3FC', storm: '#A78BFA' };
-function dayNames() {
-  var out = ['Today'], d = new Date();
-  for (var i = 1; i < 7; i++) out.push(new Date(d.getFullYear(), d.getMonth(), d.getDate() + i).toLocaleDateString('en-US', { weekday: 'short' }));
-  return out;
-}
 // Today's high/low always brackets the current temperature. null without live weather.
 function todayHL() {
-  var wx = liveWx();
-  if (wx && isNum(wx.daily.temperature_2m_max[0]) && isNum(wx.daily.temperature_2m_min[0])) {
-    return { hi: Math.max(wx.daily.temperature_2m_max[0], wx.current.temperature_2m), lo: Math.min(wx.daily.temperature_2m_min[0], wx.current.temperature_2m) };
+  var wx = liveWx(), d0 = wx ? wxIdx(wx).di : 0;
+  if (wx && isNum(wx.daily.temperature_2m_max[d0]) && isNum(wx.daily.temperature_2m_min[d0])) {
+    return { hi: Math.max(wx.daily.temperature_2m_max[d0], wx.current.temperature_2m), lo: Math.min(wx.daily.temperature_2m_min[d0], wx.current.temperature_2m) };
   }
   return null;
 }
-// Seven days of lows and highs. Without live weather: the day names with "—" (rows are flagged na).
+// Seven days of lows and highs, from today. Empty without live weather.
 function weekData() {
-  var hl = todayHL(), wx = liveWx();
-  if (wx && hl) {
-    var dy = wx.daily, rows = [], mn = Infinity, mx = -Infinity;
-    for (var i = 0; i < Math.min(7, dy.time.length); i++) {
-      var dlo = i ? dy.temperature_2m_min[i] : hl.lo, dhi = i ? dy.temperature_2m_max[i] : hl.hi;
-      if (!isNum(dlo) || !isNum(dhi)) break;
-      rows.push({ day: i ? weekdayOf(dy.time[i]) : 'Today', lo: dlo, hi: dhi, c: WEEK_COL[wmoKind(dy.weather_code[i])] });
-      mn = Math.min(mn, dlo); mx = Math.max(mx, dhi);
-    }
-    var span = Math.max(1, mx - mn);
-    if (rows.length) return rows.map(function (r) {
-      return { day: r.day, lo: fmtT(r.lo), hi: fmtT(r.hi), c: r.c, l: ((r.lo - mn) / span * 100) + '%', r: ((mx - r.hi) / span * 100) + '%' };
-    });
+  var hl = todayHL(), wx = liveWx(), rows = [];
+  if (!wx || !hl) return rows;
+  var dy = wx.daily, d0 = wxIdx(wx).di;
+  for (var i = 0; i < 7 && d0 + i < dy.time.length; i++) {
+    var dlo = i ? dy.temperature_2m_min[d0 + i] : hl.lo, dhi = i ? dy.temperature_2m_max[d0 + i] : hl.hi;
+    if (!isNum(dlo) || !isNum(dhi)) break;
+    rows.push({ day: i ? weekdayOf(dy.time[d0 + i]) : 'Today', lo: fmtT(dlo), hi: fmtT(dhi) });
   }
-  return dayNames().map(function (n) { return { day: n, lo: '—', hi: '—', c: 'rgba(255,255,255,0.28)', l: '0%', r: '100%', na: true }; });
+  return rows;
 }
+// The readings as text: one record per topic, each with its value, a line of detail and its source,
+// or `na` (a state, never a number). Ask AI reads these (builtinAnswer, skylineContext), and so do
+// the storm, typhoon, waves and seasonal-outlook widgets.
 function catalog(L) {
-  var grad = 'linear-gradient(90deg,' + pal().join(',') + ')', OM = 'Open-Meteo';
-  var stat = function (id, title, src, o) { var t = { id: id, title: title, src: src, value: '—', sub: '', span: 1, rows: 1, kind: 'stat' }; for (var k in (o || {})) t[k] = o[k]; return t; };
+  var OM = 'Open-Meteo';
+  var stat = function (id, title, src) { return { id: id, title: title, src: src, value: '—', sub: '', kind: 'stat' }; };
   var all = [
-    { id: 'hourly', title: 'Hourly', src: OM, span: 4, rows: 1, kind: 'hourly', hours: [] },
-    { id: 'map', title: 'Live map', src: 'Windy', span: 2, rows: 2, kind: 'map' },
-    stat('thunder', 'Thunderstorm risk', 'Open-Meteo · CAPE + weather codes', { meterBg: grad, bg: '#3B2F6B' }),
+    { id: 'hourly', title: 'Hourly', src: OM, kind: 'hourly', hours: [] },
+    stat('thunder', 'Thunderstorm risk', 'Open-Meteo · CAPE + weather codes'),
     stat('storms', 'Storm outlook · 72h', OM),
-    { id: 'typhoon', title: 'Typhoon watch', src: 'CWA typhoon warnings', span: 2, rows: 1, kind: 'typhoon', bg: '#123A5E' },
-    stat('pm25', 'PM2.5', 'Open-Meteo CAMS', { meterBg: grad }),
-    stat('landslide', 'Landslide risk', 'Team landslide model', { bg: '#FFF4E0', fg: '#5A2E00' }),
-    { id: 'week', title: '7-day forecast', src: OM, span: 2, rows: 2, kind: 'week', week: weekData() },
+    { id: 'typhoon', title: 'Typhoon watch', src: 'CWA typhoon warnings', kind: 'typhoon' },
+    stat('pm25', 'PM2.5', 'Open-Meteo CAMS'),
+    stat('landslide', 'Landslide risk', 'Team landslide model'),
+    { id: 'week', title: '7-day forecast', src: OM, kind: 'week', week: weekData() },
     stat('wind', 'Wind & gusts', OM),
     stat('rain', 'Rain today', OM),
     stat('clouds', 'Cloud layers', OM),
@@ -1645,20 +1370,14 @@ function catalog(L) {
     stat('visibility', 'Visibility', OM),
     stat('waves', 'Coast & waves', 'Open-Meteo Marine'),
     stat('uv', 'UV index', OM),
-    stat('climate', 'Seasonal outlook', 'ECMWF SEAS5 · Open-Meteo', { span: 2 })
+    stat('climate', 'Seasonal outlook', 'ECMWF SEAS5 · Open-Meteo')
   ];
-  var off = { landslide: !S.sources.landslide, typhoon: !S.sources.typhoon, map: !S.sources.windyMap };
+  var off = { landslide: !S.sources.landslide, typhoon: !S.sources.typhoon };
   liveTiles(all, L);
   return all.filter(function (t) { return !off[t.id]; });
 }
 function activeSets() {
   return DATASETS.filter(function (d) { return !((d.id === 'landslide' && !S.sources.landslide) || (d.id === 'typhoon' && !S.sources.typhoon)); });
-}
-function currentOrder(cat) {
-  var ids = cat.map(function (t) { return t.id; });
-  var o = Array.isArray(S.order) ? S.order.filter(function (id) { return ids.indexOf(id) >= 0; }) : [];
-  ids.forEach(function (id) { if (o.indexOf(id) < 0) o.push(id); });
-  return o;
 }
 // Which base map a dataset opens on
 function baseFor(d) {
@@ -1671,122 +1390,914 @@ function baseFor(d) {
 /* ============================================================
    Views
    ============================================================ */
-// Options for the sky preview picker (Settings, and Home with ?demo=1)
+// Options for the sky preview picker (Settings)
 function skyOptions() {
   var pv = previewOn();
   return '<option value="live"' + (pv ? '' : ' selected') + '>Live weather</option>' +
-    Object.keys(WEATHER).map(function (k) { return '<option value="' + k + '"' + (pv && k === S.weather ? ' selected' : '') + '>' + WEATHER[k].label + '</option>'; }).join('');
+    MOODS.map(function (m) { return '<option value="' + m[0] + '"' + (pv && m[0] === S.weather ? ' selected' : '') + '>' + m[1] + '</option>'; }).join('');
 }
-function homeView() {
-  var key = wxKey(), b = key ? WEATHER[key] : SKY_UNKNOWN;
-  var live = S.bgMode === 'live' && !!key;   // no sky is drawn until the weather is known
-  var L = S.loc, tw = inTW(L.lat, L.lon), nowWx = wxNow(), pv = previewOn(), hl = todayHL();
-  var bgVars = live ? '--top:' + b.top + ';--mid:' + b.mid + ';--bottom:' + b.bottom : '--top:' + SKY_UNKNOWN.top + ';--mid:' + SKY_UNKNOWN.mid + ';--bottom:' + SKY_UNKNOWN.bottom;
-  var cat = catalog(L), byId = {};
-  cat.forEach(function (t) { byId[t.id] = t; });
-  var n = Math.max(3, Math.min(10, S.pinCount));
-  var pins = S.pins.slice(0, n).map(function (id) {
-    var t = byId[id]; if (!t) return '';
-    return '<div class="pin' + (t.na ? ' na' : '') + '"><span class="t">' + t.title + '</span><span class="v">' + t.value + '</span><span class="s">' + t.sub + '</span><span class="src">' + t.src + '</span></div>';
-  }).join('');
-  var retry = '<button type="button" class="chip act" data-action="retry-live">Retry</button>';
-  var chips, headline;
+/* ============================================================
+   Home: hero + widgets
+   The widget system is the team dashboard's (branch app, skyline/static/app.js): a catalog of
+   tiles (TILES) in five sizes, a saved layout (S.layout), edit mode (jiggle, drag to rearrange,
+   − to remove, long-press to enter), a gallery sheet to add widgets, and detail sheets.
+   Its tiles read the Open-Meteo forecast and air-quality responses directly; here those come
+   from our feed layer for S.loc (wctx), so they work for any location. Our own tiles (storms,
+   typhoon, waves, seasonal outlook, landslide) are widgets in the same format and read catalog().
+   A tile with no data shows a state inside the same chrome: loading, turned off, not connected
+   yet, or unavailable with Retry. Old data is labelled with its age.
+   ============================================================ */
+function tx(en, zhText) { return S.lang === 'zh' ? zhText : en; }
+function num(v, d) { return v == null || isNaN(v) ? '--' : Number(v).toFixed(d || 0); }
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+function sumOf(arr) { return arr.reduce(function (s, v) { return s + (v || 0); }, 0); }
+// Parts of an Open-Meteo local time string ("2026-11-15T14:30")
+function pt(s) {
+  var a = String(s).split('T'), d = a[0].split('-').map(Number), t = (a[1] || '00:00').split(':').map(Number);
+  return { y: d[0], m: d[1], d: d[2], hh: t[0], mm: t[1], date: a[0], mins: t[0] * 60 + t[1], ts: Date.UTC(d[0], d[1] - 1, d[2], t[0], t[1]) };
+}
+function hhLabel(hh) { hh = ((hh % 24) + 24) % 24; return S.lang === 'zh' ? (hh < 12 ? '上午' : '下午') + (hh % 12 || 12) + '時' : (hh % 12 || 12) + (hh < 12 ? 'AM' : 'PM'); }
+function timeLabel(s) {
+  var p = pt(s), hm = (p.hh % 12 || 12) + ':' + ('0' + p.mm).slice(-2);
+  return S.lang === 'zh' ? (p.hh < 12 ? '上午' : '下午') + hm : hm + (p.hh < 12 ? 'AM' : 'PM');
+}
+var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function niceDate(date) {
+  var p = pt(date);
+  return S.lang === 'zh' ? p.m + ' 月 ' + p.d + ' 日（' + zh(weekdayOf(date)) + '）' : weekdayOf(date) + ', ' + MONTHS[p.m - 1] + ' ' + p.d;
+}
+// A temperature (given in °C) as a number in the chosen unit
+function tU(c) { return S.units === 'F' ? c * 9 / 5 + 32 : c; }
+
+// US AQI categories and breakpoints (2024 revision), as in the team model
+var CATS = [[50, 'Good', '#3ad06e', 'Clean air. Enjoy the outdoors.'],
+  [100, 'Moderate', '#f5d33b', 'Acceptable for most people.'],
+  [150, 'Unhealthy for Sensitive Groups', '#ff8c32', 'Sensitive groups: limit long exertion.'],
+  [200, 'Unhealthy', '#ff4545', 'Everyone: cut back outdoor exertion.'],
+  [300, 'Very Unhealthy', '#a35cd6', 'Avoid outdoor exertion.'],
+  [1e9, 'Hazardous', '#8a1538', 'Stay indoors.']];
+function aqiCat(v) { for (var i = 0; i < CATS.length; i++) if (v <= CATS[i][0]) return CATS[i]; return CATS[CATS.length - 1]; }
+function shortCat(name) { return name === 'Unhealthy for Sensitive Groups' ? 'Unhealthy (Sens.)' : name; }
+var PM25_BP = [[0, 9, 0, 50], [9.1, 35.4, 51, 100], [35.5, 55.4, 101, 150], [55.5, 125.4, 151, 200], [125.5, 225.4, 201, 300], [225.5, 325.4, 301, 500]];
+var PM10_BP = [[0, 54, 0, 50], [55, 154, 51, 100], [155, 254, 101, 150], [255, 354, 151, 200], [355, 424, 201, 300], [425, 604, 301, 500]];
+function subIndex(c, bps) {
+  for (var i = 0; i < bps.length; i++) { var b = bps[i]; if (c <= b[1]) return Math.round((b[3] - b[2]) / (b[1] - b[0]) * (Math.max(c, b[0]) - b[0]) + b[2]); }
+  return 500;
+}
+function aqiOf(pm25, pm10) { return Math.max(subIndex(Math.floor(pm25 * 10) / 10, PM25_BP), subIndex(Math.floor(pm10), PM10_BP)); }
+// Same wording as the team model's school_advice(), so the fallback reads the same
+function schoolAdvice(a) {
+  if (a <= 50) return { level: 'go', title: 'Outdoor PE as normal', detail: 'Air should be clean all day. Good day for sports practice outside.' };
+  if (a <= 100) return { level: 'go', title: 'Outdoor PE OK', detail: 'Fine for most students. Students with asthma should keep their inhaler nearby.' };
+  if (a <= 150) return { level: 'limit', title: 'Shorten hard outdoor exercise', detail: 'Sensitive students (asthma, heart or lung conditions) should do PE indoors or take it easy.' };
+  if (a <= 200) return { level: 'indoor', title: 'Move PE indoors', detail: 'Everyone should cut down on long or hard activity outside.' };
+  return { level: 'indoor', title: 'Keep students indoors', detail: 'Avoid outdoor activity. Close windows if indoor air is filtered.' };
+}
+// Colour for a temperature (°C) on the 10-day bars
+var TSTOPS = [[0, [61, 139, 255]], [10, [90, 200, 250]], [16, [99, 230, 190]], [21, [255, 214, 10]], [26, [255, 159, 10]], [32, [255, 69, 58]]];
+function tcol(t) {
+  if (t <= TSTOPS[0][0]) return 'rgb(' + TSTOPS[0][1] + ')';
+  for (var i = 1; i < TSTOPS.length; i++) {
+    if (t <= TSTOPS[i][0]) {
+      var c0 = TSTOPS[i - 1][1], c1 = TSTOPS[i][1], k = (t - TSTOPS[i - 1][0]) / (TSTOPS[i][0] - TSTOPS[i - 1][0]);
+      return 'rgb(' + c0.map(function (v, j) { return Math.round(v + (c1[j] - v) * k); }) + ')';
+    }
+  }
+  return 'rgb(' + TSTOPS[TSTOPS.length - 1][1] + ')';
+}
+
+// ----- the data the tiles read -----
+// The team tiles' context: `w` is the Open-Meteo forecast response and `a` the air-quality
+// response for S.loc (the same two objects their /api/weather returned for Taichung), plus the
+// indexes of "now". null until the weather has loaded; `a` is null until air quality has.
+function wctx() {
+  var w = liveWx();
+  if (!w) return null;
+  var a = liveAir(), cur = w.current, ix = wxIdx(w);
+  return { w: w, a: a, cur: cur, hi: ix.hi, di: ix.di, ai: a ? airIdx(a, w) : 0, now: pt(cur.time), isDay: !!cur.is_day };
+}
+// Tomorrow's daily means from the CAMS forecast (Open-Meteo), in the shape of a model prediction.
+// Used when no Skyline city model covers the location. null when the forecast has too few hours.
+function camsTomorrow(c) {
+  if (!c || !c.a) return null;
+  var h = c.a.hourly, day = c.w.daily.time[c.di + 1], today = c.w.daily.time[c.di];
+  if (!day) return null;
+  var mean = function (key, date) {
+    var s = 0, n = 0;
+    for (var i = 0; i < h.time.length; i++) if (h.time[i].slice(0, 10) === date && isNum(h[key][i])) { s += h[key][i]; n++; }
+    return n >= 12 ? s / n : null;
+  };
+  var p25 = mean('pm2_5', day), p10 = mean('pm10', day), t25 = mean('pm2_5', today);
+  if (p25 == null || p10 == null) return null;
+  var a = aqiOf(p25, p10), cat = aqiCat(a);
+  return { cams: true, date: day, pm25: Math.round(p25 * 10) / 10, pm10: Math.round(p10 * 10) / 10, aqi: a, category: cat[1], color: cat[2], advice: schoolAdvice(a),
+    today: t25 == null ? null : { pm25: Math.round(t25 * 10) / 10 } };
+}
+// Tomorrow's air for S.loc.
+//   { kind: 'model', p, city }  a Skyline city model answered (/api/predict): show it and name the city
+//   { kind: 'cams', p, why }    no city model here: tomorrow's CAMS forecast, labelled as such
+//   { kind: 'na', na }          nothing to show yet (loading) or at all
+function tomorrowAir() {
+  var c = wctx(), pm = pmData();
+  if (pm) return { kind: 'model', p: pm, city: pm.city || { id: 'taichung', name: 'Taichung City', name_zh: '臺中市' } };
+  var st = pmState();
+  if (st === 'loading') return { kind: 'na', na: naOf('loading', 'om') };
+  var p = camsTomorrow(c);
+  if (p) return { kind: 'cams', p: p, why: st };
+  var ast = !liveWx() ? wxState() : omState('air');
+  return { kind: 'na', na: naOf(ast === 'gone' ? 'error' : ast, 'om') };
+}
+function cityName(city) { return (S.lang === 'zh' && city.name_zh) || city.name || ''; }
+// Why there is no Skyline model for this location, in one sentence
+function noModelWhy() {
+  var st = pmState(), near = pmNearest();
+  if (st === 'off') return tx('The Skyline PM2.5 model is switched off in Settings.', 'Skyline PM2.5 模型已在設定中關閉。');
+  if (near) return tx('The nearest city model is ' + (near.name || '') + (isNum(near.distance_km) ? ', ' + Math.round(near.distance_km) + ' km away' : '') + '. Models cover places within 25 km of a modelled city.',
+    '最近的城市模型是' + cityName(near) + (isNum(near.distance_km) ? '，距離 ' + Math.round(near.distance_km) + ' 公里' : '') + '。模型只涵蓋城市周圍 25 公里內的地點。');
+  if (st === 'error') return tx('The Skyline PM2.5 model couldn’t be reached.', '無法連上 Skyline PM2.5 模型。');
+  if (!inTW(S.loc.lat, S.loc.lon)) return tx('Skyline’s PM2.5 models cover 22 cities in Taiwan.', 'Skyline 的 PM2.5 模型涵蓋台灣 22 個縣市。');
+  return tx('The Skyline PM2.5 model isn’t connected on this server.', '這台伺服器尚未連接 Skyline PM2.5 模型。');
+}
+
+var HOURLY_MODE = 'temp', MAP_LAYER = 'rain';
+var MAP_LAYERS = [['rain', 'Rain', ['rain', 'ecmwf']], ['wind', 'Wind', ['wind', 'ecmwf']], ['pm2p5', 'PM2.5', ['pm2p5', 'cams']], ['temp', 'Temp', ['temp', 'ecmwf']]];
+
+// A tile of ours: the value and line that catalog() built for it, in the team tile chrome
+function factTile(id, extra) {
+  var f = fact(id);
+  return '<div class="big' + (String(f.value).length > 7 ? ' long' : '') + '">' + f.value + '</div>' + (extra || '') + '<div class="note">' + f.sub + '</div>';
+}
+function factNA(id) { var f = fact(id); return f ? f.na || null : naOf('off', 'om'); }
+function pmTile(c, key, bps) {
+  var v = c.a.current[key], hist = c.a.hourly[key].slice(Math.max(0, c.ai - 23), c.ai + 1).filter(function (x) { return x != null; });
+  var avg = hist.length ? sumOf(hist) / hist.length : null, cat = aqiCat(subIndex(v, bps));
+  return '<div class="big"><span data-count="' + v + '">' + num(v) + '</span><small>µg/m³</small></div><div class="sub" style="color:' + cat[2] + '">' + shortCat(cat[1]) + '</div>' +
+    '<div class="note">' + tx('24-hour average: ', '24 小時平均：') + num(avg, 1) + ' µg/m³</div>';
+}
+
+/* needs: which feed a tile cannot render without: 'wx' (default), 'air' (weather and air quality) or 'none'.
+   na():  for tiles with their own source, the state to show instead of a body (null = render).
+   available(): false leaves the tile out of the layout and the gallery. */
+var TILES = {
+  hourly: {
+    title: 'Hourly Forecast', label: 'Next 24 Hours', icon: 'clock', size: 'h', desc: 'Temperature, air quality or rain for each hour, with sunrise and sunset.',
+    head: function () { return '<div class="seg">' + [['temp', 'Temp'], ['air', 'Air'], ['rain', 'Rain']].map(function (o) { return '<button type="button" data-hmode="' + o[0] + '" class="' + (HOURLY_MODE === o[0] ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>'; },
+    render: function (c) {
+      var h = c.w.hourly, d = c.w.daily, airAt = {}, items = [], i, k;
+      if (c.a) c.a.hourly.time.forEach(function (t, j) { airAt[t] = c.a.hourly.pm2_5[j]; });
+      var end = Math.min(h.time.length, c.hi + 25);
+      for (i = c.hi; i < end; i++) items.push({ ts: pt(h.time[i]).ts, i: i });
+      var t0 = items[0].ts, t1 = items[items.length - 1].ts;
+      for (k = c.di; k < Math.min(d.time.length, c.di + 2); k++) {
+        [['Sunrise', 'sunrise'], ['Sunset', 'sunset']].forEach(function (s) {
+          if (!d[s[1]][k]) return;
+          var ts = pt(d[s[1]][k]).ts;
+          if (ts > t0 && ts < t1) items.push({ ts: ts, sun: s[0], t: d[s[1]][k] });
+        });
+      }
+      items.sort(function (x, y) { return x.ts - y.ts; });
+      return '<div class="hours">' + items.map(function (it) {
+        if (it.sun) return '<div class="hour"><span class="t">' + timeLabel(it.t) + '</span>' + Icons.art(it.sun === 'Sunrise' ? 'sunrise' : 'sunset', 30) + '<span class="p"></span><span class="v" style="font-size:13px">' + it.sun + '</span></div>';
+        var j = it.i, label = j === c.hi ? 'Now' : hhLabel(pt(h.time[j]).hh), cls = 'hour' + (j === c.hi ? ' now' : '');
+        if (HOURLY_MODE === 'air') {
+          var pm = airAt[h.time[j]], cat = pm == null ? null : aqiCat(subIndex(pm, PM25_BP)), col = cat ? cat[2] : '#777';
+          return '<div class="' + cls + '"><span class="t">' + label + '</span><span class="aq-dot" style="background:' + col + ';color:' + col + '"></span><span class="p" style="color:var(--dim)">µg/m³</span><span class="v">' + num(pm) + '</span></div>';
+        }
+        if (HOURLY_MODE === 'rain') {
+          return '<div class="' + cls + '"><span class="t">' + label + '</span>' + Icons.art(h.precipitation[j] > 0.1 ? 'rain' : 'cloud', 30) + '<span class="p">' + num(h.precipitation[j], 1) + ' mm</span><span class="v">' + num(h.precipitation_probability[j]) + '%</span></div>';
+        }
+        var pp = h.precipitation_probability[j];
+        return '<div class="' + cls + '"><span class="t">' + label + '</span>' + Icons.art(Icons.wmo(h.weather_code[j], !!h.is_day[j]).art, 30) + '<span class="p">' + (pp >= 20 ? pp + '%' : '') + '</span><span class="v">' + num(tU(j === c.hi ? c.cur.temperature_2m : h.temperature_2m[j])) + '°</span></div>';
+      }).join('') + '</div>';
+    }
+  },
+
+  daily: {
+    title: '10-Day Forecast', icon: 'calendar', size: 't', desc: 'Highs, lows and rain chance for the next 10 days.',
+    render: function (c) {
+      var d = c.w.daily, idx = [], k;
+      for (k = c.di; k < Math.min(d.time.length, c.di + 10); k++) if (isNum(d.temperature_2m_min[k]) && isNum(d.temperature_2m_max[k])) idx.push(k);
+      var lo = Math.min.apply(null, idx.map(function (q) { return d.temperature_2m_min[q]; })), hi = Math.max.apply(null, idx.map(function (q) { return d.temperature_2m_max[q]; }));
+      var pos = function (t) { return ((t - lo) / (hi - lo || 1)) * 100; };
+      return '<div class="days">' + idx.map(function (q, n) {
+        var mn = d.temperature_2m_min[q], mx = d.temperature_2m_max[q], pp = d.precipitation_probability_max[q];
+        var dot = n === 0 ? '<b style="left:' + clamp(pos(c.cur.temperature_2m), 0, 100) + '%"></b>' : '';
+        return '<div class="day"><span>' + (n === 0 ? 'Today' : weekdayOf(d.time[q])) + '</span>' +
+          '<span class="ic">' + Icons.art(Icons.wmo(d.weather_code[q], true).art, 24) + (pp >= 20 ? '<small>' + pp + '%</small>' : '') + '</span>' +
+          '<span class="lo">' + num(tU(mn)) + '°</span>' +
+          '<span class="bar"><i style="left:' + pos(mn) + '%;width:' + (pos(mx) - pos(mn)) + '%;background:linear-gradient(90deg,' + tcol(mn) + ',' + tcol(mx) + ')"></i>' + dot + '</span>' +
+          '<span class="hi">' + num(tU(mx)) + '°</span></div>';
+      }).join('') + '</div>';
+    }
+  },
+
+  tomorrow: {
+    title: 'Tomorrow’s Air', icon: 'sparkle', size: 'w', needs: 'none',
+    desc: 'Skyline’s own AI forecast of tomorrow’s PM2.5, PM10 and AQI from the nearest city model. Elsewhere, tomorrow’s CAMS forecast.',
+    gold: function () { return tomorrowAir().kind === 'model'; },
+    head: function () { var t = tomorrowAir(); return t.kind === 'model' ? '<span class="badge">BY SKYLINE</span>' : t.kind === 'cams' ? '<em class="src">CAMS forecast</em>' : ''; },
+    open: function () { if (tomorrowAir().kind === 'model') openModel(); else openCamsNote(); },
+    na: function () { var t = tomorrowAir(); return t.kind === 'na' ? t.na : null; },
+    render: function () {
+      var t = tomorrowAir(), p = t.p, trend = '';
+      if (p.today && isNum(p.today.pm25)) {
+        var diff = p.pm25 - p.today.pm25;
+        if (Math.abs(diff) >= 1) trend = '<span class="trend ' + (diff < 0 ? 'down' : 'up') + '">' + (diff < 0 ? '↓' : '↑') + ' ' + num(Math.abs(diff), 1) + tx(' vs today', '（與今天相比）') + '</span>';
+      }
+      var better = p.model && p.model.baseline_mae ? Math.round((1 - p.model.test_mae / p.model.baseline_mae) * 100) : null;
+      var note = t.kind === 'model'
+        ? niceDate(p.date) + ' · ' + cityName(t.city) + (better != null ? tx(' · ' + better + '% more accurate than “same as today”', ' · 比「和今天一樣」準 ' + better + '%') : '') + tx(' · tap for details', ' · 點一下看細節')
+        : niceDate(p.date) + tx(' · CAMS forecast via Open-Meteo, not a Skyline model', ' · CAMS 預報（經 Open-Meteo），不是 Skyline 模型');
+      return '<div class="tm"><div class="aqibig"><span data-count="' + p.aqi + '">' + p.aqi + '</span><small style="color:' + p.color + '">AQI · ' + tx(shortCat(p.category), zh(shortCat(p.category))) + '</small></div>' +
+        '<div class="vals"><div><b data-count="' + p.pm25 + '" data-dec="1">' + p.pm25 + '</b>µg/m³ PM2.5 ' + trend +
+        (p.pm25_range ? '<br><span class="rng">' + tx('likely ', '可能範圍 ') + p.pm25_range[0] + '–' + p.pm25_range[1] + '</span>' : '') + '</div>' +
+        '<div><b data-count="' + p.pm10 + '" data-dec="1">' + p.pm10 + '</b>µg/m³ PM10</div></div></div>' +
+        '<div class="note dim">' + note + '</div>';
+    }
+  },
+
+  advice: {
+    title: 'School Outdoor Plan', label: 'School Outdoor Plan · Tomorrow', icon: 'school', size: 'w', needs: 'none',
+    desc: 'Turns tomorrow’s PM2.5 forecast into a go / limit / indoors call for PE and sports practice.',
+    gold: function () { return tomorrowAir().kind === 'model'; },
+    head: function () { return tomorrowAir().kind === 'cams' ? '<em class="src">CAMS forecast</em>' : ''; },
+    open: function () { if (tomorrowAir().kind === 'model') openModel(); else openCamsNote(); },
+    na: function () { var t = tomorrowAir(); return t.kind === 'na' ? t.na : null; },
+    render: function () {
+      var t = tomorrowAir(), p = t.p, a = p.advice || schoolAdvice(p.aqi), glyph = { go: '✓', limit: '!', indoor: '⌂' }[a.level] || '!';
+      return '<div class="advice"><div class="light ' + esc(a.level) + '">' + glyph + '</div><div><h4>' + esc(a.title) + '</h4><p>' + esc(a.detail) + '</p></div></div>' +
+        '<div class="note dim">' + (t.kind === 'model'
+          ? tx('From Skyline’s forecast for ' + cityName(t.city) + ' (AQI ' + p.aqi + '). Prototype, not official health advice.', '依 Skyline 對' + cityName(t.city) + '的預報（AQI ' + p.aqi + '）。原型，並非官方健康建議。')
+          : tx('From tomorrow’s CAMS forecast (AQI ' + p.aqi + '), not a Skyline model. Not official health advice.', '依明天的 CAMS 預報（AQI ' + p.aqi + '），不是 Skyline 模型。並非官方健康建議。')) + '</div>';
+    }
+  },
+
+  model: {
+    title: 'Model Check', icon: 'target', size: 's', needs: 'none',
+    desc: 'How much better the Skyline model is than guessing “tomorrow = today”, on 12 months it never saw.',
+    gold: function () { return !!modelMetrics(); },
+    open: function () { if (modelMetrics()) openModel(); },
+    na: function () {
+      if (modelMetrics()) return null;
+      var st = pmState();
+      if (st === 'loading' || (pmData() && modelState() === 'loading')) return naOf('loading', 'om');
+      return { st: 'gone', h: 'Not available here', msg: pmData() ? tx('The model report for this city couldn’t be loaded.', '無法載入這個城市的模型報告。') : noModelWhy() };
+    },
+    render: function () {
+      var m = modelMetrics(), ch = m.chosen.pm25, mm = m.results.pm25[ch].mae, bm = m.results.pm25.baseline.mae, pm = pmData();
+      return '<div class="big">−' + Math.round((1 - mm / bm) * 100) + '%<small>' + tx('error', '誤差') + '</small></div>' +
+        '<div class="cmp"><div class="row">' + (pm && pm.city ? cityName(pm.city) : 'Skyline') + ' · ' + num(mm, 1) + ' µg/m³<span class="track"><i style="width:' + (mm / bm) * 100 + '%;background:var(--gold)"></i></span></div>' +
+        '<div class="row">' + tx('Same as today · ', '和今天一樣 · ') + num(bm, 1) + '<span class="track"><i style="width:100%;background:rgba(255,255,255,.45)"></i></span></div></div>';
+    }
+  },
+
+  pmtrend: {
+    title: 'PM2.5 Outlook', icon: 'chart', size: 'w', source: 'CAMS', needs: 'air', desc: 'PM2.5 over the past 2 days and the next 3, with the Skyline forecast for tomorrow where a city model covers you.',
+    render: function (c) {
+      var a = c.a.hourly, from = Math.max(0, c.ai - 48), to = Math.min(a.time.length, c.ai + 72), vals = a.pm2_5.slice(from, to), n = vals.length;
+      if (n < 2) return naHTML(naOf('ok', 'om'));
+      var ymax = Math.max.apply(null, [50].concat(vals.filter(function (v) { return v != null; }))) * 1.12;
+      var X = function (i) { return (i / (n - 1)) * 300; }, Y = function (v) { return 100 - (v / ymax) * 100; };
+      var pts = []; vals.forEach(function (v, i) { if (v != null) pts.push([X(i), Y(v)]); });
+      var nowX = X(c.ai - from), past = pts.filter(function (q) { return q[0] <= nowX + 0.01; }), fut = pts.filter(function (q) { return q[0] >= nowX - 0.01; });
+      var line = function (ps) { return ps.map(function (q, i) { return (i ? 'L' : 'M') + q[0].toFixed(1) + ',' + q[1].toFixed(1); }).join(''); };
+      var area = past.length ? line(past) + 'L' + past[past.length - 1][0] + ',100L' + past[0][0] + ',100Z' : '', gold = '', pm = pmData();
+      if (pm && pm.pm25_range) {
+        var s = a.time.indexOf(pm.date + 'T00:00'), e = a.time.indexOf(pm.date + 'T23:00');
+        if (s >= from && e > 0) {
+          var x0 = X(s - from), x1 = X(Math.min(e, to - 1) - from), y = Y(pm.pm25);
+          gold = '<rect x="' + x0 + '" y="' + Y(pm.pm25_range[1]) + '" width="' + (x1 - x0) + '" height="' + (Y(pm.pm25_range[0]) - Y(pm.pm25_range[1])) + '" fill="rgba(255,194,75,.14)"/>' +
+            '<line x1="' + x0 + '" x2="' + x1 + '" y1="' + y + '" y2="' + y + '" stroke="#FFC24B" stroke-width="2.5" vector-effect="non-scaling-stroke"/>';
+        }
+      }
+      return '<div class="chart"><svg viewBox="0 0 300 100" preserveAspectRatio="none" aria-hidden="true">' +
+        '<defs><linearGradient id="pmFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(120,200,255,.45)"/><stop offset="1" stop-color="rgba(120,200,255,0)"/></linearGradient></defs>' +
+        '<line x1="0" x2="300" y1="' + Y(35) + '" y2="' + Y(35) + '" stroke="rgba(255,120,90,.7)" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>' +
+        '<path d="' + area + '" fill="url(#pmFill)"/>' +
+        '<path d="' + line(past) + '" fill="none" stroke="#9fd8ff" stroke-width="2" vector-effect="non-scaling-stroke"/>' +
+        '<path d="' + line(fut) + '" fill="none" stroke="#9fd8ff" stroke-width="2" stroke-dasharray="3 4" opacity=".75" vector-effect="non-scaling-stroke"/>' + gold +
+        '<line x1="' + nowX + '" x2="' + nowX + '" y1="0" y2="100" stroke="rgba(255,255,255,.5)" vector-effect="non-scaling-stroke"/></svg></div>' +
+        '<div class="legend"><span><i style="background:#9fd8ff"></i>' + tx('CAMS hourly (dashed = forecast)', 'CAMS 逐時（虛線為預報）') + '</span>' +
+        (gold ? '<span><i style="background:#FFC24B"></i>' + tx('Skyline tomorrow', 'Skyline 明日預報') + '</span>' : '') + '<span><i style="background:rgba(255,120,90,.8)"></i>35 µg/m³</span></div>';
+    }
+  },
+
+  aqi: {
+    title: 'Air Quality', icon: 'leaf', size: 's', source: 'CAMS', needs: 'air', desc: 'US AQI right now, from all pollutants.',
+    render: function (c) {
+      var cur = c.a.current, v = isNum(cur.us_aqi) ? cur.us_aqi : aqiOf(cur.pm2_5, cur.pm10 || 0), cat = aqiCat(v), st = stationData();
+      return '<div class="big" data-count="' + v + '">' + num(v) + '</div><div class="sub"' + (cat[1].length > 12 ? ' style="font-size:14px"' : '') + '>' + shortCat(cat[1]) + '</div>' +
+        '<div class="meter aqi"><b style="left:' + clamp(v / 300, 0, 1) * 100 + '%"></b></div>' +
+        (st ? '<div class="note dim">' + esc(st.station || '') + ': AQI ' + esc(st.aqi) + ' (' + esc(st.status || '') + ')</div>' : '<div class="note">' + cat[3] + '</div>');
+    }
+  },
+  pm25: { title: 'PM2.5', icon: 'drop', size: 's', source: 'CAMS', needs: 'air', desc: 'Fine particles right now and their 24-hour average.', render: function (c) { return pmTile(c, 'pm2_5', PM25_BP); } },
+  pm10: { title: 'PM10', icon: 'drop', size: 's', source: 'CAMS', needs: 'air', desc: 'Coarse particles right now and their 24-hour average.', render: function (c) { return pmTile(c, 'pm10', PM10_BP); } },
+
+  pollutants: {
+    title: 'Pollutants', icon: 'layers', size: 'w', source: 'CAMS', needs: 'air', desc: 'Ozone, NO₂, SO₂, CO and dust compared with WHO guidelines.',
+    render: function (c) {
+      var cur = c.a.current, rows = [['O₃', cur.ozone, 100], ['NO₂', cur.nitrogen_dioxide, 25], ['SO₂', cur.sulphur_dioxide, 40], ['CO', cur.carbon_monoxide, 4000], ['Dust', cur.dust, 50]];
+      return '<div class="polls">' + rows.map(function (r) {
+        var k = (r[1] || 0) / r[2], col = k <= 0.5 ? '#3ad06e' : k <= 1 ? '#f5d33b' : '#ff8c32';
+        return '<div class="p"><b>' + r[0] + '</b><span class="cmp"><span class="track"><i style="width:' + clamp(k, 0.02, 1.5) / 1.5 * 100 + '%;background:' + col + '"></i></span></span><span>' + num(r[1]) + ' µg/m³</span></div>';
+      }).join('') + '</div><div class="note dim">Bar = share of the WHO guideline</div>';
+    }
+  },
+
+  station: {
+    title: 'Official Station', icon: 'station', size: 's', source: 'MOENV', needs: 'none', desc: 'Latest reading from the nearest Ministry of Environment station.',
+    available: function () { return !!stationData(); },
+    render: function () {
+      var s = stationData();
+      return '<div class="big">' + esc(s.aqi) + '</div><div class="sub">' + esc(s.status || '') + '</div><div class="note">PM2.5 ' + esc(s.pm25) + ' · PM10 ' + esc(s.pm10) + ' µg/m³<br><span class="dim">' + esc(s.station || '') + ' · ' + esc(s.time || '') + '</span></div>';
+    }
+  },
+
+  wind: {
+    title: 'Wind', icon: 'wind', size: 's', desc: 'Speed, gusts and direction with a compass.',
+    render: function (c) {
+      var dir = c.cur.wind_direction_10m || 0, ticks = '';
+      for (var i = 0; i < 72; i++) {
+        var a = (i * 5 * Math.PI) / 180, r1 = i % 6 === 0 ? 37 : 40;
+        ticks += '<line x1="' + (50 + Math.sin(a) * r1).toFixed(2) + '" y1="' + (50 - Math.cos(a) * r1).toFixed(2) + '" x2="' + (50 + Math.sin(a) * 43).toFixed(2) + '" y2="' + (50 - Math.cos(a) * 43).toFixed(2) + '"/>';
+      }
+      return '<div class="centerviz"><svg viewBox="0 0 100 100" width="104" height="104" aria-hidden="true">' +
+        '<g stroke="rgba(255,255,255,.35)" stroke-width="1">' + ticks + '</g>' +
+        '<g font-size="9" font-weight="600" fill="rgba(255,255,255,.75)" text-anchor="middle"><text x="50" y="22">N</text><text x="80" y="53">E</text><text x="50" y="84">S</text><text x="20" y="53">W</text></g>' +
+        '<g transform="rotate(' + (dir + 180) + ' 50 50)"><line x1="50" y1="88" x2="50" y2="14" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><polygon points="50,9 45,19 55,19" fill="#fff"/><circle cx="50" cy="88" r="3" fill="none" stroke="#fff" stroke-width="2"/></g>' +
+        '<circle cx="50" cy="50" r="15" fill="rgba(20,30,50,.75)"/>' +
+        '<text x="50" y="50" font-size="13" font-weight="600" fill="#fff" text-anchor="middle">' + num(c.cur.wind_speed_10m) + '</text>' +
+        '<text x="50" y="59" font-size="6.5" fill="rgba(255,255,255,.7)" text-anchor="middle">km/h</text></svg></div>' +
+        '<div class="note">Gusts ' + Math.round(c.cur.wind_gusts_10m || 0) + ' km/h · from ' + compass(dir) + '</div>';
+    }
+  },
+
+  uv: {
+    title: 'UV Index', icon: 'sun', size: 's', desc: 'Current UV level and when to use sun protection.',
+    render: function (c) {
+      var h = c.w.hourly, uv = h.uv_index[c.hi] || 0, lvl = uv < 3 ? 'Low' : uv < 6 ? 'Moderate' : uv < 8 ? 'High' : uv < 11 ? 'Very High' : 'Extreme';
+      var today = c.cur.time.slice(0, 10), strong = [];
+      h.time.forEach(function (t, i) { if (t.slice(0, 10) === today && h.uv_index[i] >= 3) strong.push(t); });
+      var note = strong.length && pt(strong[strong.length - 1]).hh >= c.now.hh
+        ? tx('Use sun protection ', '需要防曬：') + hhLabel(pt(strong[0]).hh) + '–' + hhLabel(pt(strong[strong.length - 1]).hh + 1) + tx('.', '')
+        : tx('Low for the rest of the day.', '今天接下來都偏低。');
+      return '<div class="big">' + num(uv) + '</div><div class="sub">' + lvl + '</div><div class="meter uv"><b style="left:' + clamp(uv / 11, 0, 1) * 100 + '%"></b></div><div class="note">' + note + '</div>';
+    }
+  },
+
+  sunrise: {
+    title: 'Sunrise', icon: 'sunrise', size: 's', desc: 'Next sunrise or sunset and the sun’s path today.',
+    label: function () { var c = wctx(); if (!c || !c.w.daily.sunrise[c.di]) return 'Sunrise'; var m = c.now.mins; return m >= pt(c.w.daily.sunrise[c.di]).mins && m < pt(c.w.daily.sunset[c.di]).mins ? 'Sunset' : 'Sunrise'; },
+    render: function (c) {
+      var d = c.w.daily;
+      if (!d.sunrise[c.di] || !d.sunset[c.di]) return naHTML(naOf('ok', 'om'));
+      var sr = pt(d.sunrise[c.di]), ss = pt(d.sunset[c.di]), m = c.now.mins, big, foot, phi;
+      var rise = tx('Sunrise: ', '日出：') + timeLabel(d.sunrise[c.di]), set = tx('Sunset: ', '日落：') + timeLabel(d.sunset[c.di]);
+      if (m < sr.mins) { big = d.sunrise[c.di]; foot = set; }
+      else if (m < ss.mins) { big = d.sunset[c.di]; foot = rise; }
+      else { big = d.sunrise[c.di + 1] || d.sunrise[c.di]; foot = set; }
+      if (m >= sr.mins && m <= ss.mins) phi = 0.25 + 0.5 * (m - sr.mins) / (ss.mins - sr.mins);
+      else { var night = 1440 - (ss.mins - sr.mins), since = (m - ss.mins + 1440) % 1440; phi = (0.75 + 0.5 * since / night) % 1; }
+      var curve = ''; for (var i = 0; i <= 60; i++) { var f = i / 60; curve += (i ? 'L' : 'M') + (f * 120).toFixed(1) + ',' + (32 - 22 * Math.sin(2 * Math.PI * (f - 0.25))).toFixed(2); }
+      var sx = phi * 120, sy = 32 - 22 * Math.sin(2 * Math.PI * (phi - 0.25)), up = sy <= 32;
+      return '<div class="big" style="font-size:30px">' + timeLabel(big) + '</div>' +
+        '<div class="centerviz"><svg viewBox="0 6 120 52" width="100%" height="58" aria-hidden="true">' +
+        '<defs><clipPath id="above"><rect x="0" y="0" width="120" height="32"/></clipPath><radialGradient id="sunDot"><stop offset="0" stop-color="#fff"/><stop offset=".45" stop-color="#fff"/><stop offset="1" stop-color="rgba(255,255,255,0)"/></radialGradient></defs>' +
+        '<path d="' + curve + '" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="1.6"/><path d="' + curve + '" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.6" clip-path="url(#above)"/>' +
+        '<line x1="0" x2="120" y1="32" y2="32" stroke="rgba(255,255,255,.45)" stroke-width="1"/>' +
+        (up ? '<circle cx="' + sx + '" cy="' + sy + '" r="9" fill="url(#sunDot)"/>' : '') +
+        '<circle cx="' + sx + '" cy="' + sy + '" r="3.6" fill="' + (up ? '#fff' : 'rgba(255,255,255,.45)') + '"/></svg></div><div class="note">' + foot + '</div>';
+    }
+  },
+
+  feels: {
+    title: 'Feels Like', icon: 'thermo', size: 's', desc: 'Apparent temperature and why it differs.',
+    render: function (c) {
+      var f = c.cur.apparent_temperature, t = c.cur.temperature_2m, diff = f - t;
+      var why = Math.abs(diff) < 2 ? 'Similar to the actual temperature.'
+        : diff > 0 ? (c.cur.relative_humidity_2m >= 70 ? 'Humidity is making it feel warmer.' : 'It feels warmer than the actual temperature.')
+        : (c.cur.wind_speed_10m >= 15 ? 'Wind is making it feel cooler.' : 'It feels cooler than the actual temperature.');
+      return '<div class="big">' + num(tU(f)) + '°</div><div class="note">' + why + '</div>';
+    }
+  },
+
+  humidity: {
+    title: 'Humidity', icon: 'drop', size: 's', desc: 'Relative humidity and dew point.',
+    render: function (c) {
+      var dp = isNum(c.cur.dew_point_2m) ? c.cur.dew_point_2m : c.w.hourly.dew_point_2m[c.hi];
+      return '<div class="big">' + num(c.cur.relative_humidity_2m) + '%</div><div class="note">' + tx('The dew point is ' + num(tU(dp)) + '° right now.', '目前露點 ' + num(tU(dp)) + '°。') + '</div>';
+    }
+  },
+
+  visibility: {
+    title: 'Visibility', icon: 'eye', size: 's', desc: 'How far you can see. Haze from PM2.5 lowers it.',
+    render: function (c) {
+      var v = isNum(c.cur.visibility) ? c.cur.visibility : c.w.hourly.visibility[c.hi], far = (v || 0) / 1000;
+      var note = far >= 20 ? 'Perfectly clear view.' : far >= 10 ? 'Clear view.' : far >= 5 ? 'Light haze or rain is reducing visibility.' : 'Low visibility. Haze or rain is limiting the view.';
+      return '<div class="big">' + num(far, far < 10 ? 1 : 0) + '<small>km</small></div><div class="note">' + note + '</div>';
+    }
+  },
+
+  pressure: {
+    title: 'Pressure', icon: 'gauge', size: 's', desc: 'Sea-level pressure and whether it is rising or falling.',
+    render: function (c) {
+      var h = c.w.hourly, p = c.cur.pressure_msl, later = h.pressure_msl[Math.min(h.time.length - 1, c.hi + 3)];
+      var trend = later - p > 0.6 ? ['↑', 'Rising'] : later - p < -0.6 ? ['↓', 'Falling'] : ['=', 'Steady'];
+      var k = clamp((p - 980) / 60, 0, 1), a0 = -225, a1 = 45, ang = ((a0 + (a1 - a0) * k) * Math.PI) / 180, rad = Math.PI / 180;
+      var arc = 'M' + (50 + 40 * Math.cos(a0 * rad)) + ',' + (50 + 40 * Math.sin(a0 * rad)) + 'A40,40 0 1 1 ' + (50 + 40 * Math.cos(a1 * rad)) + ',' + (50 + 40 * Math.sin(a1 * rad));
+      return '<div class="centerviz"><svg viewBox="0 0 100 92" width="108" height="100" aria-hidden="true">' +
+        '<path d="' + arc + '" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="7" stroke-linecap="round" stroke-dasharray="1.2 3.2"/>' +
+        '<line x1="' + (50 + 30 * Math.cos(ang)) + '" y1="' + (50 + 30 * Math.sin(ang)) + '" x2="' + (50 + 45 * Math.cos(ang)) + '" y2="' + (50 + 45 * Math.sin(ang)) + '" stroke="#fff" stroke-width="3" stroke-linecap="round"/>' +
+        '<text x="50" y="44" text-anchor="middle" font-size="12" fill="#fff">' + trend[0] + '</text>' +
+        '<text x="50" y="60" text-anchor="middle" font-size="15" font-weight="600" fill="#fff">' + num(p) + '</text>' +
+        '<text x="50" y="71" text-anchor="middle" font-size="7" fill="rgba(255,255,255,.7)">hPa</text></svg></div>' +
+        '<div class="note dim" style="text-align:center">' + trend[1] + '</div>';
+    }
+  },
+
+  precip: {
+    title: 'Precipitation', icon: 'umbrella', size: 's', desc: 'Rain in the last 24 hours and expected in the next 24.',
+    render: function (c) {
+      var h = c.w.hourly.precipitation, past = sumOf(h.slice(Math.max(0, c.hi - 23), c.hi + 1)), next = sumOf(h.slice(c.hi + 1, c.hi + 25));
+      return '<div class="big">' + num(past, past < 10 ? 1 : 0) + '<small>mm</small></div><div class="sub" style="font-size:14px">in last 24h</div><div class="note">' + tx(num(next, 1) + ' mm expected in next 24h.', '未來 24 小時預計 ' + num(next, 1) + ' mm。') + '</div>';
+    }
+  },
+
+  clouds: {
+    title: 'Cloud Cover', icon: 'cloud', size: 's', desc: 'How much of the sky is covered by cloud.',
+    render: function (c) {
+      var v = c.cur.cloud_cover, t = v < 15 ? 'Clear skies' : v < 40 ? 'Mostly clear' : v < 70 ? 'Partly cloudy' : v < 90 ? 'Mostly cloudy' : 'Overcast';
+      return '<div class="big">' + num(v) + '%</div><div class="sub">' + t + '</div><div class="meter" style="background:linear-gradient(90deg,#7cc6ff,#c9d4e3)"><b style="left:' + clamp(v, 0, 100) + '%"></b></div>';
+    }
+  },
+
+  moon: {
+    title: 'Moon', icon: 'moon', size: 's', needs: 'none', desc: 'Moon phase, illumination and next full moon.',
+    render: function () {
+      var syn = 29.530588853, ref = Date.UTC(2000, 0, 6, 18, 14), p = ((((Date.now() - ref) / 86400000) % syn) + syn) % syn / syn, lit = (1 - Math.cos(2 * Math.PI * p)) / 2;
+      var name = p < 0.03 || p > 0.97 ? 'New Moon' : p < 0.22 ? 'Waxing Crescent' : p < 0.28 ? 'First Quarter' : p < 0.47 ? 'Waxing Gibbous' : p < 0.53 ? 'Full Moon' : p < 0.72 ? 'Waning Gibbous' : p < 0.78 ? 'Last Quarter' : 'Waning Crescent';
+      var r = 26, cc = Math.cos(2 * Math.PI * p), rx = r * Math.abs(cc), wax = p < 0.5, wx = liveWx(), opts = { month: 'short', day: 'numeric' };
+      var path = 'M32 ' + (32 - r) + 'A' + r + ' ' + r + ' 0 0 ' + (wax ? 1 : 0) + ' 32 ' + (32 + r) + 'A' + rx + ' ' + r + ' 0 0 ' + (cc > 0 ? (wax ? 0 : 1) : (wax ? 1 : 0)) + ' 32 ' + (32 - r) + 'Z';
+      if (wx && wx.timezone) opts.timeZone = wx.timezone;
+      var full; try { full = new Date(Date.now() + (((0.5 - p + 1) % 1) * syn) * 86400000).toLocaleDateString(S.lang === 'zh' ? 'zh-TW' : 'en-US', opts); } catch (e) { full = ''; }
+      return '<div class="centerviz"><svg viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="rgba(255,255,255,.1)"/><path d="' + path + '" fill="url(#gMoon)"/></svg></div>' +
+        '<div class="sub" style="font-size:14px">' + name + '</div><div class="note dim">' + tx(Math.round(lit * 100) + '% lit · Full moon ' + full, '亮面 ' + Math.round(lit * 100) + '% · 滿月 ' + full) + '</div>';
+    }
+  },
+
+  // ----- ours: storms, typhoon, sea, season, landslide -----
+  thunder: {
+    title: 'Thunderstorm Risk', label: 'Thunderstorm Risk · 24h', icon: 'bolt', size: 's', source: 'CAPE', needs: 'none', desc: 'Storm risk for the next 24 hours from storm energy (CAPE), weather codes and rain chance.',
+    na: function () { return factNA('thunder'); },
+    render: function () { var f = fact('thunder'); return factTile('thunder', '<div class="meter risk"><b style="left:' + f.meter + '"></b></div>'); }
+  },
+  storms: {
+    title: 'Storm Outlook', label: 'Storm Outlook · 72h', icon: 'bolt', size: 's', needs: 'none', desc: 'Days with thunderstorms in the 3-day forecast.',
+    na: function () { return factNA('storms'); },
+    render: function () { return factTile('storms'); }
+  },
+  typhoon: {
+    title: 'Typhoon Watch', icon: 'cyclone', size: 'w', source: 'CWA', needs: 'none', desc: 'The active typhoon near Taiwan: its track, distance and strength, from CWA warnings.',
+    available: function () { return S.sources.typhoon !== false; },
+    open: function () { if (tyStorm()) location.hash = 'predictions/typhoon'; },
+    na: function () { return factNA('typhoon'); },
+    render: function () { return tyTileHTML(tyView()); }
+  },
+  waves: {
+    title: 'Coast & Waves', icon: 'waves', size: 's', source: 'Marine', needs: 'none', desc: 'Wave height, swell and direction at the nearest sea point.',
+    na: function () { return factNA('waves'); },
+    render: function () { return factTile('waves'); }
+  },
+  climate: {
+    title: 'Seasonal Outlook', icon: 'season', size: 'w', source: 'ECMWF SEAS5', needs: 'none', desc: 'Next month’s temperature and rain compared with normal, from the ECMWF seasonal forecast.',
+    na: function () { return factNA('climate'); },
+    render: function () { return factTile('climate'); }
+  },
+  landslide: {
+    title: 'Landslide Risk', icon: 'slope', size: 's', source: 'Skyline', needs: 'none', desc: 'Slope-failure risk from the team landslide model. Shows “Not connected yet” until the model is.',
+    available: function () { return S.sources.landslide !== false; },
+    na: function () { return naOf('gone', 'landslide'); },
+    render: function () { return ''; }
+  },
+
+  map: {
+    title: 'Live Map', icon: 'map', size: 'l', needs: 'none', desc: 'Interactive Windy.com map: rain radar, wind, PM2.5 or temperature.',
+    available: function () { return S.sources.windyMap !== false; },
+    head: function () { return '<div class="chips">' + MAP_LAYERS.map(function (o) { return '<button type="button" data-layer="' + o[0] + '" class="' + (MAP_LAYER === o[0] ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>'; },
+    render: function () {
+      var lay = MAP_LAYERS.filter(function (o) { return o[0] === MAP_LAYER; })[0] || MAP_LAYERS[0];
+      return '<div class="map-wrap">' + windyFrame('Windy map of ' + S.loc.name, windyURL(lay[2], inTW(S.loc.lat, S.loc.lon) ? 8 : 6, 0, true)) + '</div>';
+    }
+  }
+};
+var SIZE_NAME = { s: 'Small', w: 'Wide', l: 'Large', t: 'Tall', h: 'Extra wide' };
+var TILE_GROUPS = [
+  ['By Skyline · our AI models', ['tomorrow', 'advice', 'model', 'pmtrend', 'landslide']],
+  ['Air quality', ['aqi', 'pm25', 'pm10', 'pollutants', 'station']],
+  ['Weather', ['hourly', 'daily', 'wind', 'uv', 'sunrise', 'feels', 'humidity', 'visibility', 'pressure', 'precip', 'clouds', 'moon']],
+  ['Storms & sea', ['thunder', 'storms', 'typhoon', 'waves', 'climate']],
+  ['Maps', ['map']]
+];
+var DEFAULT_LAYOUT = ['hourly', 'tomorrow', 'daily', 'aqi', 'advice', 'pmtrend', 'wind', 'uv', 'sunrise', 'feels', 'map', 'thunder', 'storms', 'typhoon',
+  'pm25', 'pm10', 'precip', 'humidity', 'visibility', 'pressure', 'waves', 'climate', 'landslide', 'model'];
+
+// ----- layout (saved in S.layout) -----
+function tileOn(id) { var t = TILES[id]; return !!t && (!t.available || t.available()); }
+// The saved layout, minus anything unknown (an older build's ids) or not available right now
+function layoutIds() {
+  var seen = {}, src = Array.isArray(S.layout) ? S.layout : DEFAULT_LAYOUT;
+  return src.filter(function (id) { if (seen[id] || !tileOn(id)) return false; seen[id] = 1; return true; });
+}
+function saveLayout(ids) { S.layout = ids; save(); }
+
+// ----- one tile -----
+var FACTS = null;
+function fact(id) {
+  if (!FACTS) { FACTS = {}; catalog(S.loc).forEach(function (t) { FACTS[t.id] = t; }); }
+  return FACTS[id];
+}
+function naHTML(na) {
+  if (na.st === 'loading') return '<div class="tile-load" role="status" aria-label="Loading…"><i></i><i></i><i></i></div>';
+  return '<div class="tile-na"><div class="na-h">' + na.h + '</div><p>' + na.msg + '</p>' +
+    (na.retry ? '<button type="button" class="tile-retry" data-action="retry-live">Retry</button>' : '') + '</div>';
+}
+// Why a tile cannot render, or null when it can
+function tileNA(t) {
+  if (t.na) return t.na();
+  if (t.needs === 'none') return null;
+  if (!liveWx()) { var ws = wxState(); return naOf(ws === 'gone' ? 'error' : ws, 'om'); }
+  if (t.needs === 'air' && !liveAir()) { var as = omState('air'); return naOf(as === 'gone' ? 'error' : as, 'om'); }
+  return null;
+}
+// " · 12 min ago" for a tile whose feed could not be refreshed
+function tileAge(t, id) {
+  var k = ptKey(S.loc), f = null;
+  if (FACT_FEED[id]) { var m = / · (\d+ (?:min|h|days) ago)$/.exec((fact(id) || {}).src || ''); return m ? m[1] : ''; }
+  if (t.needs === 'none') return '';
+  if (t.needs === 'air' && feedState('air@' + k) === 'stale') f = FEEDS['air@' + k];
+  else if (feedState('wx@' + k) === 'stale') f = FEEDS['wx@' + k];
+  return f ? fmtAge(f.t) : '';
+}
+var FACT_FEED = { thunder: 1, storms: 1, typhoon: 1, waves: 1, climate: 1 };
+// Everything a tile shows, as strings (compared between updates so an unchanged tile is left alone)
+function tileView(id) {
+  var t = TILES[id], na = null, body, gold = false;
+  try {
+    na = tileNA(t);
+    body = na ? naHTML(na) : t.render(wctx());
+    gold = !na && (typeof t.gold === 'function' ? t.gold() : !!t.gold);
+  } catch (e) { if (window.console) console.error(id, e); na = naOf('ok', 'om'); body = naHTML(na); }
+  var label = typeof t.label === 'function' ? t.label() : (t.label || t.title), age = na ? '' : tileAge(t, id);
+  var right = !na && t.head ? t.head() : '';
+  if (!right && (t.source || age)) right = '<em class="src' + (age ? ' stale' : '') + '">' + [t.source, age].filter(Boolean).join(' · ') + '</em>';
+  return { cls: 'tile size-' + t.size + (gold ? ' gold' : '') + (t.open && !na ? ' clickable' : '') + (na && na.st !== 'loading' ? ' is-na' : ''),
+    head: Icons.ui(t.icon) + '<span>' + label + '</span>' + right, body: body, na: !!na };
+}
+function paintTile(el, v) {
+  var keep = ['pop', 'dragging', 'removing'].filter(function (c) { return el.classList.contains(c); });
+  el.className = v.cls + (keep.length ? ' ' + keep.join(' ') : '');
+  $('.tile-head', el).innerHTML = v.head;
+  $('.tile-body', el).innerHTML = v.body;
+  el._sig = v.cls + '\n' + v.head + '\n' + v.body; el._na = v.na;
+}
+function tileEl(id, i, anim) {
+  var t = TILES[id], el = document.createElement('article');
+  el.dataset.id = id;
+  el.style.setProperty('--i', i);
+  if (!anim) el.style.animation = 'none';
+  el.draggable = editing;
+  el.setAttribute('aria-label', t.title);
+  el.innerHTML = '<button type="button" class="remove-badge" data-remove="' + id + '" aria-label="Remove ' + t.title + '">−</button><header class="tile-head"></header><div class="tile-body"></div>';
+  paintTile(el, tileView(id));
+  return el;
+}
+function reduced() { return !!S.reduceMotion || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }
+// Numbers count up from zero when a tile first shows a value
+function countUp(root) {
+  if (reduced()) return;
+  root.querySelectorAll('[data-count]').forEach(function (el) {
+    var to = parseFloat(el.dataset.count), dec = +(el.dataset.dec || 0), node = el.firstChild;
+    if (isNaN(to) || !node || node.nodeType !== 3) return;
+    var t0 = performance.now(), step = function (t) {
+      var k = Math.min(1, (t - t0) / 1100), e = 1 - Math.pow(1 - k, 3);
+      node.nodeValue = (to * e).toFixed(dec);   // the text node, so the 中文 layer is not woken every frame
+      if (k < 1 && node.parentNode) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  });
+}
+function renderGrid(anim) {
+  var grid = $('#grid'); if (!grid) return;
+  grid.innerHTML = '';
+  layoutIds().forEach(function (id, i) { grid.appendChild(tileEl(id, i, anim)); });
+  if (anim) countUp(grid);
+}
+// Brings the grid up to date without rebuilding it: only tiles whose content changed are touched,
+// so maps keep their iframe, the hourly strip keeps its scroll position and nothing re-animates.
+function syncGrid() {
+  var grid = $('#grid'); if (!grid) return;
+  var ids = layoutIds(), have = Array.prototype.filter.call(grid.children, function (e) { return !e.classList.contains('removing'); }).map(function (e) { return e.dataset.id; });
+  if (ids.join() !== have.join()) { renderGrid(false); return; }
+  Array.prototype.forEach.call(grid.children, function (el) {
+    if (el.classList.contains('removing')) return;
+    var v = tileView(el.dataset.id), wasNA = el._na;
+    if (el._sig === v.cls + '\n' + v.head + '\n' + v.body) return;
+    paintTile(el, v);
+    if (wasNA && !v.na) countUp(el);
+  });
+}
+function rerenderTile(id) {
+  var el = document.querySelector('#grid [data-id="' + id + '"]');
+  if (el) paintTile(el, tileView(id));
+}
+// Animate tiles from where they were to where a layout change put them
+function flip(mutate) {
+  var grid = $('#grid'), first = new Map();
+  Array.prototype.forEach.call(grid.children, function (e) { first.set(e, e.getBoundingClientRect()); });
+  mutate();
+  if (reduced()) return;
+  Array.prototype.forEach.call(grid.children, function (e) {
+    var f = first.get(e); if (!f || !e.animate) return;
+    var l = e.getBoundingClientRect(), dx = f.left - l.left, dy = f.top - l.top;
+    if (dx || dy) e.animate([{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.2,.8,.2,1)' });
+  });
+}
+function addTile(id) {
+  if (!tileOn(id)) return;
+  saveLayout(layoutIds().concat(id));
+  var grid = $('#grid'); if (!grid) return;
+  var el = tileEl(id, 0, false);
+  el.classList.add('pop');
+  grid.appendChild(el);
+  countUp(el);
+  setTimeout(function () { el.classList.remove('pop'); }, 900);
+}
+function removeTile(id) {
+  var el = document.querySelector('#grid [data-id="' + id + '"]');
+  saveLayout(layoutIds().filter(function (x) { return x !== id; }));
+  if (!el) return;
+  el.classList.add('removing');
+  setTimeout(function () { if (el.parentNode) flip(function () { el.remove(); }); }, 260);
+}
+function resetLayout() { S.layout = null; save(); renderGrid(true); toast('Layout reset to default'); }
+
+// ----- hero -----
+function heroHTML(first) {
+  var L = S.loc, nowWx = wxNow(), hl = todayHL(), tw = inTW(L.lat, L.lon), pv = previewOn();
+  var retry = '<button type="button" class="chip act" data-action="retry-live">Retry</button>', chips, cond;
   if (nowWx.live) {
-    headline = esc(nowWx.headline);
+    cond = esc(nowWx.label);
     chips = nowWx.stale ? '<span class="chip warn">Open-Meteo · updated ' + fmtAge(nowWx.t) + ' · couldn’t refresh</span>' + retry
       : '<span class="chip"><span class="dot" aria-hidden="true"></span>Open-Meteo · live' + (nowWx.time ? ' · updated ' + nowWx.time : '') + '</span>';
   } else if (nowWx.state === 'loading') {
-    headline = 'Loading live weather…'; chips = '<span class="chip">Open-Meteo · loading…</span>';
+    cond = 'Loading live weather…'; chips = '<span class="chip">Open-Meteo · loading…</span>';
   } else if (nowWx.state === 'off') {
-    headline = 'Live weather is turned off'; chips = '<span class="chip warn">Open-Meteo is switched off</span><a class="chip act" href="#settings">Open Settings</a>';
+    cond = 'Live weather is turned off'; chips = '<span class="chip warn">Open-Meteo is switched off</span><a class="chip act" href="#settings">Open Settings</a>';
   } else {
-    headline = 'Live weather is unavailable'; chips = '<span class="chip warn">' + (offline() ? 'You’re offline' : 'Couldn’t reach Open-Meteo') + '</span>' + retry;
+    cond = 'Live weather is unavailable'; chips = '<span class="chip warn">' + (offline() ? 'You’re offline' : 'Couldn’t reach Open-Meteo') + '</span>' + retry;
   }
-  if (pv) chips += '<span class="chip warn">Preview sky: ' + WEATHER[S.weather].label + '</span><button type="button" class="chip act" data-action="sky-live">Back to live</button>';
-
-  return '<section class="hero" style="' + bgVars + '" aria-label="Current weather">' +
-    (live ? skyLayers(b) : '') +
-    (DEMO_UI ? '<label class="demo"><span>Preview a sky</span><select id="demo-weather" data-input="weather">' + skyOptions() + '</select></label>' : '') +
-    '<div class="hero-main">' +
-      '<button type="button" class="loc" data-action="open-search" aria-label="Location: ' + esc(L.name) + '. Change location">' +
-        '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>' +
-        '<span>' + esc(L.name) + '</span>' + (L.sub ? '<span class="loc-sub">· ' + esc(L.sub) + '</span>' : '') +
-        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>' +
-      '</button>' +
-      (nowWx.live ? '<div class="temp" aria-label="Temperature ' + fmtT(nowWx.temp) + '">' + fmtT(nowWx.temp) + '</div>'
-                  : '<div class="temp na" aria-label="Temperature not available">—</div>') +
-      '<div class="headline">' + headline + '</div>' +
-      (hl ? '<div class="hilo" aria-label="Today: high ' + fmtT(hl.hi) + ', low ' + fmtT(hl.lo) + '"><span>H:' + fmtT(hl.hi) + '</span><span>L:' + fmtT(hl.lo) + '</span></div>' : '') +
-      '<div class="chips">' + chips +
-      (tw ? '' : '<span class="chip warn">Outside Taiwan: PM2.5, landslide and Predictions cover Taiwan only</span>') + '</div>' +
-    '</div>' +
-    (S.skyline === 'city' ? skylineSVG(skylineFor(L), b) : '') +
-    (live ? '<canvas class="wx-front" aria-hidden="true"></canvas>' : '') +
-    '<div class="pinned-wrap"><div class="days" role="list" aria-label="7-day forecast">' + weekData().map(function (w) {
-        return '<div class="day' + (w.na ? ' na' : '') + '" role="listitem" aria-label="' + (w.na ? w.day + ': not available' : w.day + ': high ' + w.hi + ', low ' + w.lo) + '"><span class="dn">' + w.day + '</span><span class="ic" style="background:' + w.c + '" aria-hidden="true"></span><span class="dh">' + w.hi + '</span><span class="dl">' + w.lo + '</span></div>';
-      }).join('') + '</div><div class="pinned ' + (n <= 3 ? 'few' : 'many') + '">' + pins + '</div>' +
-      '<button type="button" class="scroll-hint" data-action="scroll-stats">All stats ↓</button></div>' +
-  '</section>' +
-  '<section id="stats" class="stats" aria-labelledby="stats-h">' + statsInner() + '</section>';
+  chips += '<button type="button" class="chip act unit" data-action="toggle-units" aria-label="Temperature unit">' + (S.units === 'F' ? '°C · <b>°F</b>' : '<b>°C</b> · °F') + '</button>';
+  if (pv) chips += '<span class="chip warn">Preview sky: ' + moodLabel(S.weather) + '</span><button type="button" class="chip act" data-action="sky-live">Back to live</button>';
+  if (!tw) chips += '<span class="chip warn">Outside Taiwan: Skyline models and Predictions cover Taiwan only</span>';
+  // Tomorrow's air: gold and "Tomorrow" for a Skyline city model, plain and "CAMS forecast" otherwise
+  var ta = tomorrowAir(), pill = '';
+  if (ta.kind !== 'na') {
+    var p = ta.p, catName = tx(shortCat(p.category), zh(shortCat(p.category)));
+    pill = '<button type="button" class="headline' + (ta.kind === 'model' ? '' : ' plain') + (first ? ' first' : '') + '" data-action="open-tomorrow">' +
+      '<span class="dot" style="background:' + esc(p.color) + ';color:' + esc(p.color) + '"></span><span class="tag">' + (ta.kind === 'model' ? 'Tomorrow' : 'CAMS forecast · Tomorrow') + '</span>' +
+      tx(catName + ' air · PM2.5 ≈ ' + p.pm25 + ' µg/m³', '空氣' + catName + ' · PM2.5 ≈ ' + p.pm25 + ' µg/m³') + (ta.kind === 'model' ? ' · ' + esc(cityName(ta.city)) : '') + '</button>';
+  }
+  return '<button type="button" class="place" data-action="open-search" aria-label="Location: ' + esc(L.name) + '. Change location">' +
+      '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>' +
+      '<span>' + esc(L.name) + '</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>' +
+    (L.sub ? '<div class="place-sub">' + esc(L.sub) + '</div>' : '') +
+    (nowWx.live ? '<div class="temp" aria-label="Temperature ' + fmtT(nowWx.temp) + '">' + (first ? '<span data-count="' + Math.round(tU(nowWx.temp)) + '">' + Math.round(tU(nowWx.temp)) + '</span>' : Math.round(tU(nowWx.temp))) + '<span class="deg">°</span></div>'
+                : '<div class="temp na" aria-label="Temperature not available">—</div>') +
+    '<div class="cond">' + cond + '</div>' +
+    '<div class="hl"' + (hl ? ' aria-label="Today: high ' + fmtT(hl.hi) + ', low ' + fmtT(hl.lo) + '"><span>H:' + fmtT(hl.hi) + '</span><span>L:' + fmtT(hl.lo) + '</span>' : '>&nbsp;') + '</div>' +
+    pill + '<div class="chips">' + chips + '</div>' +
+    (S.skyline === 'city' ? skylineSVG(skylineFor(L)) : '');
 }
+function footHTML() {
+  var pm = pmData(), m = modelMetrics();
+  return 'Weather: <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> forecast · Air quality: Copernicus CAMS via Open-Meteo · Waves: Open-Meteo Marine · Season: ECMWF SEAS5 · Map: <a href="https://www.windy.com" target="_blank" rel="noopener">Windy.com</a><br>' +
+    (pm ? tx('Tomorrow’s air: Skyline model for ' + cityName(pm.city || { name: 'Taichung City' }) + (m ? ' (trained ' + m.trained_on + ', tested ' + m.tested_on + ')' : '') + '. Prototype, not official health advice.',
+            '明日空氣：Skyline 模型（' + cityName(pm.city || { name: 'Taichung City', name_zh: '臺中市' }) + (m ? '，訓練 ' + m.trained_on + '，測試 ' + m.tested_on : '') + '）。原型，並非官方健康建議。')
+        : 'Tomorrow’s air: CAMS forecast where no Skyline city model covers the location. Not official health advice.') + '<br>' +
+    'A widget whose source isn’t connected or can’t be reached says so and shows no number.';
+}
+function homeView() {
+  return '<div class="home"><section class="hero" id="hero" aria-label="Current weather"></section>' +
+    '<section class="grid" id="grid" aria-label="Widgets"></section><footer class="foot" id="foot"></footer></div>';
+}
+// Fills Home from the feeds. Called after the first paint and whenever a feed arrives or the location changes.
+function homeUpdate(first) {
+  var hero = $('#hero'); if (!hero) return;
+  FACTS = null;
+  applySky();
+  var h = heroHTML(false);
+  if (hero._h !== h) {
+    var anim = first || (hero._na && wxNow().live);
+    hero.innerHTML = anim ? heroHTML(true) : h; hero._h = h; hero._na = !wxNow().live;
+    if (anim) countUp(hero);
+  }
+  if (first) renderGrid(true); else syncGrid();
+  var foot = footHTML(), fe = $('#foot');
+  if (fe._h !== foot) { fe.innerHTML = foot; fe._h = foot; }
+  syncCompact();
+}
+// The compact title in the top bar (shown once the hero has scrolled away)
+function syncCompact() {
+  var w = wxNow();
+  $('#compactPlace').textContent = S.loc.name;
+  $('#compactTemp').textContent = w.live ? fmtT(w.temp) : '—';
+  $('#compactCond').textContent = w.live ? w.label : '';
+}
+function onScroll() {
+  var y = window.scrollY || 0, home = document.body.dataset.page === 'home', hero = $('#hero');
+  if (home && hero) {
+    hero.style.opacity = String(clamp(1 - y / 300, 0, 1));
+    hero.style.transform = reduced() ? '' : 'translateY(' + (y * 0.3).toFixed(1) + 'px) scale(' + (1 - clamp(y / 2400, 0, 0.1)).toFixed(4) + ')';
+  }
+  $('#topbar').classList.toggle('scrolled', y > (home ? 170 : 8));
+  $('#topbar').classList.toggle('show-compact', home && y > 170);
+}
+window.addEventListener('scroll', onScroll, { passive: true });
 
-function statsInner() {
-  var L = S.loc, cat = catalog(L), byId = {};
-  cat.forEach(function (t) { byId[t.id] = t; });
-  var order = currentOrder(cat);
-  var visible = order.filter(function (id) { return !S.hidden[id]; });
-  var tiles = visible.map(function (id, vi) {
-    var t = byId[id], span = S.spans[id] || t.span;
-    var style = (t.bg ? '--tbg:' + t.bg + ';' : '') + (t.fg ? '--tfg:' + t.fg + ';' : '');
-    return '<article class="tile s' + span + (t.rows > 1 ? ' r2' : '') + '" data-id="' + id + '"' + (editing ? ' draggable="true"' : '') + ' style="' + style + '" aria-label="' + t.title + '">' +
-      '<header><h3>' + t.title + '</h3><span class="src">' + esc(t.src) + '</span></header>' + tileBody(t) +
-      (editing ? '<div class="edit-ctl">' +
-        '<button type="button" data-action="tile-left" data-id="' + id + '" aria-label="Move ' + t.title + ' earlier"' + (vi === 0 ? ' disabled' : '') + '>◀</button>' +
-        '<button type="button" data-action="tile-right" data-id="' + id + '" aria-label="Move ' + t.title + ' later"' + (vi === visible.length - 1 ? ' disabled' : '') + '>▶</button>' +
-        '<button type="button" data-action="tile-smaller" data-id="' + id + '"' + (span <= 1 ? ' disabled' : '') + '>Smaller</button>' +
-        '<button type="button" data-action="tile-bigger" data-id="' + id + '"' + (span >= 4 ? ' disabled' : '') + '>Bigger</button>' +
-        '<button type="button" class="hide" data-action="tile-hide" data-id="' + id + '">Hide</button></div>' : '') +
-      '</article>';
+// ----- edit mode -----
+function setEditing(on) {
+  editing = !!on;
+  document.body.classList.toggle('editing', editing);
+  var b = $('#editBtn'); if (b) b.setAttribute('aria-pressed', String(editing));
+  document.querySelectorAll('#grid .tile').forEach(function (t) { t.draggable = editing; });
+}
+document.addEventListener('click', function (e) {
+  var grid = e.target.closest && e.target.closest('#grid');
+  if (!grid) return;
+  var rm = e.target.closest('[data-remove]');
+  if (rm) { removeTile(rm.dataset.remove); return; }
+  if (editing) return;
+  var hm = e.target.closest('[data-hmode]');
+  if (hm) { HOURLY_MODE = hm.dataset.hmode; rerenderTile('hourly'); return; }
+  var ml = e.target.closest('[data-layer]');
+  if (ml) { MAP_LAYER = ml.dataset.layer; rerenderTile('map'); return; }
+  if (e.target.closest('button,a,iframe')) return;
+  var t = e.target.closest('.tile.clickable');
+  if (t && TILES[t.dataset.id].open) TILES[t.dataset.id].open();
+});
+var dragEl = null, lastMove = 0;
+document.addEventListener('dragstart', function (e) {
+  var t = e.target.closest && e.target.closest('#grid .tile');
+  if (!t) return;
+  dragEl = editing ? t : null;
+  if (!dragEl) { e.preventDefault(); return; }
+  dragEl.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  try { e.dataTransfer.setData('text/plain', dragEl.dataset.id); } catch (err) { /* Safari quirk */ }
+});
+document.addEventListener('dragover', function (e) {
+  if (!dragEl) return;
+  e.preventDefault();
+  var over = e.target.closest && e.target.closest('#grid .tile');
+  if (!over || over === dragEl || performance.now() - lastMove < 150) return;
+  var r = over.getBoundingClientRect(), before = e.clientX - r.left < r.width / 2;
+  if ((before && over.previousElementSibling === dragEl) || (!before && over.nextElementSibling === dragEl)) return;
+  lastMove = performance.now();
+  flip(function () { over.parentNode.insertBefore(dragEl, before ? over : over.nextElementSibling); });
+});
+document.addEventListener('dragend', function () {
+  if (!dragEl) return;
+  dragEl.classList.remove('dragging');
+  dragEl = null;
+  var grid = $('#grid');
+  if (grid) saveLayout(Array.prototype.map.call(grid.children, function (el) { return el.dataset.id; }).filter(tileOn));
+});
+// Long-press a tile to enter edit mode; the pointer also moves the tile's soft spotlight
+var pressTimer = 0, pressAt = null;
+document.addEventListener('pointerdown', function (e) {
+  if (editing || !e.target.closest || !e.target.closest('#grid .tile') || e.target.closest('iframe,button,a')) return;
+  pressAt = [e.clientX, e.clientY];
+  clearTimeout(pressTimer);
+  pressTimer = setTimeout(function () { setEditing(true); }, 600);
+});
+document.addEventListener('pointermove', function (e) {
+  var t = e.target.closest && e.target.closest('#grid .tile');
+  if (t) { var r = t.getBoundingClientRect(); t.style.setProperty('--mx', (e.clientX - r.left) + 'px'); t.style.setProperty('--my', (e.clientY - r.top) + 'px'); }
+  if (pressAt && Math.hypot(e.clientX - pressAt[0], e.clientY - pressAt[1]) > 8) { clearTimeout(pressTimer); pressAt = null; }
+});
+['pointerup', 'pointercancel'].forEach(function (ev) { document.addEventListener(ev, function () { clearTimeout(pressTimer); pressAt = null; }); });
+
+// ----- sheets (widget gallery, model details) -----
+var CLOSE_BTN = '<button type="button" class="round-btn close" data-action="close-sheet" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>';
+var sheetFocus = null, sheetTimer = 0;
+function openSheet(html, label) {
+  var bd = $('#sheetBackdrop'), sh = $('#sheet');
+  clearTimeout(sheetTimer);
+  if (bd.hidden) sheetFocus = document.activeElement;
+  sh.innerHTML = html; sh.scrollTop = 0; sh.setAttribute('aria-label', label || 'Details');
+  bd.hidden = false;
+  requestAnimationFrame(function () { bd.classList.add('open'); sh.focus({ preventScroll: true }); });
+}
+function closeSheet() {
+  var bd = $('#sheetBackdrop');
+  if (bd.hidden) return false;
+  bd.classList.remove('open');
+  sheetTimer = setTimeout(function () { bd.hidden = true; }, reduced() ? 0 : 320);
+  if (sheetFocus && sheetFocus.focus && document.contains(sheetFocus)) sheetFocus.focus({ preventScroll: true });
+  return true;
+}
+$('#sheetBackdrop').addEventListener('click', function (e) { if (e.target.id === 'sheetBackdrop') closeSheet(); });
+function openGallery() {
+  var on = layoutIds();
+  var card = function (id) {
+    var t = TILES[id], has = on.indexOf(id) >= 0;
+    return '<div class="gcard' + (t.gold || id === 'landslide' ? ' gold' : '') + '"><div class="gi">' + Icons.ui(t.icon, 20) + '</div><div class="gb">' +
+      '<div class="gt">' + t.title + '</div><div class="gd">' + t.desc + '</div>' +
+      '<div class="gm"><span class="size">' + SIZE_NAME[t.size] + '</span><button type="button" class="add-btn' + (has ? ' added' : '') + '" data-action="toggle-widget" data-id="' + id + '" aria-pressed="' + has + '">' + (has ? 'Added ✓' : '+ Add') + '</button></div></div></div>';
+  };
+  openSheet('<div class="sheet-head"><h2>Add widgets</h2>' + CLOSE_BTN + '</div>' +
+    '<p>Pick what shows on your dashboard. Tap a widget’s button again to remove it, or use Edit (···) to drag widgets around.</p>' +
+    TILE_GROUPS.map(function (g) {
+      var list = g[1].filter(tileOn);
+      return list.length ? '<h3>' + g[0] + '</h3><div class="gallery">' + list.map(card).join('') + '</div>' : '';
+    }).join('') +
+    '<h3>Layout</h3><button type="button" class="text-btn" data-action="reset-widgets" style="padding-left:0">Reset to the default layout</button>', 'Add widgets');
+}
+// What the CAMS fallback is, for the tiles that show it
+function openCamsNote() {
+  var t = tomorrowAir();
+  if (t.kind !== 'cams') return;
+  openSheet('<div class="sheet-head"><h2>' + tx('Tomorrow’s air here is a CAMS forecast', '這裡的明日空氣是 CAMS 預報') + '</h2>' + CLOSE_BTN + '</div>' +
+    '<p>' + noModelWhy() + '</p>' +
+    '<p>' + tx('So for ' + esc(S.loc.name) + ' the widgets show tomorrow’s average PM2.5 (' + t.p.pm25 + ' µg/m³) and PM10 (' + t.p.pm10 + ' µg/m³) from the Copernicus CAMS global forecast, via Open-Meteo. That is a model estimate for a grid cell tens of kilometres wide, not a station reading and not a Skyline prediction, so it has no accuracy report here.',
+      '因此' + esc(zh(S.loc.name)) + '的小工具顯示的是 Copernicus CAMS 全球預報（經 Open-Meteo）的明日平均 PM2.5（' + t.p.pm25 + ' µg/m³）與 PM10（' + t.p.pm10 + ' µg/m³）。這是數十公里網格的模式估計值，不是測站觀測，也不是 Skyline 的預測，所以這裡沒有準確度報告。') + '</p>' +
+    '<p>' + tx('The AQI and the school plan are worked out from those two numbers with the same US AQI breakpoints the Skyline model uses.', 'AQI 與學校戶外建議是用這兩個數字、以 Skyline 模型相同的美國 AQI 分級算出來的。') + '</p>', 'CAMS forecast');
+}
+function lineChart(series, keys, colors, ymaxHint) {
+  var n = series[keys[0]].length, all = [ymaxHint];
+  keys.forEach(function (k) { all = all.concat(series[k]); });
+  var ymax = Math.max.apply(null, all) * 1.08;
+  var path = function (arr) { return arr.map(function (v, i) { return (i ? 'L' : 'M') + ((i / (n - 1)) * 800).toFixed(1) + ',' + (220 - (v / ymax) * 220).toFixed(1); }).join(''); };
+  var y35 = 220 - (35 / ymax) * 220;
+  return '<svg viewBox="0 0 800 220" preserveAspectRatio="none" width="100%" height="100%" aria-hidden="true">' +
+    '<line x1="0" x2="800" y1="' + y35 + '" y2="' + y35 + '" stroke="rgba(255,120,90,.7)" stroke-dasharray="5 5" vector-effect="non-scaling-stroke"/>' +
+    keys.map(function (k, i) { return '<path d="' + path(series[k]) + '" fill="none" stroke="' + colors[i] + '" stroke-width="' + (i === 0 ? 1.6 : 1.3) + '" vector-effect="non-scaling-stroke" opacity="' + (i === 2 ? 0.55 : 1) + '"/>'; }).join('') + '</svg>';
+}
+// How the Skyline model did on its test year, for the city model that answered for S.loc
+function openModel() {
+  var m = modelMetrics(), p = pmData();
+  if (!m) { if (p) toast('The model report for this city isn’t available right now.'); return; }
+  var city = cityName((p && p.city) || m.city || { name: 'Taichung City', name_zh: '臺中市' });
+  var ch = m.chosen.pm25, R = m.results, W = R.warnings, isZh = S.lang === 'zh';
+  var NAMES = { baseline: tx('Tomorrow = today (baseline)', '明天 = 今天（基準）'), ridge: tx('Linear regression (Ridge)', '線性迴歸（Ridge）'), boosted: tx('Gradient-boosted trees', '梯度提升樹'), boosted_no_weather: tx('Boosted trees without weather forecast', '不含天氣預報的提升樹') };
+  var better = Math.round((1 - R.pm25[ch].mae / R.pm25.baseline.mae) * 100);
+  var rows = Object.keys(NAMES).filter(function (k) { return R.pm25[k] && W[k]; }).map(function (k) {
+    return '<tr class="' + (k === ch ? 'best' : '') + '"><td>' + NAMES[k] + (k === ch ? ' ✓' : '') + '</td><td>' + num(R.pm25[k].mae, 2) + '</td><td>' + num(R.pm10[k].mae, 2) + '</td><td>' + W[k].caught + '/' + W[k].bad_days + '</td><td>' + (W[k].warned - W[k].caught) + '</td></tr>';
   }).join('');
-  var hidden = order.filter(function (id) { return S.hidden[id]; });
-  return '<div class="stats-head"><div><h2 id="stats-h">All stats</h2><p>Live readings for ' + esc(L.name) + '. Each tile names its source.</p></div>' +
-    '<div class="row">' + (editing ? '<button type="button" class="btn ghost" data-action="reset-grid">Reset layout</button>' : '') +
-    '<button type="button" class="btn' + (editing ? ' accent' : '') + '" data-action="toggle-edit" aria-pressed="' + editing + '">' + (editing ? 'Done' : 'Customize') + '</button></div></div>' +
-    (editing ? '<p class="edit-tip">Drag a tile to move it, or use its buttons. Make tiles bigger or smaller, or hide the ones you don’t need. Hidden tiles wait below so you can bring them back.</p>' : '') +
-    '<div class="grid' + (editing ? ' editing' : '') + '" id="grid">' + tiles + '</div>' +
-    (hidden.length ? '<div class="hidden-row"><span>Hidden:</span>' + hidden.map(function (id) { return '<button type="button" data-action="tile-restore" data-id="' + id + '">+ ' + byId[id].title + '</button>'; }).join('') + '</div>' : '') +
-    '<p class="foot">Every reading is live: weather, air quality, waves and the seasonal outlook come from Open-Meteo at your coordinates, PM2.5 near Taichung also uses the team model, and typhoons come from the CWA feed. A tile whose source isn’t connected or can’t be reached says so and shows no number.</p>';
-}
-
-// Body of a tile that has no value: what is going on, and Retry when retrying can help
-function naHTML(na) {
-  return '<div class="na-body"><div class="val na-h">' + na.h + '</div><p class="sub">' + na.msg + '</p>' +
-    (na.retry ? '<button type="button" class="tile-retry" data-action="retry-live">Retry</button>' : '') + '</div>';
-}
-function tileBody(t) {
-  if (t.na) return naHTML(t.na);
-  if (t.kind === 'stat') {
-    return '<div class="val">' + t.value + '</div><p class="sub">' + t.sub + '</p>' +
-      (t.meter ? '<div class="meter" style="background:' + t.meterBg + '" aria-hidden="true"><span style="left:' + t.meter + '"></span></div>' : '');
-  }
-  if (t.kind === 'hourly') {
-    return '<div class="hours">' + t.hours.map(function (h) {
-      return '<div class="hour"><span>' + h.t + '</span><span class="ic" style="background:' + h.c + '" aria-hidden="true"></span><span class="tt">' + h.temp + '</span><span class="rp">' + h.rain + '</span></div>';
-    }).join('') + '</div>';
-  }
-  if (t.kind === 'week') {
-    return '<div class="week">' + t.week.map(function (w) {
-      return '<div class="wrow"><span>' + w.day + '</span><span class="ic" style="background:' + w.c + '" aria-hidden="true"></span><span class="lo">' + w.lo + '</span><span class="wbar" aria-hidden="true"><span style="left:' + w.l + ';right:' + w.r + '"></span></span><span>' + w.hi + '</span></div>';
-    }).join('') + '</div>';
-  }
-  if (t.kind === 'map') {
-    return '<div class="tile-map">' + windyFrame('Live Windy wind map', windyURL(WINDY_LAYER.wind, inTW(S.loc.lat, S.loc.lon) ? 8 : 6)) +
-      '<a class="btn accent open" href="#predictions/wind">Open map</a></div>';
-  }
-  if (t.kind === 'typhoon') {
-    return tyTileHTML(tyView());   // only reached with a feed: an active storm or "No active typhoon"
-  }
-  return '';
+  var months = (m.monthly && m.monthly.pm25) || [], mmax = Math.max.apply(null, [1].concat(months.map(function (x) { return Math.max(x.model, x.baseline); })));
+  var monthBars = months.map(function (x) {
+    return '<div class="mrow"><span class="mm">' + esc(x.month) + '</span><span class="mb"><span class="cmp"><span class="track"><i style="width:' + x.model / mmax * 100 + '%;background:var(--gold)"></i></span></span><span class="cmp"><span class="track"><i style="width:' + x.baseline / mmax * 100 + '%;background:rgba(255,255,255,.45)"></i></span></span></span>' +
+      '<span class="mv">' + num(x.model, 1) + ' vs ' + num(x.baseline, 1) + '</span></div>';
+  }).join('');
+  var dates = m.test_dates || [], ticks = dates.filter(function (d) { return /-01$/.test(d); }).map(function (d) {
+    return '<span style="left:' + dates.indexOf(d) / Math.max(1, dates.length - 1) * 100 + '%">' + (isZh ? +d.slice(5, 7) + '月' : MONTHS[+d.slice(5, 7) - 1]) + '</span>';
+  }).join('');
+  var fails = (m.failures || []).map(function (f) {
+    return '<div class="fail"><b>' + esc(f.date) + '</b><span>' + tx('Actual ', '實際 ') + '<b>' + f.actual + '</b> · ' + tx('we said ', '我們預測 ') + '<b style="color:var(--gold)">' + f.model + '</b> · ' + tx('baseline ', '基準 ') + f.baseline + ' µg/m³ <span class="dim">(' +
+      tx('forecast rain ' + f.tomorrow_rain_mm + ' mm, wind ' + f.tomorrow_wind_kmh + ' km/h', '預報雨量 ' + f.tomorrow_rain_mm + ' mm、風速 ' + f.tomorrow_wind_kmh + ' km/h') + ')</span></span></div>';
+  }).join('');
+  var intro = !p ? '' : '<p>' + tx(
+    'For <b>' + niceDate(p.date) + '</b> the ' + esc(city) + ' model expects an average PM2.5 of <b>' + p.pm25 + ' µg/m³</b>' + (p.pm25_range ? ' (likely ' + p.pm25_range[0] + '–' + p.pm25_range[1] + ')' : '') + ' and PM10 of <b>' + p.pm10 + ' µg/m³</b>. That is AQI <b>' + p.aqi + ', ' + esc(p.category) + '</b>.' +
+      (p.today ? ' Today is averaging ' + p.today.pm25 + ' µg/m³' + (p.tomorrow_weather ? ', and tomorrow’s forecast has ' + p.tomorrow_weather.rain_mm + ' mm of rain and ' + p.tomorrow_weather.wind_kmh + ' km/h of wind.' : '.') : '') +
+      (p.city && isNum(p.city.distance_km) ? ' The model is for ' + esc(city) + ', ' + Math.round(p.city.distance_km) + ' km from ' + esc(S.loc.name) + '.' : ''),
+    '<b>' + niceDate(p.date) + '</b>，' + esc(city) + '模型預測 PM2.5 平均 <b>' + p.pm25 + ' µg/m³</b>' + (p.pm25_range ? '（可能範圍 ' + p.pm25_range[0] + '–' + p.pm25_range[1] + '）' : '') + '、PM10 <b>' + p.pm10 + ' µg/m³</b>，相當於 AQI <b>' + p.aqi + '，' + zh(p.category) + '</b>。' +
+      (p.today ? '今天平均 ' + p.today.pm25 + ' µg/m³' + (p.tomorrow_weather ? '，明天預報雨量 ' + p.tomorrow_weather.rain_mm + ' mm、風速 ' + p.tomorrow_weather.wind_kmh + ' km/h。' : '。') : '') +
+      (p.city && isNum(p.city.distance_km) ? '這個模型是為' + esc(city) + '訓練的，距離' + esc(zh(S.loc.name)) + ' ' + Math.round(p.city.distance_km) + ' 公里。' : '')) + '</p>';
+  openSheet('<div class="sheet-head"><h2>' + tx('How Skyline predicts tomorrow’s air · ' + esc(city), 'Skyline 如何預測明天的空氣 · ' + esc(city)) + '</h2>' + CLOSE_BTN + '</div>' + intro +
+    '<h3>' + tx('Results on 12 months the model never saw (' + esc(m.tested_on) + ')', '在模型沒看過的 12 個月上的結果（' + esc(m.tested_on) + '）') + '</h3>' +
+    '<div class="kpis">' +
+      '<div class="kpi"><b>' + num(R.pm25[ch].mae, 1) + '</b><span>' + tx('µg/m³ average error, Skyline', 'µg/m³ 平均誤差，Skyline') + '</span></div>' +
+      '<div class="kpi"><b>' + num(R.pm25.baseline.mae, 1) + '</b><span>' + tx('µg/m³ average error, “same as today”', 'µg/m³ 平均誤差，「和今天一樣」') + '</span></div>' +
+      '<div class="kpi"><b style="color:var(--gold)">' + better + '%</b><span>' + tx('less error than the baseline', '誤差比基準少') + '</span></div>' +
+      '<div class="kpi"><b>' + W[ch].caught + '/' + W[ch].bad_days + '</b><span>' + tx('days over 35 µg/m³ warned (' + (W[ch].warned - W[ch].caught) + ' false alarms)', '超過 35 µg/m³ 的日子有事先警示（誤報 ' + (W[ch].warned - W[ch].caught) + ' 次）') + '</span></div>' +
+    '</div>' +
+    (m.series && m.series.pm25 ? '<div class="bigchart">' + lineChart(m.series.pm25, ['actual', 'model', 'baseline'], ['#9fd8ff', '#FFC24B', '#ffffff'], 40) + '</div><div class="ticks-row">' + ticks + '</div>' +
+      '<div class="legend"><span><i style="background:#9fd8ff"></i>' + tx('Actual daily PM2.5', '每日實際 PM2.5') + '</span><span><i style="background:#FFC24B"></i>' + tx('Skyline prediction', 'Skyline 預測') + '</span><span><i style="background:rgba(255,255,255,.6)"></i>' + tx('Same as today', '和今天一樣') + '</span><span><i style="background:rgba(255,120,90,.8)"></i>35 µg/m³</span></div>' : '') +
+    '<h3>' + tx('All models compared', '各模型比較') + '</h3>' +
+    '<p class="fine">' + tx('PM2.5 and PM10 columns are mean absolute error in µg/m³ (lower is better).', 'PM2.5 與 PM10 欄是平均絕對誤差（µg/m³），越低越好。') + '</p>' +
+    '<div class="table-scroll"><table class="metrics"><tr><th>' + tx('Model', '模型') + '</th><th>PM2.5</th><th>PM10</th><th>' + tx('Bad days warned', '警示到的壞空氣日') + '</th><th>' + tx('False alarms', '誤報') + '</th></tr>' + rows + '</table></div>' +
+    '<p class="fine">' + tx('The model is picked on a validation slice of the training data, not on the test year. Removing tomorrow’s weather forecast from the inputs makes the error worse, so rain and wind are a big part of what the model learns.', '模型是用訓練資料中的驗證區段挑選的，不是用測試年。把明天的天氣預報從輸入拿掉，誤差會變大，可見雨和風是模型學到的重要因素。') + '</p>' +
+    (monthBars ? '<h3>' + tx('Error by month (Skyline vs baseline)', '各月誤差（Skyline 與基準）') + '</h3><div class="mrows">' + monthBars + '</div>' : '') +
+    (fails ? '<h3>' + tx('Where it fails', '哪裡會失準') + '</h3><p>' + tx('The five biggest misses on the test year. Most are sudden pollution spikes that the model under-predicted. It only knows this city’s own weather and today’s levels, so polluted air blown in from elsewhere, or a sudden stagnant day, can push PM2.5 far above what today suggests.',
+      '測試年中誤差最大的五天。多半是模型低估的突發污染高峰。模型只知道這個城市自己的天氣和今天的濃度，所以外地吹來的污染或突然的滯留天氣，都可能讓 PM2.5 遠高於今天的水準。') + '</p><div class="fails">' + fails + '</div>' : '') +
+    '<h3>' + tx('How it works', '運作方式') + '</h3>' +
+    '<p>' + tx('<b>Inputs:</b> today’s and yesterday’s PM2.5 and PM10 (daily average, peak, evening level), today’s weather, and the weather forecast for tomorrow (rain, wind speed and direction, humidity, temperature, pressure, mixing-layer height), plus season and weekend.',
+      '<b>輸入：</b>今天與昨天的 PM2.5 和 PM10（日平均、最高值、傍晚濃度）、今天的天氣、明天的天氣預報（雨量、風速與風向、濕度、氣溫、氣壓、混合層高度），以及季節與是否週末。') + '</p>' +
+    '<p>' + tx('<b>Training:</b> ' + m.n_train + ' days (' + esc(m.trained_on) + '). Tested once on the next ' + m.n_test + ' days. One model is trained per city: 22 in all.', '<b>訓練：</b>' + m.n_train + ' 天（' + esc(m.trained_on) + '），並在之後的 ' + m.n_test + ' 天測試一次。每個縣市各訓練一個模型，共 22 個。') + '</p>' +
+    '<p>' + tx('<b>Honest caveats:</b> the PM2.5/PM10 history comes from the Copernicus CAMS model via Open-Meteo, not from ground stations, so the absolute numbers need checking against Ministry of Environment (MOENV) station data. In training, the weather that actually happened stood in for the “forecast”, so live accuracy will be a little worse than the test score.',
+      '<b>老實說的限制：</b>PM2.5／PM10 的歷史資料來自 Copernicus CAMS 模式（經 Open-Meteo），不是地面測站，所以絕對數值還需要和環境部測站資料比對。訓練時是用實際發生的天氣當作「預報」，因此實際上線的準確度會比測試分數略差。') + '</p>',
+    'Model details');
 }
 
 /* ============================================================
@@ -1827,8 +2338,9 @@ var TIME_HOURS = [-72, -48, -24, -12, 0, 6, 12, 24, 48, 72, 120, 168];
 // now + that many hours, clamped to its own range (today's midnight … end of the free forecast).
 // It cannot open in the past, so past steps keep the map at "now".
 function windyHours(t) { var h = TIME_HOURS[t] || 0; return h > 0 ? h : 0; }
-function windyURL(layer, zoom, hours) {
-  var L = S.loc, tw = inTW(L.lat, L.lon);
+// here: centre on S.loc wherever it is (the Home widget). Otherwise a location outside Taiwan shows Taiwan (Predictions).
+function windyURL(layer, zoom, hours, here) {
+  var L = S.loc, tw = here || inTW(L.lat, L.lon);
   var c = tw ? [L.lat, L.lon] : [23.75, 120.95];
   var p = { lat: c[0].toFixed(3), lon: c[1].toFixed(3), detailLat: c[0].toFixed(3), detailLon: c[1].toFixed(3), zoom: String(zoom || 7),
     level: 'surface', overlay: layer[0], product: layer[1], menu: '', message: 'true', marker: tw ? 'true' : '', calendar: 'now',
@@ -2001,7 +2513,7 @@ function predView(sub) {
         '<input id="pred-time" class="time" type="range" min="0" max="11" step="1" value="' + S.predT + '" data-input="predT" aria-valuetext="' + TIMES[S.predT] + '">' +
         '<div class="ticks" aria-hidden="true">' + TIMES.map(function (l, i) { return '<span' + (i === NOW ? ' class="is-now"' : '') + '>' + l + '</span>'; }).join('') + '</div></div>' +
       '<div class="legend" id="pm-legend"></div></section>' +
-    '<aside class="pm-side" aria-label="Region values"><div class="note"><div class="k" id="pm-k"></div><p>' + d.note + '</p><div class="conf" id="pm-conf"></div></div>' +
+    '<aside class="pm-side" aria-label="Region values"><div class="side-note"><div class="k" id="pm-k"></div><p>' + d.note + '</p><div class="conf" id="pm-conf"></div></div>' +
       '<div class="regions" id="pm-rows"></div>' +
       '<a class="btn accent" href="#ask" data-action="ask-about" data-q="' + esc('What does the ' + d.title + ' map show near ' + S.loc.name + '?') + '" style="border-radius:14px;min-height:50px">Ask the AI about this map</a></aside></div></div>';
 }
@@ -2127,7 +2639,7 @@ function emptyChatHTML() {
 function askView() {
   if (!chat) chat = [];
   var sugg = ['What’s it like outside right now?', 'Do I need an umbrella?', 'Will it storm today?', 'How is the air (PM2.5)?', 'How windy is it?', 'Any typhoon near Taiwan?'];
-  return '<div class="page light"><header><div class="eyebrow">Grounded in live data</div><h1>Ask Skyline</h1>' +
+  return '<div class="page"><header><div class="eyebrow">Grounded in live data</div><h1>Ask Skyline</h1>' +
     '<p class="lede">Answers use the live Skyline data for ' + esc(S.loc.name) + ': Open-Meteo weather, air quality and waves, plus the team PM2.5 model and the CWA typhoon feed when they are connected.</p>' +
     '<p class="lede ai-using">Answering with: <strong>' + esc(aiLabel()) + '</strong> · <a class="link" href="#settings">Change</a></p>' +
     '<p class="lede ai-note"' + (aiProvider() === 'builtin' ? '' : ' hidden') + '>No AI model is connected. The built-in assistant only reads out the live data on screen and can’t answer other questions.</p></header>' +
@@ -2218,6 +2730,10 @@ function skylineContext() {
     if (t.kind === 'typhoon') lines.push(tv.state === 'active' ? '- Typhoon watch: ' + tv.title + ' of this location' + (tv.sub ? '; ' + tv.sub : '') + ' [source: ' + tv.src + ']'
       : '- Typhoon watch: no active typhoon near Taiwan [source: ' + tv.src + ']');
   });
+  var air = liveAir(), ta = tomorrowAir();
+  if (air && isNum(air.current.us_aqi)) lines.push('- Air quality now: US AQI ' + Math.round(air.current.us_aqi) + ' (' + aqiCat(air.current.us_aqi)[1] + ')' + (isNum(air.current.pm10) ? ', PM10 ' + Math.round(air.current.pm10) + ' µg/m³' : '') + ' [source: Open-Meteo CAMS' + liveTag('air@' + ptKey(L)) + ']');
+  if (ta.kind !== 'na') lines.push('- Tomorrow’s air (' + ta.p.date + ', daily average): PM2.5 ' + ta.p.pm25 + ' µg/m³, PM10 ' + ta.p.pm10 + ' µg/m³, AQI ' + ta.p.aqi + ' (' + ta.p.category + '). School outdoor plan: ' + (ta.p.advice || schoolAdvice(ta.p.aqi)).title +
+    (ta.kind === 'model' ? ' [source: Skyline PM2.5 model for ' + (ta.city.name || 'the nearest city') + ', live]' : ' [source: Copernicus CAMS forecast via Open-Meteo, live; not a Skyline model: no city model covers this location]'));
   lines.push('Taiwan prediction maps (region levels now / +24h / +72h):');
   activeSets().forEach(function (d) {
     if (!d.lv) { lines.push('- ' + d.title + ': UNAVAILABLE — ' + (d.na.h === '—' ? '' : d.na.h + '. ') + d.na.msg); return; }
@@ -2526,16 +3042,14 @@ function setRow(label, small, control) {
 }
 // One-line status of a same-origin feature, for the Data sources card
 function featNote(feature, feedName) {
-  var st = apiState(feature, feedName);
+  var st = feature === 'pm25' ? pmState() : apiState(feature, feedName);
+  if (feature === 'pm25' && st === 'gone' && pmNearest()) return 'No city model within 25 km of this location';
   return st === 'gone' ? 'Not connected on this server' : st === 'error' ? 'Couldn’t be reached' : st === 'loading' ? 'Checking…' : st === 'off' ? 'Turned off' : 'Connected';
 }
 function settingsView() {
-  var cat = catalog(S.loc), byId = {};
-  cat.forEach(function (t) { byId[t.id] = t; });
-  var n = S.pinCount;
   var swatches = [['#FFC24B', 'Sun yellow (default)'], ['#FF6B5A', 'Coral'], ['#4C8DFF', 'Sky blue'], ['#2FBF9B', 'Jade'], ['#C084FC', 'Orchid']];
   var isPreset = swatches.some(function (s) { return s[0].toLowerCase() === S.accent.toLowerCase(); });
-  return '<div class="page light"><header><h1>Settings</h1><p class="lede">Everything in Skyline can be changed here, down to the colors. What you see now are the defaults.</p></header>' +
+  return '<div class="page"><header><h1>Settings</h1><p class="lede">Everything in Skyline can be changed here, down to the colors. What you see now are the defaults.</p></header>' +
   '<div class="settings-grid"><div style="display:flex;flex-direction:column;gap:20px">' +
 
   '<section class="card" aria-labelledby="st-loc"><h2 id="st-loc">Location</h2>' +
@@ -2543,22 +3057,15 @@ function settingsView() {
   '</section>' +
 
   '<section class="card" aria-labelledby="st-home"><h2 id="st-home">Home screen</h2>' +
-    '<label for="pin-count" style="display:flex;justify-content:space-between;font-weight:600;font-size:15px"><span>Pinned items under the temperature</span><span id="pin-out" style="color:#1E5BC6">' + n + '</span></label>' +
-    '<input id="pin-count" class="plain" type="range" min="3" max="10" value="' + n + '" data-input="pinCount">' +
-    '<p class="hint">Shows the first ' + n + '. Reorder to choose which ones.</p>' +
-    '<ol class="pins-list">' + S.pins.map(function (id, i) {
-      var t = byId[id]; if (!t) return '';
-      return '<li class="' + (i < n ? '' : 'off') + '"><span class="n">' + (i + 1) + '</span><span class="grow">' + t.title + (i < n ? '' : ' <small>(not shown)</small>') + '</span>' +
-        '<button type="button" class="mini" data-action="pin-up" data-id="' + id + '" aria-label="Move ' + t.title + ' up"' + (i === 0 ? ' disabled' : '') + '>↑</button>' +
-        '<button type="button" class="mini" data-action="pin-down" data-id="' + id + '" aria-label="Move ' + t.title + ' down"' + (i === S.pins.length - 1 ? ' disabled' : '') + '>↓</button></li>';
-    }).join('') + '</ol>' +
-    '<a class="link" href="#stats">Customize All stats →</a>' +
+    setRow('Widgets', layoutIds().length + ' on your dashboard', '<a class="light-btn" href="#home">Open Home</a>') +
+    '<p class="hint">On Home, use + to add widgets and ··· (or a long press on a widget) to drag them around or remove them.</p>' +
+    '<button type="button" class="light-btn" data-action="reset-widgets"' + (S.layout == null ? ' disabled' : '') + '>Reset to the default layout</button>' +
   '</section>' +
 
   '<section class="card" aria-labelledby="st-data"><h2 id="st-data">Data sources</h2><p class="hint">Every value in Skyline comes from one of these. Turning one off hides or empties what depends on it; nothing is filled in with made-up numbers.</p>' +
     setRow('Open-Meteo', 'Live conditions, forecast, air quality, waves and the seasonal outlook at your coordinates', sw('sources.openMeteo', 'Open-Meteo')) +
     setRow('Windy maps', 'Live map embeds', sw('sources.windyMap', 'Windy maps')) +
-    setRow('Team PM2.5 model', 'Next-day forecast for Taichung · ' + featNote('pm25', 'pm'), sw('sources.pm25', 'Team PM2.5 model')) +
+    setRow('Team PM2.5 model', 'Next-day forecast from the nearest of 22 city models · ' + featNote('pm25'), sw('sources.pm25', 'Team PM2.5 model')) +
     setRow('Team landslide model', 'Not connected yet', sw('sources.landslide', 'Team landslide model')) +
     setRow('CWA typhoon warnings', featNote('typhoon', 'ty'), sw('sources.typhoon', 'CWA typhoon warnings')) +
   '</section></div>' +
@@ -2568,25 +3075,24 @@ function settingsView() {
     (themeIsDefault() ? '<span class="badge">Default</span>' : '<span class="badge custom">Custom</span>') + '</div>' +
     '<div style="display:flex;flex-direction:column;gap:8px"><span style="font-weight:600;font-size:15px">Accent color</span><div class="swatches" role="group" aria-label="Accent color">' +
       swatches.map(function (s) { return '<button type="button" class="swatch" style="background:' + s[0] + '" aria-label="' + s[1] + '" aria-pressed="' + (s[0].toLowerCase() === S.accent.toLowerCase()) + '" data-action="set" data-key="accent" data-val="' + s[0] + '"></button>'; }).join('') +
-      '<input type="color" id="accent-custom" data-input="accent" value="' + S.accent + '" aria-label="Custom accent color"' + (isPreset ? '' : ' style="border:3px solid #0B1B3F"') + '></div></div>' +
+      '<input type="color" id="accent-custom" data-input="accent" value="' + S.accent + '" aria-label="Custom accent color"' + (isPreset ? '' : ' class="on"') + '></div></div>' +
     setRow('Risk color scale', '<span style="display:flex;gap:3px;margin-top:4px">' + pal().map(function (c) { return '<i style="display:block;width:18px;height:10px;border-radius:3px;background:' + c + '"></i>'; }).join('') + '</span>',
       seg('risk', 'Risk color scale', [['default', 'Default'], ['cb', 'Color-blind safe']])) +
-    setRow('Background', 'Follows live weather at your location', seg('bgMode', 'Background', [['live', 'Live weather'], ['static', 'Static']])) +
-    setRow('Tile style', '', seg('tiles', 'Tile style', [['glass', 'Glass'], ['solid', 'Solid']])) +
+    setRow('Sky', 'Follows live weather at your location, on every screen', seg('bgMode', 'Sky', [['live', 'Live weather'], ['static', 'Static']])) +
     setRow('Fonts', '', seg('fonts', 'Fonts', [['default', 'Bricolage + Inter'], ['system', 'System']])) +
     '<div class="set-row"><label for="radius" class="lbl">Corner roundness<small id="radius-out">' + S.radius + ' px</small></label><input id="radius" class="plain" style="max-width:200px" type="range" min="6" max="36" value="' + S.radius + '" data-input="radius"></div>' +
-    setRow('Skyline art', 'Taiwan city silhouettes', seg('skyline', 'Skyline art', [['city', 'Follow my city'], ['off', 'Off']])) +
+    setRow('Skyline art', 'Taiwan city silhouettes under the temperature on Home', seg('skyline', 'Skyline art', [['city', 'Follow my city'], ['off', 'Off']])) +
     setRow('Map base', 'Default for prediction maps', seg('mapBase', 'Map base', [['auto', 'Auto'], ['sat', 'Satellite'], ['windy', 'Windy']])) +
     '<p class="hint" style="margin-top:-4px">Auto: satellite for Skyline models, Windy for everything else.</p>' +
     '<button type="button" class="light-btn" data-action="reset-theme"' + (themeIsDefault() ? ' disabled' : '') + '>Reset theme to default</button>' +
   '</section>' +
 
   aiSettingsHTML() + mcpSettingsHTML() +
-  '<section class="card" aria-labelledby="st-sky"><h2 id="st-sky">Sky preview</h2><p class="hint">A preview control for demos and testing. It shows another sky on Home until you switch back or reload. Readings are never changed: they stay live.</p>' +
+  '<section class="card" aria-labelledby="st-sky"><h2 id="st-sky">Sky preview</h2><p class="hint">A preview control for demos and testing. It shows another sky behind every screen until you switch back or reload. Readings are never changed: they stay live.</p>' +
     '<div class="set-row"><label for="demo-weather" class="lbl">Preview a sky<small>Default: live weather</small></label><select id="demo-weather" data-input="weather">' + skyOptions() + '</select></div>' +
   '</section>' +
   '<section class="card" aria-labelledby="st-look"><h2 id="st-look">Motion</h2>' +
-    setRow('Reduce motion', 'Stops drifting clouds, rain, lightning and map flow', sw('reduceMotion', 'Reduce motion')) +
+    setRow('Reduce motion', 'Stops drifting clouds, rain, lightning, count-up numbers and widget motion', sw('reduceMotion', 'Reduce motion')) +
   '</section>' +
 
   '<section class="card" aria-labelledby="st-units"><h2 id="st-units">Units &amp; language</h2>' +
@@ -2608,26 +3114,31 @@ function route() {
   return { page: page, sub: parts[1] || '', stats: parts[0] === 'stats' };
 }
 function render() {
-  var r = route(), key = r.page + '/' + r.sub;
+  var r = route(), key = r.page + '/' + r.sub, app = $('#app');
   document.body.dataset.page = r.page;
-  var app = $('#app');
   destroyLive();
   loadLive(r.page); applyLiveSets();
-  app.innerHTML = r.page === 'home' ? homeView() : r.page === 'predictions' ? predView(r.sub) : r.page === 'ask' ? askView() : settingsView();
+  if (key !== lastRoute) { closeSheet(); setEditing(false); }
+  // Home already on screen (a feed arrived, the location or unit changed): update it in place, so
+  // widgets keep their state and nothing re-animates. Otherwise build the page.
+  if (r.page === 'home' && key === lastRoute && $('#grid')) homeUpdate(false);
+  else {
+    app.innerHTML = r.page === 'home' ? homeView() : r.page === 'predictions' ? predView(r.sub) : r.page === 'ask' ? askView() : settingsView();
+    if (r.page === 'home') homeUpdate(true); else { applySky(); syncCompact(); }
+  }
   document.querySelectorAll('[data-nav]').forEach(function (a) {
     if (a.dataset.nav === r.page) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
   });
-  if (r.page === 'home' && S.bgMode === 'live' && wxKey()) SkyFX.start($('.hero'), wxKey(), !!S.reduceMotion || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches));
-  else SkyFX.stop();
   if (r.page === 'predictions' && r.sub) updatePred();
   if (r.page === 'ask' && pendingAsk) { var pq = pendingAsk; pendingAsk = null; ask(pq); }
   document.documentElement.lang = S.lang === 'zh' ? 'zh-Hant-TW' : 'en';
   document.title = { home: S.loc.name + ' · Skyline', predictions: 'Predictions · Skyline', ask: 'Ask AI · Skyline', settings: 'Settings · Skyline' }[r.page];
   if (key !== lastRoute) {
-    if (r.stats) { var st = $('#stats'); if (st) st.scrollIntoView(); }
+    if (r.stats) { var st = $('#grid'); if (st) st.scrollIntoView(); }
     else window.scrollTo(0, 0);
   }
   lastRoute = key;
+  onScroll();
 }
 function selectorFor(el) {
   if (!el || el === document.body) return null;
@@ -2644,37 +3155,24 @@ function rerender() {
   render();
   if (sel) { var el = document.querySelector(sel); if (el && !el.disabled) el.focus({ preventScroll: true }); }
 }
-function rerenderStats(focusSel) {
-  var st = $('#stats'); if (!st) return;
-  st.innerHTML = statsInner();
-  if (focusSel) { var el = document.querySelector(focusSel); if (el && !el.disabled) el.focus({ preventScroll: true }); else { var g = $('#grid .edit-ctl button'); if (g) g.focus({ preventScroll: true }); } }
-}
-
 /* ============================================================
    Actions
    ============================================================ */
-function moveIn(arr, id, dir) {
-  var i = arr.indexOf(id), j = i + dir;
-  if (i < 0 || j < 0 || j >= arr.length) return arr;
-  var o = arr.slice(); o.splice(i, 1); o.splice(j, 0, id); return o;
-}
-function visibleNeighbor(order, id, dir) {
-  var vis = order.filter(function (x) { return !S.hidden[x]; });
-  var i = vis.indexOf(id), j = i + dir;
-  return j >= 0 && j < vis.length ? vis[j] : null;
-}
 var ACTIONS = {
   'open-search': function () { openSearch(); },
   'close-search': function () { closeSearch(); },
-  'scroll-stats': function () { var s = $('#stats'); if (s) s.scrollIntoView({ behavior: 'smooth' }); },
-  'toggle-edit': function () { editing = !editing; rerenderStats('[data-action="toggle-edit"]'); },
-  'reset-grid': function () { S.order = null; S.spans = {}; S.hidden = {}; save(); rerenderStats('[data-action="toggle-edit"]'); toast('Layout reset to default'); },
-  'tile-left': function (el) { tileMove(el.dataset.id, -1, '[data-action="tile-left"][data-id="' + el.dataset.id + '"]'); },
-  'tile-right': function (el) { tileMove(el.dataset.id, 1, '[data-action="tile-right"][data-id="' + el.dataset.id + '"]'); },
-  'tile-bigger': function (el) { tileSpan(el.dataset.id, 1); rerenderStats('[data-action="tile-bigger"][data-id="' + el.dataset.id + '"]'); },
-  'tile-smaller': function (el) { tileSpan(el.dataset.id, -1); rerenderStats('[data-action="tile-smaller"][data-id="' + el.dataset.id + '"]'); },
-  'tile-hide': function (el) { S.hidden[el.dataset.id] = true; save(); rerenderStats('[data-action="tile-restore"][data-id="' + el.dataset.id + '"]'); },
-  'tile-restore': function (el) { delete S.hidden[el.dataset.id]; save(); rerenderStats('[data-action="tile-hide"][data-id="' + el.dataset.id + '"]'); },
+  'edit-widgets': function () { setEditing(!editing); },
+  'done-widgets': function () { setEditing(false); },
+  'add-widget': function () { openGallery(); },
+  'reset-widgets': function () { resetLayout(); closeSheet(); if (route().page === 'settings') rerender(); },
+  'toggle-widget': function (el) {
+    var id = el.dataset.id, has = layoutIds().indexOf(id) >= 0;
+    if (has) removeTile(id); else addTile(id);
+    el.classList.toggle('added', !has); el.setAttribute('aria-pressed', String(!has)); el.textContent = has ? '+ Add' : 'Added ✓';
+  },
+  'close-sheet': function () { closeSheet(); },
+  'open-tomorrow': function () { TILES.tomorrow.open(); },
+  'toggle-units': function () { S.units = S.units === 'F' ? 'C' : 'F'; save(); rerender(); },
   'set-base': function (el) { var sub = route().sub; S.predBase[sub] = el.dataset.base; save(); updatePred(); },
   'ask': function (el) { ask(el.dataset.q); },
   'ask-about': function (el) { pendingAsk = el.dataset.q; location.hash = 'ask'; },
@@ -2684,8 +3182,6 @@ var ACTIONS = {
     if (k.indexOf('sources.') === 0) { var sk = k.split('.')[1]; S.sources[sk] = !S.sources[sk]; } else S[k] = !S[k];
     save(); applyTheme(); rerender();
   },
-  'pin-up': function (el) { S.pins = moveIn(S.pins, el.dataset.id, -1); save(); rerender(); },
-  'pin-down': function (el) { S.pins = moveIn(S.pins, el.dataset.id, 1); save(); rerender(); },
   'reset-theme': function () { THEME_KEYS.forEach(function (k) { S[k] = DEFAULTS[k]; }); save(); applyTheme(); render(); toast('Theme reset to default'); },
   'retry-live': function () { retryLive(); },
   'sky-live': function () { S.weather = 'live'; rerender(); },
@@ -2716,19 +3212,6 @@ var ACTIONS = {
   'worldwide': function () { worldwide(); },
   'geolocate': function () { geolocate(); }
 };
-function tileMove(id, dir, focusSel) {
-  var cat = catalog(S.loc), order = currentOrder(cat);
-  var nb = visibleNeighbor(order, id, dir); if (!nb) return;
-  var o = order.slice(), i = o.indexOf(id); o.splice(i, 1);
-  var j = o.indexOf(nb); o.splice(dir < 0 ? j : j + 1, 0, id);
-  S.order = o; save(); rerenderStats(focusSel);
-}
-function tileSpan(id, d) {
-  var t = catalog(S.loc).filter(function (x) { return x.id === id; })[0];
-  var cur = S.spans[id] || t.span;
-  S.spans[id] = Math.max(1, Math.min(4, cur + d)); save();
-}
-
 document.addEventListener('click', function (e) {
   var el = e.target.closest('[data-action]');
   if (!el || el.disabled) return;
@@ -2740,7 +3223,6 @@ document.addEventListener('input', function (e) {
   if (!k) return;
   if (k === 'predT') { S.predT = +el.value; updatePred(); save(); }
   else if (k === 'radius') { S.radius = +el.value; applyTheme(); var o = $('#radius-out'); if (o) o.textContent = S.radius + ' px'; }
-  else if (k === 'pinCount') { var p = $('#pin-out'); if (p) p.textContent = el.value; }
   else if (k === 'accent') { S.accent = el.value; applyTheme(); }
   else if (k === 'q') runSearch();
   else if (k.indexOf('ai.') === 0) { S.ai[k.slice(3)] = el.value.trim(); save(); }
@@ -2749,45 +3231,11 @@ document.addEventListener('input', function (e) {
 document.addEventListener('change', function (e) {
   var el = e.target, k = el.dataset && el.dataset.input;
   if (!k) return;
-  if (k === 'pinCount') { S.pinCount = +el.value; save(); rerender(); }
-  else if (k === 'radius' || k === 'accent') { save(); rerender(); }
+  if (k === 'radius' || k === 'accent') { save(); rerender(); }
   else if (k === 'weather') { S.weather = el.value; rerender(); }   // session only: not saved
 });
 document.addEventListener('submit', function (e) {
   if (e.target.id === 'ask-form') { e.preventDefault(); if (aiAbort) { aiAbort.abort(); return; } var i = $('#ask-input'); ask(i.value); i.value = ''; }
-});
-
-// Drag and drop for the stats grid
-document.addEventListener('dragstart', function (e) {
-  var t = e.target.closest && e.target.closest('.grid.editing .tile');
-  if (!t) return;
-  dragId = t.dataset.id; t.classList.add('dragging');
-  e.dataTransfer.effectAllowed = 'move';
-  try { e.dataTransfer.setData('text/plain', dragId); } catch (err) {}
-});
-document.addEventListener('dragover', function (e) {
-  var t = e.target.closest && e.target.closest('.grid.editing .tile');
-  if (!t || !dragId) return;
-  e.preventDefault();
-  document.querySelectorAll('.drop-target').forEach(function (x) { if (x !== t) x.classList.remove('drop-target'); });
-  if (t.dataset.id !== dragId) t.classList.add('drop-target');
-});
-document.addEventListener('drop', function (e) {
-  var t = e.target.closest && e.target.closest('.grid.editing .tile');
-  if (!t || !dragId) return;
-  e.preventDefault();
-  var target = t.dataset.id;
-  if (target !== dragId) {
-    var o = currentOrder(catalog(S.loc)).slice();
-    var from = o.indexOf(dragId), to = o.indexOf(target);
-    o.splice(from, 1); o.splice(o.indexOf(target) + (from < to ? 1 : 0), 0, dragId);
-    S.order = o; save();
-  }
-  dragId = null; rerenderStats();
-});
-document.addEventListener('dragend', function () {
-  dragId = null;
-  document.querySelectorAll('.dragging,.drop-target').forEach(function (x) { x.classList.remove('dragging', 'drop-target'); });
 });
 
 /* ============================================================
@@ -2989,6 +3437,7 @@ function geolocate() {
 function openSearch() {
   var ov = $('#search');
   if (!ov.hidden) { $('#q').focus(); return; }
+  closeSheet();
   lastFocus = document.activeElement;
   ov.hidden = false;
   var q = $('#q'); q.value = ''; runSearch(); q.focus();
@@ -3004,6 +3453,7 @@ document.addEventListener('keydown', function (e) {
   var typing = /INPUT|TEXTAREA|SELECT/.test((e.target.tagName || '')) || e.target.isContentEditable;
   if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) { e.preventDefault(); open ? closeSearch() : openSearch(); return; }
   if (!open && e.key === '/' && !typing) { e.preventDefault(); openSearch(); return; }
+  if (!open && e.key === 'Escape') { if (!closeSheet()) setEditing(false); return; }
   if (!open) return;
   if (e.key === 'Escape') { e.preventDefault(); closeSearch(); return; }
   if (e.target.id === 'q') {
@@ -3034,11 +3484,8 @@ var ZH = {
   'Clear day': '晴天', 'Partly cloudy': '晴時多雲', 'Cloudy': '多雲', 'Rain': '雨', 'Thunderstorm': '雷雨', 'Clear night': '晴朗夜晚', 'Dawn': '清晨', 'Dusk': '黃昏',
 
 
-  'Outside Taiwan: PM2.5, landslide and Predictions cover Taiwan only': '台灣以外：PM2.5、山崩與預測僅涵蓋台灣',
-  'All stats ↓': '所有數據 ↓', 'All stats': '所有數據', 'Customize': '自訂', 'Done': '完成', 'Reset layout': '重設版面',
-  'Drag a tile to move it, or use its buttons. Make tiles bigger or smaller, or hide the ones you don’t need. Hidden tiles wait below so you can bring them back.': '拖曳磚塊即可移動，或使用按鈕。可以放大、縮小或隱藏不需要的磚塊，隱藏的會留在下方，隨時加回來。',
-  'Hidden:': '已隱藏：', 'Smaller': '縮小', 'Bigger': '放大', 'Hide': '隱藏',
-  'Hourly': '逐時', 'Live map': '即時地圖', 'Thunderstorm risk': '雷雨風險', 'Storm outlook · 72h': '風暴展望 · 72 小時', 'Typhoon watch': '颱風動態',
+  'Done': '完成',
+  'Hourly': '逐時', 'Thunderstorm risk': '雷雨風險', 'Storm outlook · 72h': '風暴展望 · 72 小時', 'Typhoon watch': '颱風動態',
   'Landslide risk': '山崩風險', '7-day forecast': '7 天預報', 'Wind & gusts': '風與陣風', 'Rain today': '今日雨量', 'Cloud layers': '雲層',
   'Humidity': '濕度', 'Pressure': '氣壓', 'Visibility': '能見度', 'Coast & waves': '海岸與浪高', 'UV index': '紫外線指數',
   'High': '高', 'Low': '低',
@@ -3047,7 +3494,7 @@ var ZH = {
 
 
 
-  'Open map': '開啟地圖', 'Now': '現在', 'Today': '今天', 'Sun': '週日', 'Mon': '週一', 'Tue': '週二', 'Wed': '週三', 'Thu': '週四', 'Fri': '週五', 'Sat': '週六',
+  'Now': '現在', 'Today': '今天', 'Sun': '週日', 'Mon': '週一', 'Tue': '週二', 'Wed': '週三', 'Thu': '週四', 'Fri': '週五', 'Sat': '週六',
   'Taiwan only': '僅限台灣',
   'Pick a dataset to open its map, then scrub back through the past or forward into the forecast.': '選擇資料集開啟地圖，再拖曳時間軸查看過去或未來的預測。',
   'By Skyline': 'Skyline 自製', 'Our own Taiwan models': '我們自己的台灣模型', 'Others': '其他來源',
@@ -3070,15 +3517,15 @@ var ZH = {
   'Do I need an umbrella?': '需要帶傘嗎？',
   'Ask': '送出', 'Ask a question': '提出問題',
   'Everything in Skyline can be changed here, down to the colors. What you see now are the defaults.': 'Skyline 的一切都能在這裡調整，連顏色也可以。目前顯示的是預設值。',
-  'Location': '位置', 'Change': '變更', 'Home screen': '首頁畫面', 'Pinned items under the temperature': '溫度下方的釘選項目',
-  '(not shown)': '（不顯示）', 'Customize All stats →': '自訂所有數據 →', 'Data sources': '資料來源',
+  'Location': '位置', 'Change': '變更', 'Home screen': '首頁畫面',
+  'Data sources': '資料來源',
 
   'Team PM2.5 model': '團隊 PM2.5 模型', 'Team landslide model': '團隊山崩模型', 'CWA typhoon warnings': '中央氣象署颱風警報',
   'Theme & colors': '主題與顏色', 'Default': '預設', 'Custom': '自訂', 'Accent color': '強調色', 'Risk color scale': '風險色階', 'Color-blind safe': '色盲友善',
-  'Background': '背景', 'Live weather': '即時天氣', 'Static': '靜態', 'Tile style': '磚塊樣式', 'Glass': '玻璃', 'Solid': '實色',
-  'Fonts': '字型', 'System': '系統', 'Corner roundness': '圓角', 'Skyline art': '天際線圖', 'Taiwan city silhouettes': '台灣城市剪影', 'Follow my city': '跟隨我的城市', 'Off': '關閉',
+  'Sky': '天空', 'Live weather': '即時天氣', 'Static': '靜態',
+  'Fonts': '字型', 'System': '系統', 'Corner roundness': '圓角', 'Skyline art': '天際線圖', 'Taiwan city silhouettes under the temperature on Home': '首頁溫度下方的台灣城市剪影', 'Follow my city': '跟隨我的城市', 'Off': '關閉',
   'Default for prediction maps': '預測地圖的預設', 'Auto': '自動', 'Auto: satellite for Skyline models, Windy for everything else.': '自動：Skyline 模型用衛星，其他用 Windy。',
-  'Reset theme to default': '將主題重設為預設', 'Motion': '動態效果', 'Reduce motion': '減少動態效果', 'Stops drifting clouds, rain, lightning and map flow': '停止雲、雨、閃電與地圖流線動畫',
+  'Reset theme to default': '將主題重設為預設', 'Motion': '動態效果', 'Reduce motion': '減少動態效果', 'Stops drifting clouds, rain, lightning, count-up numbers and widget motion': '停止雲、雨、閃電、數字跳動與小工具的動態',
   'Units & language': '單位與語言', 'Temperature': '溫度', 'Language': '語言', 'Temperature unit': '溫度單位',
   'Reset everything to default': '全部重設為預設', 'Custom accent color': '自訂強調色', 'Sun yellow (default)': '陽光黃（預設）', 'Coral': '珊瑚紅', 'Sky blue': '天空藍', 'Jade': '玉綠', 'Orchid': '蘭紫',
   'City, district, postal code, 25.03, 121.56, TPE, or a university': '城市、行政區、郵遞區號、25.03, 121.56、TPE 或大學', 'Place, coordinates, airport code or university': '地點、座標、機場代碼或大學',
@@ -3100,7 +3547,6 @@ PLACES.forEach(function (p) { if (p.kind === 'District' && !ZH[p.locName]) ZH[p.
 var ZHP = [
   [/^(· )?([A-Za-z' ]+) · (\d{3}) (\S+)$/, function (m) { return (m[1] || '') + zh(m[2]) + ' · ' + m[3] + ' ' + m[4]; }],
   [/^Search worldwide for “(.*)”$/, function (m) { return '全球搜尋「' + m[1] + '」'; }],
-  [/^Shows the first (\d+)\. Reorder to choose which ones\.$/, function (m) { return '顯示前 ' + m[1] + ' 項。調整順序來選擇要顯示哪些。'; }],
   [/^(Past|Now|Prediction) · (.*)$/, function (m) { return zh(m[1]) + ' · ' + m[2]; }],
   [/^Postal (\d{3})$/, function (m) { return '郵遞區號 ' + m[1]; }],
   [/^No Taiwan district has postal code (\d{3})\.$/, function (m) { return '沒有行政區使用郵遞區號 ' + m[1] + '。'; }],
@@ -3109,7 +3555,6 @@ var ZHP = [
   [/^Dew point (.*)$/, function (m) { return '露點 ' + m[1]; }],
   [/^Nothing in the offline list matches “(.*)”\.$/, function (m) { return '離線清單中找不到「' + m[1] + '」。'; }],
   [/^No airport with (IATA|ICAO) code (\w+) in the offline list\. Try searching worldwide below\.$/, function (m) { return '離線清單中沒有 ' + m[1] + ' 代碼 ' + m[2] + ' 的機場，請試試下方的全球搜尋。'; }],
-  [/^Move (.*) (earlier|later|up|down)$/, function (m) { return '移動' + zh(m[1]) + ({ earlier: '往前', later: '往後', up: '上移', down: '下移' })[m[2]]; }],
   [/^Location: (.*)\. Change location$/, function (m) { return '位置：' + m[1] + '。變更位置'; }],
   [/^(· )?([A-Za-z' ]+) · (\d{3}) (\S+) · near (.+) border$/, function (m) { return (m[1] || '') + zh(m[2]) + ' · ' + m[3] + ' ' + m[4] + ' · 靠近' + zh(m[5]) + '邊界'; }],
   [/^Live Windy map \((.*) layer\)\. The slider opened it at (.*) \(as far as Windy’s free forecast reaches\); .*$/, function (m) { return '即時 Windy 地圖（' + m[1] + ' 圖層）。時間軸已讓地圖從 ' + m[2] + ' 開啟（以 Windy 免費預報的範圍為限）；之後可用地圖底部 Windy 自己的時間軸繼續調整。右側的各地區數值會跟著時間軸變化。'; }],
@@ -3135,7 +3580,7 @@ var ZH_LIVE = {
   'Peak gusts at seven cities. Open-Meteo forecast models.': '七個城市的最大陣風。資料來自 Open-Meteo 預報模式。',
   
   
-  'Team model (Taichung) + Open-Meteo CAMS': '團隊模型（台中）+ Open-Meteo CAMS', 'Team model + Open-Meteo CAMS': '團隊模型 + Open-Meteo CAMS',
+  'Team model + Open-Meteo CAMS': '團隊模型 + Open-Meteo CAMS',
   'Open-Meteo · CAPE + weather codes': 'Open-Meteo · CAPE 與天氣代碼', 'Open-Meteo Marine': 'Open-Meteo 海象', 
 };
 Object.keys(ZH_LIVE).forEach(function (k) { if (!Object.prototype.hasOwnProperty.call(ZH, k)) ZH[k] = ZH_LIVE[k]; });
@@ -3160,15 +3605,14 @@ ZHP.push(
   [/^(.+) · ([\d.,]+) km (N|NE|E|SE|S|SW|W|NW)$/, function (m) { return m[1] + ' · ' + ZH_DIR[m[3]] + '方 ' + m[2] + ' 公里'; }],
   [/^Max wind (\d+) km\/h(.*)$/, function (m) { return '最大風速 ' + m[1] + ' km/h' + m[2]; }],
   [/^Track of (.+)\. Each region shows how far the storm centre is from it along the track\. These are distances, not official warnings\.$/, function (m) { return m[1] + ' 的路徑。各地區顯示颱風中心沿路徑與該地的距離。這是距離，並非官方警報。'; }],
-  [/^PM2\.5 at seven cities from the Copernicus CAMS model, via Open-Meteo\. These are model estimates, not station readings\. The forecast ends about four days ahead, so later steps repeat the last value\.(?: Team model, Taichung, (\S+): ([\d.]+) µg\/m³ \((.*)\)\.)?( The team PM2\.5 model isn’t connected on this server\.)?( The team PM2\.5 model couldn’t be reached\.)?$/,
-    function (m) { return '七個城市的 PM2.5，來自 Copernicus CAMS 模式（經 Open-Meteo）。這是模式估計值，不是測站觀測。預報約到四天後，之後的時間點沿用最後一筆數值。' + (m[1] ? ' 團隊模型，台中，' + m[1] + '：' + m[2] + ' µg/m³（' + zh(m[3]) + '）。' : '') + (m[4] ? ' 這台伺服器尚未連接團隊 PM2.5 模型。' : '') + (m[5] ? ' 無法連上團隊 PM2.5 模型。' : ''); }]
+  [/^PM2\.5 at seven cities from the Copernicus CAMS model, via Open-Meteo\. These are model estimates, not station readings\. The forecast ends about four days ahead, so later steps repeat the last value\.(?: Team model, (.+?), (\S+): ([\d.]+) µg\/m³ \((.*?)\)\.)?( The team PM2\.5 model isn’t connected on this server\.)?( The team PM2\.5 model couldn’t be reached\.)?$/,
+    function (m) { return '七個城市的 PM2.5，來自 Copernicus CAMS 模式（經 Open-Meteo）。這是模式估計值，不是測站觀測。預報約到四天後，之後的時間點沿用最後一筆數值。' + (m[1] ? ' 團隊模型，' + zh(m[1]) + '，' + m[2] + '：' + m[3] + ' µg/m³（' + zh(m[4]) + '）。' : '') + (m[5] ? ' 這台伺服器尚未連接團隊 PM2.5 模型。' : '') + (m[6] ? ' 無法連上團隊 PM2.5 模型。' : ''); }]
 );
 // 中文 for the live-app strings: states (loading, not connected, unavailable), the built-in Ask AI
 // summary, the seasonal outlook and the sky preview. Added the same way, so nothing above is overridden.
 var ZH_APP = {
   'Loading live weather…': '正在載入即時天氣…', 'Open-Meteo · loading…': 'Open-Meteo · 載入中…', 'Live weather is turned off': '即時天氣已關閉', 'Open-Meteo is switched off': 'Open-Meteo 已關閉', 'Open Settings': '開啟設定',
   'Live weather is unavailable': '目前無法取得即時天氣', 'You’re offline': '目前離線', 'Couldn’t reach Open-Meteo': '無法連上 Open-Meteo', 'Retry': '重試', 'Back to live': '回到即時天氣', 'Preview a sky': '預覽天空', 'Temperature not available': '沒有溫度資料',
-  'Every reading is live: weather, air quality, waves and the seasonal outlook come from Open-Meteo at your coordinates, PM2.5 near Taichung also uses the team model, and typhoons come from the CWA feed. A tile whose source isn’t connected or can’t be reached says so and shows no number.': '所有數據都是即時資料：天氣、空氣品質、浪高與季節展望來自 Open-Meteo（依你的座標），台中附近的 PM2.5 另外使用團隊模型，颱風來自中央氣象署資料。來源尚未連接或無法取得時，磚塊會直接說明，不顯示任何數字。',
   'Not connected yet': '尚未連接', 'Loading…': '載入中…', 'Turned off': '已關閉', 'Unavailable': '無法取得', 'No sea nearby': '附近沒有海域',
   'Open-Meteo is switched off in Settings.': 'Open-Meteo 已在設定中關閉。',
   'Open-Meteo Marine has no sea point near this location.': 'Open-Meteo 海象在這個位置附近沒有海面格點。',
@@ -3205,9 +3649,9 @@ var ZH_APP = {
   'Live conditions, forecast, air quality, waves and the seasonal outlook at your coordinates': '依你的座標提供即時天氣、預報、空氣品質、浪高與季節展望',
   'Windy maps': 'Windy 地圖', 'Live map embeds': '嵌入的即時地圖',
   'Not connected on this server': '這台伺服器尚未連接', 'Couldn’t be reached': '無法連線', 'Connected': '已連接',
-  'Follows live weather at your location': '跟隨你所在位置的即時天氣',
+  'Follows live weather at your location, on every screen': '每個畫面都跟隨你所在位置的即時天氣',
   'Sky preview': '天空預覽', 'This server (connect by URL)': '這台伺服器（以網址連線）', 'Outside the track': '不在路徑時間範圍內', 'Default: live weather': '預設：即時天氣',
-  'A preview control for demos and testing. It shows another sky on Home until you switch back or reload. Readings are never changed: they stay live.': '示範與測試用的預覽控制。首頁會顯示另一種天空，直到你切換回來或重新載入。數據不會改變，一律維持即時資料。'
+  'A preview control for demos and testing. It shows another sky behind every screen until you switch back or reload. Readings are never changed: they stay live.': '示範與測試用的預覽控制。每個畫面都會顯示另一種天空，直到你切換回來或重新載入。數據不會改變，一律維持即時資料。'
 };
 Object.keys(ZH_APP).forEach(function (k) { if (!Object.prototype.hasOwnProperty.call(ZH, k)) ZH[k] = ZH_APP[k]; });
 ZHP.push(
@@ -3218,16 +3662,81 @@ ZHP.push(
   [/^(.+) · (\d+ (?:min|h|days) ago)$/, function (m) { return zh(m[1]) + ' · ' + zh(m[2]); }],
   [/^Preview sky: (.*)$/, function (m) { return '預覽天空：' + zh(m[1]); }],
   [/^(.+): not available$/, function (m) { return zh(m[1]) + '：沒有資料'; }],
-  [/^Live readings for (.*)\. Each tile names its source\.$/, function (m) { return zh(m[1]) + '的即時數據。每個磚塊都標示資料來源。'; }],
   [/^(January|February|March|April|May|June|July|August|September|October|November|December) · (warmer than normal|cooler than normal|near normal)(?: · rain ([+−])(\d+) mm vs normal)?$/,
     function (m) { return zh(m[1]) + ' · ' + { 'warmer than normal': '比常態溫暖', 'cooler than normal': '比常態涼', 'near normal': '接近常態' }[m[2]] + (m[3] ? ' · 雨量較常態 ' + m[3] + m[4] + ' 毫米' : ''); }],
-  [/^Next-day forecast for Taichung · (.*)$/, function (m) { return '台中隔日預報 · ' + zh(m[1]); }],
+  [/^Next-day forecast from the nearest of 22 city models · (.*)$/, function (m) { return '由 22 個縣市模型中最近的一個預測隔日 · ' + zh(m[1]); }],
   [/^Ask about the weather for (.*), or start with one of the suggestions below\.$/, function (m) { return '詢問' + zh(m[1]) + '的天氣，或從下方的建議問題開始。'; }],
   [/^Answers use the live Skyline data for (.*): Open-Meteo weather, air quality and waves, plus .*$/, function (m) { return '回答使用' + zh(m[1]) + '的 Skyline 即時資料：Open-Meteo 的天氣、空氣品質與浪高，以及已連接時的團隊 PM2.5 模型與中央氣象署颱風資料。'; }],
   [/^Wave height at the coast point nearest each city \((.*)\)\. Nantou has no coast\. Open-Meteo Marine wave models\.$/,
     function (m) { return '各城市最近海岸點的浪高（' + m[1].split(', ').map(function (x) { var q = x.split(': '); return zh(q[0]) + '：' + zh(q[1]); }).join('、') + '）。南投不臨海。資料來自 Open-Meteo 海象波浪模式。'; }],
   [/^Temperature anomaly for (\w+) (\d{4}) at seven cities, from the ECMWF SEAS5 seasonal forecast via Open-Meteo\. .*$/,
     function (m) { return '七個城市 ' + m[2] + ' 年 ' + zh(m[1]) + '的氣溫距平，來自 ECMWF SEAS5 季節預報（經 Open-Meteo）。「常態」指模式本身的長期氣候平均。這是月展望，所以時間軸不會改變它。'; }]
+);
+// 中文 for the widget dashboard (tile titles, labels, descriptions, gallery, edit bar, AQI categories,
+// school advice). Sentences built from numbers are written in both languages where they are made (tx).
+var ZH_WIDGETS = {
+  'Search for a location': '搜尋地點', 'Edit widgets': '編輯小工具', 'Add widget': '新增小工具', 'Details': '詳細資料', 'Close': '關閉', 'Widgets': '小工具',
+  'Drag widgets to rearrange · tap − to remove': '拖曳小工具可重新排列 · 點 − 可移除', 'Reset': '重設',
+  'Add widgets': '新增小工具', 'Layout': '版面', 'Reset to the default layout': '重設為預設版面', '+ Add': '+ 加入', 'Added ✓': '已加入 ✓', 'Layout reset to default': '版面已重設為預設',
+  'Pick what shows on your dashboard. Tap a widget’s button again to remove it, or use Edit (···) to drag widgets around.': '選擇要顯示在首頁的內容。再點一次按鈕可移除小工具，或用「編輯」（···）拖曳排列。',
+  'By Skyline · our AI models': 'Skyline 自製 · 我們的 AI 模型', 'Air quality': '空氣品質', 'Weather': '天氣', 'Storms & sea': '風暴與海象', 'Maps': '地圖',
+  'Small': '小', 'Wide': '寬', 'Large': '大', 'Tall': '高', 'Extra wide': '特寬',
+  'Hourly Forecast': '逐時預報', 'Next 24 Hours': '未來 24 小時', '10-Day Forecast': '10 天預報', 'Tomorrow’s Air': '明日空氣', 'School Outdoor Plan': '學校戶外活動建議',
+  'School Outdoor Plan · Tomorrow': '學校戶外活動建議 · 明天', 'Model Check': '模型檢驗', 'PM2.5 Outlook': 'PM2.5 展望', 'Air Quality': '空氣品質', 'Pollutants': '污染物',
+  'Official Station': '官方測站', 'Wind': '風', 'UV Index': '紫外線指數', 'Sunrise': '日出', 'Sunset': '日落', 'Feels Like': '體感溫度', 'Precipitation': '降水',
+  'Cloud Cover': '雲量', 'Moon': '月相', 'Thunderstorm Risk': '雷雨風險', 'Thunderstorm Risk · 24h': '雷雨風險 · 24 小時', 'Storm Outlook': '風暴展望', 'Storm Outlook · 72h': '風暴展望 · 72 小時',
+  'Typhoon Watch': '颱風動態', 'Coast & Waves': '海岸與浪高', 'Seasonal Outlook': '季節展望', 'Landslide Risk': '山崩風險', 'Live Map': '即時地圖',
+  'Temp': '氣溫', 'Air': '空氣', 'BY SKYLINE': 'SKYLINE 自製', 'CAMS forecast': 'CAMS 預報', 'CAMS forecast · Tomorrow': 'CAMS 預報 · 明天', 'Tomorrow': '明天',
+  'Temperature, air quality or rain for each hour, with sunrise and sunset.': '每小時的氣溫、空氣品質或降雨，並標出日出與日落。',
+  'Highs, lows and rain chance for the next 10 days.': '未來 10 天的高低溫與降雨機率。',
+  'Skyline’s own AI forecast of tomorrow’s PM2.5, PM10 and AQI from the nearest city model. Elsewhere, tomorrow’s CAMS forecast.': 'Skyline 自家 AI 以最近的城市模型預測明天的 PM2.5、PM10 與 AQI。沒有城市模型的地方，改用明天的 CAMS 預報。',
+  'Turns tomorrow’s PM2.5 forecast into a go / limit / indoors call for PE and sports practice.': '把明天的 PM2.5 預報換成體育課與運動練習的建議：照常、減量或改室內。',
+  'How much better the Skyline model is than guessing “tomorrow = today”, on 12 months it never saw.': 'Skyline 模型比「明天 = 今天」的猜法好多少，以它沒看過的 12 個月來檢驗。',
+  'PM2.5 over the past 2 days and the next 3, with the Skyline forecast for tomorrow where a city model covers you.': '過去 2 天與未來 3 天的 PM2.5；所在地有城市模型時，加上 Skyline 的明日預報。',
+  'US AQI right now, from all pollutants.': '目前的美國 AQI，綜合所有污染物。',
+  'Fine particles right now and their 24-hour average.': '目前的細懸浮微粒與 24 小時平均。', 'Coarse particles right now and their 24-hour average.': '目前的懸浮微粒與 24 小時平均。',
+  'Ozone, NO₂, SO₂, CO and dust compared with WHO guidelines.': '臭氧、NO₂、SO₂、CO 與沙塵，和 WHO 指引值比較。',
+  'Latest reading from the nearest Ministry of Environment station.': '最近的環境部測站的最新讀數。',
+  'Speed, gusts and direction with a compass.': '風速、陣風與風向，附羅盤。', 'Current UV level and when to use sun protection.': '目前的紫外線等級，以及需要防曬的時段。',
+  'Next sunrise or sunset and the sun’s path today.': '下一次日出或日落，以及今天的太陽軌跡。', 'Apparent temperature and why it differs.': '體感溫度，以及它和實際氣溫不同的原因。',
+  'Relative humidity and dew point.': '相對濕度與露點。', 'How far you can see. Haze from PM2.5 lowers it.': '可以看多遠。PM2.5 造成的霾會降低能見度。',
+  'Sea-level pressure and whether it is rising or falling.': '海平面氣壓，以及正在上升或下降。', 'Rain in the last 24 hours and expected in the next 24.': '過去 24 小時的雨量，以及未來 24 小時的預計雨量。',
+  'How much of the sky is covered by cloud.': '天空被雲遮住的比例。', 'Moon phase, illumination and next full moon.': '月相、亮面比例與下一次滿月。',
+  'Storm risk for the next 24 hours from storm energy (CAPE), weather codes and rain chance.': '依對流能量（CAPE）、天氣代碼與降雨機率推估未來 24 小時的雷雨風險。',
+  'Days with thunderstorms in the 3-day forecast.': '未來 3 天預報中有雷雨的日子。',
+  'The active typhoon near Taiwan: its track, distance and strength, from CWA warnings.': '台灣附近活動中的颱風：路徑、距離與強度，來自中央氣象署警報。',
+  'Wave height, swell and direction at the nearest sea point.': '最近海面格點的浪高、湧浪與方向。',
+  'Next month’s temperature and rain compared with normal, from the ECMWF seasonal forecast.': '下個月的氣溫與雨量和常態的差距，來自 ECMWF 季節預報。',
+  'Slope-failure risk from the team landslide model. Shows “Not connected yet” until the model is.': '團隊山崩模型的邊坡崩塌風險。模型連接之前會顯示「尚未連接」。',
+  'Interactive Windy.com map: rain radar, wind, PM2.5 or temperature.': '可互動的 Windy.com 地圖：降雨雷達、風、PM2.5 或氣溫。',
+  'Unhealthy for Sensitive Groups': '對敏感族群不健康', 'Unhealthy (Sens.)': '敏感族群不健康', 'Very Unhealthy': '非常不健康', 'Hazardous': '危害',
+  'Clean air. Enjoy the outdoors.': '空氣乾淨，適合戶外活動。', 'Acceptable for most people.': '多數人可以接受。', 'Sensitive groups: limit long exertion.': '敏感族群：減少長時間的劇烈活動。',
+  'Everyone: cut back outdoor exertion.': '所有人：減少戶外劇烈活動。', 'Avoid outdoor exertion.': '避免戶外劇烈活動。', 'Stay indoors.': '請留在室內。',
+  'Outdoor PE as normal': '戶外體育課照常', 'Air should be clean all day. Good day for sports practice outside.': '整天空氣應該都很乾淨，適合在戶外練習運動。',
+  'Outdoor PE OK': '可以上戶外體育課', 'Fine for most students. Students with asthma should keep their inhaler nearby.': '多數學生沒問題。有氣喘的學生請把吸入器帶在身邊。',
+  'Shorten hard outdoor exercise': '縮短戶外劇烈運動', 'Sensitive students (asthma, heart or lung conditions) should do PE indoors or take it easy.': '敏感的學生（氣喘、心臟或肺部疾病）應在室內上體育課，或放慢強度。',
+  'Move PE indoors': '體育課改在室內', 'Everyone should cut down on long or hard activity outside.': '所有人都應減少在戶外長時間或劇烈的活動。',
+  'Keep students indoors': '讓學生留在室內', 'Avoid outdoor activity. Close windows if indoor air is filtered.': '避免戶外活動。室內有空氣清淨設備時請關窗。',
+  'Bar = share of the WHO guideline': '長條 = 佔 WHO 指引值的比例', 'Dust': '沙塵', 'Very High': '很高',
+  'Similar to the actual temperature.': '和實際氣溫差不多。', 'Humidity is making it feel warmer.': '濕度讓體感更熱。', 'It feels warmer than the actual temperature.': '體感比實際氣溫高。',
+  'Wind is making it feel cooler.': '風讓體感更涼。', 'It feels cooler than the actual temperature.': '體感比實際氣溫低。',
+  'Perfectly clear view.': '視野非常清晰。', 'Clear view.': '視野清晰。', 'Light haze or rain is reducing visibility.': '薄霾或降雨讓能見度下降。', 'Low visibility. Haze or rain is limiting the view.': '能見度低。霾或降雨限制了視野。',
+  'Rising': '上升', 'Falling': '下降', 'Steady': '持平', 'in last 24h': '過去 24 小時', 'Clear skies': '晴空', 'Mostly clear': '大致晴朗', 'Mostly cloudy': '多雲時陰',
+  'New Moon': '新月', 'Waxing Crescent': '眉月', 'First Quarter': '上弦月', 'Waxing Gibbous': '盈凸月', 'Full Moon': '滿月', 'Waning Gibbous': '虧凸月', 'Last Quarter': '下弦月', 'Waning Crescent': '殘月',
+  'Not available here': '這裡無法提供', 'Partly cloudy night': '晴時多雲的夜晚', 'Cloudy night': '多雲的夜晚',
+  'Outside Taiwan: Skyline models and Predictions cover Taiwan only': '台灣以外：Skyline 模型與預測僅涵蓋台灣',
+  'Weather:': '天氣：', 'forecast · Air quality: Copernicus CAMS via Open-Meteo · Waves: Open-Meteo Marine · Season: ECMWF SEAS5 · Map:': '預報 · 空氣品質：Copernicus CAMS（經 Open-Meteo）· 浪高：Open-Meteo 海象 · 季節：ECMWF SEAS5 · 地圖：',
+  'Tomorrow’s air: CAMS forecast where no Skyline city model covers the location. Not official health advice.': '明日空氣：所在地沒有 Skyline 城市模型時，使用 CAMS 預報。並非官方健康建議。',
+  'A widget whose source isn’t connected or can’t be reached says so and shows no number.': '來源尚未連接或無法取得時，小工具會直接說明，不顯示任何數字。',
+  'Open Home': '開啟首頁', 'On Home, use + to add widgets and ··· (or a long press on a widget) to drag them around or remove them.': '在首頁用 + 新增小工具，用 ···（或長按小工具）拖曳排列或移除。',
+  'No city model within 25 km of this location': '這個位置 25 公里內沒有城市模型',
+  'The model report for this city isn’t available right now.': '目前無法取得這個城市的模型報告。'
+};
+Object.keys(ZH_WIDGETS).forEach(function (k) { if (!Object.prototype.hasOwnProperty.call(ZH, k)) ZH[k] = ZH_WIDGETS[k]; });
+ZHP.push(
+  [/^Remove (.+)$/, function (m) { return '移除' + zh(m[1]); }],
+  [/^(\d+) on your dashboard$/, function (m) { return '首頁上有 ' + m[1] + ' 個'; }],
+  [/^Team model \((.+)\) \+ Open-Meteo CAMS$/, function (m) { return '團隊模型（' + zh(m[1]) + '）+ Open-Meteo CAMS'; }]
 );
 function zh(t) {
   if (Object.prototype.hasOwnProperty.call(ZH, t)) return ZH[t];
@@ -3271,6 +3780,7 @@ function startI18n() {
    Boot
    ============================================================ */
 window.addEventListener('hashchange', render);
+Icons.mount();
 applyTheme();
 render();
 startI18n();
