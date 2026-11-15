@@ -1620,7 +1620,6 @@ var TILES = {
     title: 'School Outdoor Plan', label: 'School Outdoor Plan · Tomorrow', icon: 'school', size: 'w', needs: 'none',
     desc: 'Turns tomorrow’s PM2.5 forecast into a go / limit / indoors call for PE and sports practice.',
     gold: function () { return tomorrowAir().kind === 'model'; },
-    head: function () { return tomorrowAir().kind === 'cams' ? '<em class="src">CAMS forecast</em>' : ''; },
     open: function () { if (tomorrowAir().kind === 'model') openModel(); else openCamsNote(); },
     na: function () { var t = tomorrowAir(); return t.kind === 'na' ? t.na : null; },
     render: function () {
@@ -1848,7 +1847,7 @@ var TILES = {
 
   // ----- ours: storms, typhoon, sea, season, landslide -----
   thunder: {
-    title: 'Thunderstorm Risk', label: 'Thunderstorm Risk · 24h', icon: 'bolt', size: 's', source: 'CAPE', needs: 'none', desc: 'Storm risk for the next 24 hours from storm energy (CAPE), weather codes and rain chance.',
+    title: 'Thunderstorm Risk', icon: 'bolt', size: 's', needs: 'none', desc: 'Storm risk for the next 24 hours from storm energy (CAPE), weather codes and rain chance.',
     na: function () { return factNA('thunder'); },
     render: function () { var f = fact('thunder'); return factTile('thunder', '<div class="meter risk"><b style="left:' + f.meter + '"></b></div>'); }
   },
@@ -3684,7 +3683,7 @@ var ZH_WIDGETS = {
   'Hourly Forecast': '逐時預報', 'Next 24 Hours': '未來 24 小時', '10-Day Forecast': '10 天預報', 'Tomorrow’s Air': '明日空氣', 'School Outdoor Plan': '學校戶外活動建議',
   'School Outdoor Plan · Tomorrow': '學校戶外活動建議 · 明天', 'Model Check': '模型檢驗', 'PM2.5 Outlook': 'PM2.5 展望', 'Air Quality': '空氣品質', 'Pollutants': '污染物',
   'Official Station': '官方測站', 'Wind': '風', 'UV Index': '紫外線指數', 'Sunrise': '日出', 'Sunset': '日落', 'Feels Like': '體感溫度', 'Precipitation': '降水',
-  'Cloud Cover': '雲量', 'Moon': '月相', 'Thunderstorm Risk': '雷雨風險', 'Thunderstorm Risk · 24h': '雷雨風險 · 24 小時', 'Storm Outlook': '風暴展望', 'Storm Outlook · 72h': '風暴展望 · 72 小時',
+  'Cloud Cover': '雲量', 'Moon': '月相', 'Thunderstorm Risk': '雷雨風險', 'Storm Outlook': '風暴展望', 'Storm Outlook · 72h': '風暴展望 · 72 小時',
   'Typhoon Watch': '颱風動態', 'Coast & Waves': '海岸與浪高', 'Seasonal Outlook': '季節展望', 'Landslide Risk': '山崩風險', 'Live Map': '即時地圖',
   'Temp': '氣溫', 'Air': '空氣', 'BY SKYLINE': 'SKYLINE 自製', 'CAMS forecast': 'CAMS 預報', 'CAMS forecast · Tomorrow': 'CAMS 預報 · 明天', 'Tomorrow': '明天',
   'Temperature, air quality or rain for each hour, with sunrise and sunset.': '每小時的氣溫、空氣品質或降雨，並標出日出與日落。',
