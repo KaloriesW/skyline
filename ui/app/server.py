@@ -200,7 +200,7 @@ class WebFiles(StaticFiles):
     """web/ at the site root. Everything revalidates on each load (ETag/304), so a deploy shows up at once."""
 
     async def get_response(self, path: str, scope: Any):
-        if any(part.startswith(".") for part in path.replace("\\", "/").split("/")):
+        if any(part.startswith(".") and part != "." for part in path.replace("\\", "/").split("/")):
             return JSONResponse({"error": "not found"}, status_code=404)  # no dotfiles
         response = await super().get_response(path, scope)
         response.headers["Cache-Control"] = "no-cache"
