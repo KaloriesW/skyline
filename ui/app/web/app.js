@@ -1056,7 +1056,7 @@ function naOf(st, kind) {
   if (st === 'ok' || st === 'stale') return { st: 'nodata', h: '—', msg: 'No reading from the source right now.' };
   return { st: 'error', h: 'Unavailable', retry: true, msg: offline() ? 'You’re offline. Reconnect, then retry.' : kind === 'ty' ? 'Couldn’t load the typhoon feed.' : 'Couldn’t reach Open-Meteo.' };
 }
-function tileNA(t) {
+function factState(t) {
   if (t.id === 'landslide') return naOf('gone', 'landslide');
   if (t.id === 'typhoon') return naOf(tyState(), 'ty');
   return naOf(t.id === 'pm25' ? omState('air') : t.id === 'waves' ? seaState() : t.id === 'climate' ? omState('season') : wxState(), 'om');
@@ -1129,7 +1129,7 @@ function liveTiles(all, L) {
   } catch (e) { /* malformed feed: whatever was not set gets a state below */ }
   all.forEach(function (t) {
     if (t.live) return;
-    t.na = tileNA(t); t.value = '—'; t.sub = t.na.h === '—' ? t.na.msg : t.na.h;
+    t.na = factState(t); t.value = '—'; t.sub = t.na.h === '—' ? t.na.msg : t.na.h;
   });
 }
 
