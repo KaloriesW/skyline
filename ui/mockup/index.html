@@ -2064,8 +2064,8 @@ function homeView() {
         '<span>' + esc(L.name) + '</span>' + (L.sub ? '<span class="loc-sub">· ' + esc(L.sub) + '</span>' : '') +
         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>' +
       '</button>' +
-      '<div class="temp" aria-label="Temperature ' + fmtT(b.temp + tempOffset(L)) + '">' + fmtT(b.temp + tempOffset(L)) + '</div>' +
-      '<div class="headline">' + esc(b.headline) + '</div>' +
+      '<div class="temp" aria-label="Temperature ' + fmtT(nowWx.temp) + '">' + fmtT(nowWx.temp) + '</div>' +
+      '<div class="headline">' + esc(nowWx.headline) + '</div>' +
       '<div class="hilo" aria-label="Today: high ' + fmtT(todayHL(L).hi) + ', low ' + fmtT(todayHL(L).lo) + '"><span>H:' + fmtT(todayHL(L).hi) + '</span><span>L:' + fmtT(todayHL(L).lo) + '</span></div>' +
       '<div class="chips"><span class="chip">' + (nowWx.live ? '<span class="dot" aria-hidden="true"></span>' : '') + srcChip + '</span>' +
       (demo ? '<span class="chip warn">Demo sky: ' + b.label + '</span>' : '') +
@@ -2561,19 +2561,23 @@ function aiLabel() {
 }
 function hostOf(u) { try { return new URL(u).host; } catch (e) { return u || 'no URL set'; } }
 
-// Everything the model may use: the same (sample) data the screens show, for the current location.
+// Everything the model may use: the same data the screens show for the current location.
+// Each line carries its source, which says "live" or "Sample".
 function skylineContext() {
-  var L = S.loc, src = nearestSource(L), b = WEATHER[S.weather] || WEATHER['partly-cloudy'], off = tempOffset(L);
+  var L = S.loc, src = nearestSource(L), nowWx = wxNow(L), tv = tyView();
+  applyLiveSets();
   var cat = catalog(L), lines = [];
   lines.push('Location: ' + L.name + (L.sub ? ' (' + L.sub + ')' : '') + ' at ' + fmtCoord(L.lat, L.lon) + (inTW(L.lat, L.lon) ? '' : ' — outside Taiwan: team models and prediction maps do not cover it'));
-  lines.push('Nearest source for current conditions: ' + src.name + (src.dist ? ' (' + src.dist + ')' : ''));
-  lines.push('Now: ' + fmtT(b.temp + off) + ', ' + b.label + '. Headline: ' + b.headline);
-  lines.push('Today: high ' + fmtT(todayHL(L).hi) + ', low ' + fmtT(todayHL(L).lo));
+  var wxSrc = nowWx.live ? 'Open-Meteo forecast API, live' + (nowWx.time ? ', updated ' + nowWx.time + ' local time' : '') : 'Sample (placeholder, live weather not loaded; nearest station would be ' + src.name + ')';
+  lines.push('Now: ' + fmtT(nowWx.temp) + ', ' + nowWx.label + '. Headline: ' + nowWx.headline + ' [source: ' + wxSrc + ']');
+  lines.push('Today: high ' + fmtT(todayHL(L).hi) + ', low ' + fmtT(todayHL(L).lo) + ' [source: ' + wxSrc + ']');
   cat.forEach(function (t) {
     if (t.kind === 'stat') lines.push('- ' + t.title + ': ' + t.value + ' — ' + t.sub + ' [source: ' + t.src + ']');
     if (t.kind === 'hourly') lines.push('- Hourly: ' + t.hours.map(function (h) { return h.t + ' ' + h.temp + ' rain ' + h.rain; }).join('; ') + ' [source: ' + t.src + ']');
-    if (t.kind === 'week') lines.push('- 7-day forecast (low–high): ' + t.week.map(function (w) { return w.day + ' ' + w.lo + '–' + w.hi; }).join('; '));
-    if (t.kind === 'typhoon') lines.push('- Typhoon watch: sample storm TD-27, 860 km SE, moving NW at 18 km/h; sea warning possible in ~48h [source: CWA typhoon warnings]');
+    if (t.kind === 'week') lines.push('- 7-day forecast (low–high): ' + t.week.map(function (w) { return w.day + ' ' + w.lo + '–' + w.hi; }).join('; ') + ' [source: ' + t.src + ']');
+    if (t.kind === 'typhoon') lines.push(tv.state === 'active' ? '- Typhoon watch: ' + tv.title + ' of this location' + (tv.sub ? '; ' + tv.sub : '') + ' [source: ' + tv.src + ']'
+      : tv.state === 'none' ? '- Typhoon watch: no active typhoon near Taiwan [source: ' + tv.src + ']'
+      : '- Typhoon watch: sample storm TD-27, 860 km SE, moving NW at 18 km/h; sea warning possible in ~48h [source: Sample (placeholder, typhoon feed not loaded)]');
   });
   lines.push('Taiwan prediction maps (region levels now / +24h / +72h):');
   activeSets().forEach(function (d) {
@@ -2583,7 +2587,8 @@ function skylineContext() {
   return 'You are Skyline, a weather assistant for Taiwan inside a hackathon app. Answer using only the data in <skyline_data>. ' +
     'If the data does not cover the question, say so plainly instead of guessing. Name the source for each fact (for example "CWA station", "Windy", "team PM2.5 model"). ' +
     'Keep answers short and practical: two to five sentences, plain text, no headings. Reply in the language the user writes in (English or Traditional Chinese). ' +
-    'Temperatures are in °' + S.units + '. This is a mockup, so every value is sample data; mention that only if the user asks how reliable the numbers are.\n\n' +
+    'Temperatures are in °' + S.units + '. Each line names its source. Sources ending in "live" are real, current data. Sources starting with "Sample" are placeholder values, not measurements: ' +
+    'if an answer depends on one, say that figure is sample data.\n\n' +
     '<skyline_data>\n' + lines.join('\n') + '\n</skyline_data>';
 }
 
