@@ -1,8 +1,10 @@
 """Skyline app server: the whole app as one process.
 
   GET  /                        the web UI (web/index.html) and its assets (web/app.js, web/styles.css, ...)
-  GET  /api/health              what is switched on: {ok, version, features: {ask, typhoon, landslide, pm25, mcp}}
-  GET  /api/predict             the team PM2.5 model, proxied from PM25_MODEL_URL (10-minute cache, stale on failure)
+  GET  /api/health              what is switched on: {ok, version, features: {ask, typhoon, landslide, pm25, pm25_cities, mcp}}
+  GET  /api/predict?lat=&lon=   next-day PM2.5 / PM10 from the nearest city's model (model/predict.py; 30-minute
+                                cache per city, stale on failure). No lat/lon: Taichung.
+  GET  /api/model?city=<id>     that city's test-year report; GET /api/model/cities lists every city and its scores
   GET  /api/ask/status, POST /api/ask, GET /api/typhoon, GET /api/landslide     from ui/server/skyline_extras.py
   POST /mcp                     the Skyline MCP server (ui/mcp/skyline_mcp.py), when the `mcp` package is installed
 
@@ -16,6 +18,7 @@ the rate limits and the caches live in this one process.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 import sys
@@ -30,7 +33,6 @@ VERSION = "0.1.0"
 
 # Typhoon file in CWA's public AWS Open Data bucket: same content as the member API, no key needed.
 CWA_TYPHOON_PUBLIC_URL = "https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Warning/W-C0034-005.json"
-PM25_MODEL_DEFAULT_URL = "https://veritas.premiersalesri.com/api/predict"
 
 log = logging.getLogger("skyline.app")
 
@@ -100,54 +102,78 @@ def apply_defaults(environ: Optional[MutableMapping[str, str]] = None) -> None:
 load_env_file(HERE / ".env")
 apply_defaults()
 
-for _p in (HERE.parent / "mcp", HERE.parent / "server"):  # use the modules in place, no copies
+for _p in (HERE.parent / "mcp", HERE.parent / "server", HERE):  # use the modules in place, no copies
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
 import httpx  # noqa: E402
-from fastapi import FastAPI  # noqa: E402
-from fastapi.responses import JSONResponse  # noqa: E402
+from fastapi import FastAPI, Request  # noqa: E402
+from fastapi.responses import JSONResponse, Response  # noqa: E402
 from starlette.middleware.gzip import GZipMiddleware  # noqa: E402
 from starlette.staticfiles import StaticFiles  # noqa: E402
 
 import skyline_extras as extras  # noqa: E402
 import skyline_sources as sources  # noqa: E402
+from model import predict as airmodel  # noqa: E402
 
 
 def _env(name: str, default: str = "") -> str:
     return os.environ.get(name, default).strip()
 
 
-# ---------- /api/predict: proxy to the team PM2.5 model ----------
+# ---------- /api/predict, /api/model: one next-day PM2.5 / PM10 model per city (model/predict.py) ----------
 
 def pm25_url() -> str:
-    """Where the team model answers. `PM25_MODEL_URL=` (set but empty) switches the proxy off."""
-    return os.environ.get("PM25_MODEL_URL", PM25_MODEL_DEFAULT_URL).strip()
+    """The team app's /api/predict (Taichung only). Used only when our own Taichung model file is missing."""
+    return _env("PM25_MODEL_URL")
 
 
 def _pm25_ttl() -> float:
     try:
-        return max(0.0, float(_env("PM25_CACHE_SECONDS") or 600))
+        return max(0.0, float(_env("PM25_CACHE_SECONDS") or 1800))
     except ValueError:
-        return 600.0
+        return 1800.0
+
+
+def _pm25_max_km() -> float:
+    try:
+        km = float(_env("PM25_MAX_KM") or airmodel.MAX_DISTANCE_KM)
+        return km if km > 0 else airmodel.MAX_DISTANCE_KM
+    except ValueError:
+        return airmodel.MAX_DISTANCE_KM
 
 
 class Predict:
-    """Last good answer from the model, plus the client used to fetch it."""
+    """The city models, the last good answer per city, and the client used to fetch live inputs."""
 
     def __init__(self) -> None:
         self.transport: Optional[httpx.AsyncBaseTransport] = None  # tests put an httpx.MockTransport here
+        self.model_dir: Path = airmodel.MODEL_DIR                   # tests point this at a temporary directory
+        self.today = airmodel.today_taipei                          # tests pin the date
         self.reset()
 
     def reset(self) -> None:
-        self.cache: Optional[Tuple[float, str, Any]] = None  # (fetched at, url, body)
+        self.cache: Dict[str, Tuple[float, str, Any]] = {}  # key -> (fetched at, local date or proxy url, body)
         self.client: Optional[httpx.AsyncClient] = None
-        self.lock: Optional[asyncio.Lock] = None
+        self.locks: Dict[str, asyncio.Lock] = {}
+        self._models: Optional[airmodel.Models] = None
+
+    @property
+    def models(self) -> airmodel.Models:
+        if self._models is None or self._models.dir != self.model_dir:
+            self._models = airmodel.Models(self.model_dir)
+        return self._models
+
+    def lock(self, key: str) -> asyncio.Lock:
+        if key not in self.locks:
+            self.locks[key] = asyncio.Lock()
+        return self.locks[key]
 
     def http(self) -> httpx.AsyncClient:
         if self.client is None:
             self.client = httpx.AsyncClient(
                 transport=self.transport, timeout=httpx.Timeout(20.0, connect=8.0),
+                limits=httpx.Limits(max_connections=8, max_keepalive_connections=4),
                 follow_redirects=True, headers={"User-Agent": "skyline-app/" + VERSION, "Accept": "application/json"},
             )
         return self.client
@@ -156,26 +182,69 @@ class Predict:
 predict_state = Predict()
 
 
-async def predict() -> JSONResponse:
-    url = pm25_url()
-    if not url:
-        return JSONResponse({"error": "PM2.5 model not configured"}, status_code=503)
+def _coordinate(raw: Optional[str], limit: float) -> Optional[float]:
+    try:
+        v = float(raw)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+    return v if abs(v) <= limit else None  # also rejects nan and inf
+
+
+async def _cached(key: str, tag: str, ttl: float, produce: Any) -> JSONResponse:
+    """Serve cache[key] while it is fresh and carries the same tag; otherwise call produce() (one caller at
+    a time per key). When produce() fails, serve the last good answer with a stale header, else its error."""
     st = predict_state
-    ttl = _pm25_ttl()
 
     def fresh() -> Optional[Any]:
-        hit = st.cache
-        return hit[2] if hit and hit[1] == url and time.time() - hit[0] < ttl else None
+        hit = st.cache.get(key)
+        return hit[2] if hit and hit[1] == tag and time.time() - hit[0] < ttl else None
 
     body = fresh()
     if body is not None:
         return JSONResponse(body)
-    if st.lock is None:
-        st.lock = asyncio.Lock()
-    async with st.lock:  # one upstream call at a time; the others reuse its answer
+    async with st.lock(key):  # one upstream round at a time per city; the others reuse its answer
         body = fresh()
         if body is not None:
             return JSONResponse(body)
+        result = await produce()
+        if isinstance(result, JSONResponse):  # failed
+            hit = st.cache.get(key)
+            if hit:  # the last good answer, unchanged; the headers say it is old
+                return JSONResponse(hit[2], headers={"X-Skyline-Stale": "1", "Age": str(int(time.time() - hit[0]))})
+            return result
+        st.cache[key] = (time.time(), tag, result)
+        return JSONResponse(result)
+
+
+async def _predict_local(city: dict, city_block: dict, model: dict) -> JSONResponse:
+    st = predict_state
+    today = st.today()
+
+    async def produce() -> Any:
+        try:
+            aq, wx = await airmodel.fetch_inputs(st.http(), city["lat"], city["lon"])
+            body = airmodel.predict(model, aq, wx, today)
+        except airmodel.UpstreamError as e:
+            log.warning("PM2.5 inputs for %s failed: %s", city["id"], e)
+            return JSONResponse({"error": f"Weather source unavailable ({e})"}, status_code=502)
+        except airmodel.InputError as e:
+            log.warning("PM2.5 inputs for %s unusable: %s", city["id"], e)
+            return JSONResponse({"error": f"Weather source returned incomplete data ({e})"}, status_code=502)
+        return body
+
+    # The cached body has no `city` block: the distance depends on who asks. A new local day drops the cache.
+    r = await _cached("city:" + city["id"], today.isoformat(), _pm25_ttl(), produce)
+    if r.status_code != 200:
+        return r
+    headers = {k: v for k, v in r.headers.items() if k.lower() in ("x-skyline-stale", "age")}
+    return JSONResponse({**json.loads(r.body), "city": city_block}, headers=headers)
+
+
+async def _predict_proxy(url: str, city_block: dict) -> JSONResponse:
+    """Fallback for Taichung when our own model file is missing: the team app's answer, plus the `city` block."""
+    st = predict_state
+
+    async def produce() -> Any:
         try:
             r = await st.http().get(url)
             if r.status_code != 200:
@@ -186,12 +255,53 @@ async def predict() -> JSONResponse:
         except Exception as e:  # don't echo exception text: it can contain the upstream URL
             reason = str(e) if isinstance(e, RuntimeError) else e.__class__.__name__
             log.warning("PM2.5 model fetch failed: %s", reason)
-            hit = st.cache
-            if hit and hit[1] == url:  # serve the last good answer, unchanged; the header says it is old
-                return JSONResponse(hit[2], headers={"X-Skyline-Stale": "1", "Age": str(int(time.time() - hit[0]))})
             return JSONResponse({"error": f"PM2.5 model unavailable ({reason})"}, status_code=503)
-        st.cache = (time.time(), url, body)
-        return JSONResponse(body)
+        return body
+
+    r = await _cached("proxy", url, _pm25_ttl(), produce)
+    if r.status_code != 200:
+        return r
+    headers = {k: v for k, v in r.headers.items() if k.lower() in ("x-skyline-stale", "age")}
+    return JSONResponse({**json.loads(r.body), "city": city_block}, headers=headers)
+
+
+async def predict(request: Request) -> JSONResponse:
+    models = predict_state.models
+    q = request.query_params
+    if "lat" in q or "lon" in q:
+        lat, lon = _coordinate(q.get("lat"), 90.0), _coordinate(q.get("lon"), 180.0)
+        if lat is None or lon is None:
+            return JSONResponse({"error": "lat and lon must both be numbers (lat -90..90, lon -180..180)"}, status_code=400)
+        city, km = models.nearest(lat, lon)
+        block = models.city_block(city, km)
+        max_km = _pm25_max_km()
+        if km > max_km:
+            return JSONResponse({"error": f"No city model within {max_km:g} km of this point", "nearest": block,
+                                 "max_km": max_km}, status_code=404)
+    else:  # backward compatible: no coordinates means Taichung
+        city = models.by_id.get(airmodel.DEFAULT_CITY) or models.cities[0]
+        block = models.city_block(city, 0.0)
+    model = models.model(city["id"])
+    if model is not None:
+        return await _predict_local(city, block, model)
+    url = pm25_url()
+    if url and city["id"] == airmodel.DEFAULT_CITY:  # the team app only knows Taichung
+        return await _predict_proxy(url, block)
+    return JSONResponse({"error": f"No PM2.5 model for {city['name']} yet", "nearest": block}, status_code=503)
+
+
+async def model_report(city: str = airmodel.DEFAULT_CITY) -> Response:
+    models = predict_state.models
+    if city not in models.by_id:
+        return JSONResponse({"error": "unknown city", "cities": [c["id"] for c in models.cities]}, status_code=404)
+    raw = models.metrics_json(city)
+    if raw is None:
+        return JSONResponse({"error": f"No model report for {models.by_id[city]['name']} yet"}, status_code=404)
+    return Response(raw, media_type="application/json")
+
+
+async def model_cities() -> JSONResponse:
+    return JSONResponse({**predict_state.models.summary(), "max_km": _pm25_max_km()})
 
 
 # ---------- static files ----------
@@ -259,6 +369,7 @@ def build_app(with_mcp: bool = True) -> FastAPI:
 
     @app.get("/api/health")
     async def health() -> JSONResponse:
+        pm25_cities = len(predict_state.models.available())  # cities with a usable local model file
         return JSONResponse({
             "ok": True,
             "version": VERSION,
@@ -266,12 +377,15 @@ def build_app(with_mcp: bool = True) -> FastAPI:
                 "ask": bool(_env("OPENROUTER_API_KEY")),
                 "typhoon": sources.typhoon_request() is not None,
                 "landslide": bool(sources.landslide_url()),
-                "pm25": bool(pm25_url()),
+                "pm25": pm25_cities > 0 or bool(pm25_url()),
+                "pm25_cities": pm25_cities,
                 "mcp": mcp_mounted,
             },
         }, headers={"Cache-Control": "no-store"})
 
     app.add_api_route("/api/predict", predict, methods=["GET"])
+    app.add_api_route("/api/model/cities", model_cities, methods=["GET"])
+    app.add_api_route("/api/model", model_report, methods=["GET"])
 
     @app.api_route("/api/{rest:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"], include_in_schema=False)
     async def api_not_found(rest: str) -> JSONResponse:  # JSON, not the static handler's text page
