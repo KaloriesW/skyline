@@ -2100,7 +2100,7 @@ function answer(q) {
   if (l === 'thunder') return {
     text: 'Storm energy is high this afternoon (CAPE 2,400 J/kg). Thunderstorms are <strong>likely from 4 to 7 PM</strong>, and hail is possible on Saturday (Windy warning code 96).',
     bars: [[0, 1, 2, 3, 3, 1], ['2 PM', '3 PM', '4 PM', '5 PM', '6 PM', '7 PM']], src: ['Windy · CAPE', 'Windy · weatherWarnings'] };
-  if (/rain|umbrella|wet|下雨|雨/.test(l)) return {
+  if (l === 'rain') return {
     text: 'Bring an umbrella. About <strong>32 mm</strong> of rain is expected today, most of it between 4 and 7 PM.',
     bars: [[0, 0, 1, 3, 3, 2, 1], ['2 PM', '3 PM', '4 PM', '5 PM', '6 PM', '7 PM', '8 PM']], src: ['Windy · precip', src.name] };
   return {
@@ -2108,15 +2108,17 @@ function answer(q) {
     bars: null, src: [src.name, 'Windy point forecast'] };
 }
 function seedChat() {
-  return [{ me: true, text: 'Safe to drive Suhua Highway this weekend?' }, Object.assign({ me: false }, answer('suhua highway'))];
+  return [{ me: true, text: 'Safe to drive Suhua Highway this weekend?' }, cannedMsg('suhua highway')];
 }
 function msgHTML(m) {
   if (m.me) return '<div class="msg me">' + esc(m.text) + '</div>';
+  // AI bubbles are skipped by the 中文 layer (model text must stay as written), so fixed strings use tr().
   if (m.llm) return '<div class="msg ai' + (m.live ? ' live' : '') + '">' +
-    (m.error ? '<p class="err">' + esc(m.error) + ' <a class="link" href="#settings">Check settings</a></p>'
-             : '<p class="body">' + (m.plain ? mdLite(m.plain) : (m.live ? '<span class="thinking">Thinking…</span>' : '')) + '</p>') +
-    '<div class="srcs">' + m.src.map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('') + '</div></div>';
-  if (m.typing) return '<div class="msg ai typing">Checking the nearest sources…</div>';
+    (m.error ? '<p class="err">' + esc(tr(m.error)) + ' <a class="link" href="#settings">' + tr('Check settings') + '</a></p>'
+             : '<p class="body">' + (m.plain ? mdLite(m.plain) : (m.live ? '<span class="thinking">' + tr('Thinking…') + '</span>' : '')) + '</p>') +
+    '<div class="srcs">' + m.src.map(function (x) { return '<span>' + esc(tr(x)) + '</span>'; }).join('') + '</div></div>';
+  if (m.typing) return '<div class="msg ai typing">' + tr('Checking the nearest sources…') + '</div>';
+  m = cannedOf(m);
   return '<div class="msg ai"><p>' + m.text + '</p>' + (m.bars ? bars(m.bars[0], m.bars[1]) : '') +
     '<div class="srcs">' + m.src.map(function (s) { return s.charAt(0) === '★' ? '<span class="own">' + esc(s.slice(1)) + '</span>' : '<span>' + esc(s) + '</span>'; }).join('') + '</div></div>';
 }
@@ -2141,7 +2143,7 @@ function ask(q) {
   chat.push({ me: true, text: q }, { typing: true });
   renderChat();
   setTimeout(function () {
-    chat.pop(); chat.push(Object.assign({ me: false }, answer(q)));
+    chat.pop(); chat.push(cannedMsg(q));
     renderChat();
   }, 700);
 }
@@ -2219,7 +2221,7 @@ function chatHistory() {
   for (var i = 0; i < chat.length; i++) {
     var m = chat[i];
     if (m.typing || m.error || m.live) continue;
-    var text = m.me ? m.text : (m.plain || stripHTML(m.text));
+    var text = m.me ? m.text : (m.plain || stripHTML(cannedOf(m).text));
     if (!text) continue;
     var role = m.me ? 'user' : 'assistant';
     if (out.length && out[out.length - 1].role === role) out[out.length - 1].content += '\n\n' + text;
