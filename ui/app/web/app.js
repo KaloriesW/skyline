@@ -1297,7 +1297,6 @@ function wxKey() {
 }
 // Plain backdrop for "weather not known": no sun, clouds, rain or night
 var SKY_UNKNOWN = { label: '', top: '#163A7A', mid: '#1F4C94', bottom: '#2A5AA8', mtn: '#9FB4DA' };
-function skyNow() { var k = wxKey(); return k ? WEATHER[k] : SKY_UNKNOWN; }
 function previewOn() { return S.weather !== 'live' && Object.prototype.hasOwnProperty.call(WEATHER, S.weather); }
 function liveHeadline(wx) {
   var c = wx.current;
@@ -1781,7 +1780,6 @@ function tileBody(t) {
     }).join('') + '</div>';
   }
   if (t.kind === 'map') {
-    var wind = DATASETS.filter(function (d) { return d.id === 'wind'; })[0];
     return '<div class="tile-map">' + windyFrame('Live Windy wind map', windyURL(WINDY_LAYER.wind, inTW(S.loc.lat, S.loc.lon) ? 8 : 6)) +
       '<a class="btn accent open" href="#predictions/wind">Open map</a></div>';
   }
