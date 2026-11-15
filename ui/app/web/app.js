@@ -584,31 +584,25 @@ var MAP_PLACES = [
   { name: 'Taipei', x: 205, y: 55 }, { name: 'Taichung', x: 125, y: 190 }, { name: 'Nantou', x: 165, y: 230 },
   { name: 'Hualien', x: 225, y: 215 }, { name: 'Chiayi', x: 110, y: 290 }, { name: 'Kaohsiung', x: 118, y: 385 }, { name: 'Taitung', x: 195, y: 350 }
 ];
+// Prediction datasets. They carry no values of their own: levels come from a live feed (liveSet) or the
+// dataset shows a loading / not connected / unavailable state (setState).
 var DATASETS = [
-  { id: 'pm25', group: 'By Skyline', title: 'PM2.5 forecast', src: 'Team PM2.5 model', desc: 'Fine-particle pollution by region, up to 7 days ahead.',
-    base: [2, 2, 1, 0, 2, 3, 0], trend: [1, 1, 0, 0, 1, 0, 0], labels: ['Good', 'Moderate', 'Sensitive', 'Unhealthy'], legend: ['Good (0–15)', 'Moderate (16–35)', 'Sensitive (36–54)', 'Unhealthy (55+)'],
-    note: 'West-coast haze builds as the northeast monsoon weakens. The east coast stays clean behind the Central Range.', conf: ['91%', '84%', '72%'] },
+  { id: 'pm25', group: 'By Skyline', title: 'PM2.5 forecast', src: 'Team PM2.5 model + Open-Meteo CAMS', desc: 'Fine-particle pollution by region, about four days ahead.',
+    labels: ['Good', 'Moderate', 'Sensitive', 'Unhealthy'], legend: ['Good (0–15)', 'Moderate (16–35)', 'Sensitive (36–54)', 'Unhealthy (55+)'] },
   { id: 'landslide', group: 'By Skyline', title: 'Landslide risk', src: 'Team landslide model', desc: 'Slope-failure risk from satellite data, rain and soil saturation.',
-    base: [0, 1, 3, 2, 1, 0, 2], trend: [0, 0, 0, 1, 1, 0, 1], labels: ['Low', 'Medium', 'High', 'Very high'], legend: ['Low', 'Medium', 'High', 'Very high'],
-    note: 'Saturated slopes in Nantou and Hualien. Risk peaks 12–24h after the heaviest rain. Watch Provincial Highway 8.', conf: ['88%', '76%', '61%'] },
-  { id: 'rain', group: 'Others', title: 'Rain', src: 'Windy · precip', desc: 'Hourly rainfall totals.',
-    base: [1, 0, 2, 3, 1, 0, 2], trend: [1, 1, 1, -1, 1, 1, 0], labels: ['< 2 mm', '2–10 mm', '10–40 mm', '40+ mm'], legend: ['< 2 mm', '2–10 mm', '10–40 mm', '40+ mm'],
-    note: 'A frontal band moves south over the next 48 hours, with the heaviest totals on the east coast.', conf: ['95%', '80%', '64%'] },
-  { id: 'thunder', group: 'Others', title: 'Thunderstorms', src: 'Windy · CAPE + warnings', desc: 'Storm energy (CAPE) and thunderstorm warnings.',
-    base: [2, 1, 2, 1, 1, 2, 0], trend: [1, 1, 1, 0, 1, 1, 0], labels: ['Unlikely', 'Possible', 'Likely', 'Severe'], legend: ['CAPE < 500', '500–1500', '1500–2500', '2500+ J/kg'],
-    note: 'Afternoon storms form over the western foothills. Hail is possible where CAPE tops 2,500 J/kg (code 96).', conf: ['93%', '78%', '58%'] },
-  { id: 'wind', group: 'Others', title: 'Wind & gusts', src: 'Windy · windGust', desc: 'Sustained wind and peak gusts.',
-    base: [1, 0, 0, 2, 0, 1, 2], trend: [0, 0, 0, 1, 0, 1, 1], labels: ['Calm', 'Breezy', 'Strong', 'Gale'], legend: ['< 20 km/h', '20–40', '40–60', '60+ km/h'],
-    note: 'The northeast monsoon funnels strong gusts through the Taiwan Strait and along the east coast.', conf: ['94%', '82%', '66%'] },
-  { id: 'typhoon', group: 'Others', title: 'Typhoon track', src: 'CWA typhoon warnings', desc: 'Storm position, forecast cone and local impact.',
-    base: [0, 0, 0, 1, 0, 1, 1], trend: [1, 0, 1, 2, 0, 1, 2], labels: ['None', 'Watch', 'Warning', 'Direct hit'], legend: ['No impact', 'Watch', 'Warning', 'Direct impact'],
-    note: 'Sample storm TD-27 tracks northwest. The east coast enters the watch area in about 48 hours.', conf: ['97%', '70%', '45%'] },
-  { id: 'waves', group: 'Others', title: 'Coast & waves', src: 'Windy · gfsWave', desc: 'Wave height and swell along the coast.',
-    base: [2, 0, 0, 2, 0, 1, 2], trend: [0, 0, 0, 1, 0, 0, 1], labels: ['< 1 m', '1–2 m', '2–3 m', '3+ m'], legend: ['< 1 m', '1–2 m', '2–3 m', '3+ m'],
-    note: 'Northeast swell builds on the north and east coasts. Keep away from the Keelung and Yilan shores.', conf: ['92%', '80%', '63%'] },
-  { id: 'climate', group: 'Others', title: 'Climate projection', src: 'Climate projections', desc: 'Seasonal temperature anomaly vs 1991–2020.',
-    base: [1, 2, 1, 1, 2, 3, 1], trend: [0, 0, 0, 0, 0, 0, 0], labels: ['+0–0.5°', '+0.5–1°', '+1–1.5°', '+1.5°+'], legend: ['+0–0.5°', '+0.5–1°', '+1–1.5°', '+1.5°+'],
-    note: 'The coming season is projected warmer than the baseline, with more intense short bursts of rain.', conf: ['70%', '66%', '60%'] }
+    labels: ['Low', 'Medium', 'High', 'Very high'], legend: ['Low', 'Medium', 'High', 'Very high'] },
+  { id: 'rain', group: 'Others', title: 'Rain', src: 'Open-Meteo', desc: 'Rain that fell in the 24 hours up to each time.',
+    labels: ['< 2 mm', '2–10 mm', '10–40 mm', '40+ mm'], legend: ['< 2 mm', '2–10 mm', '10–40 mm', '40+ mm'] },
+  { id: 'thunder', group: 'Others', title: 'Thunderstorms', src: 'Open-Meteo · CAPE', desc: 'Storm energy (CAPE): where thunderstorms can form.',
+    labels: ['Unlikely', 'Possible', 'Likely', 'Severe'], legend: ['CAPE < 500', '500–1500', '1500–2500', '2500+ J/kg'] },
+  { id: 'wind', group: 'Others', title: 'Wind & gusts', src: 'Open-Meteo', desc: 'Peak gusts by region.',
+    labels: ['Calm', 'Breezy', 'Strong', 'Gale'], legend: ['< 20 km/h', '20–40', '40–60', '60+ km/h'] },
+  { id: 'typhoon', group: 'Others', title: 'Typhoon track', src: 'CWA typhoon warnings', desc: 'Storm position, forecast track and its distance from each region.',
+    labels: ['700+ km', '400–700 km', '200–400 km', '< 200 km'], legend: ['700+ km away', '400–700 km', '200–400 km', '< 200 km'] },
+  { id: 'waves', group: 'Others', title: 'Coast & waves', src: 'Open-Meteo Marine', desc: 'Wave height at the coast nearest each region.',
+    labels: ['< 1 m', '1–2 m', '2–3 m', '3+ m'], legend: ['< 1 m', '1–2 m', '2–3 m', '3+ m'] },
+  { id: 'climate', group: 'Others', title: 'Seasonal outlook', src: 'ECMWF SEAS5 · Open-Meteo', desc: 'Next month’s temperature compared with normal, from the ECMWF seasonal forecast.',
+    labels: ['< +0.5 °C', '+0.5–1 °C', '+1–1.5 °C', '+1.5 °C or more'], legend: ['< +0.5 °C', '+0.5–1 °C', '+1–1.5 °C', '+1.5 °C or more'] }
 ];
 
 var PIN_IDS = ['thunder', 'pm25', 'wind', 'landslide', 'rain', 'humidity', 'uv', 'pressure', 'visibility', 'waves'];
@@ -616,29 +610,38 @@ var PIN_IDS = ['thunder', 'pm25', 'wind', 'landslide', 'rain', 'humidity', 'uv',
 /* ============================================================
    State (saved in localStorage when available)
    ============================================================ */
-var KEY = 'skyline-mockup-v1';
+// Settings live under KEY. People who used the earlier build have theirs under OLD_KEY: those are
+// copied over once (the old entry is left alone) and everything is saved under KEY from then on.
+var KEY = 'skyline-v1', OLD_KEY = 'skyline-mockup-v1';
 var DEFAULTS = {
   loc: { name: 'Xinyi District', sub: 'Taipei · 110 信義區', lat: 25.0330, lon: 121.5654, kind: 'District' },
-  weather: 'live', dataV: 1, pinCount: 3, pins: PIN_IDS.slice(), order: null, spans: {}, hidden: {},
+  weather: 'live', dataV: 2, pinCount: 3, pins: PIN_IDS.slice(), order: null, spans: {}, hidden: {},
   accent: '#FFC24B', risk: 'default', bgMode: 'live', tiles: 'glass', fonts: 'default', radius: 24, skyline: 'city', mapBase: 'auto',
   reduceMotion: false, units: 'C', lang: 'en',
-  sources: { openMeteo: true, cwa: true, windyPoint: true, windyMap: true, pm25: true, landslide: true, typhoon: true },
+  sources: { openMeteo: true, windyMap: true, pm25: true, landslide: true, typhoon: true },
   recents: [], predBase: {}, predT: NOW,
-  ai: { provider: 'demo', oaBase: 'https://openrouter.ai/api/v1', oaModel: '', claudeModel: 'claude-opus-5-5', remember: false }
+  ai: { provider: 'builtin', oaBase: 'https://openrouter.ai/api/v1', oaModel: '', claudeModel: 'claude-opus-5-5', remember: false }
 };
 var THEME_KEYS = ['accent', 'risk', 'bgMode', 'tiles', 'fonts', 'radius', 'skyline', 'mapBase'];
 function clone(o) { return JSON.parse(JSON.stringify(o)); }
 var S = clone(DEFAULTS);
+// ?demo=1 puts the sky preview picker back on Home (it is always in Settings).
+var DEMO_UI = /[?&]demo=1(&|$)/.test(location.search || '');
 try {
-  var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+  var savedRaw = localStorage.getItem(KEY), migrated = false;
+  if (savedRaw == null) { savedRaw = localStorage.getItem(OLD_KEY); migrated = savedRaw != null; }
+  var saved = JSON.parse(savedRaw || 'null');
   if (saved && typeof saved === 'object') {
     for (var k in saved) if (k in DEFAULTS) S[k] = saved[k];
     S.sources = Object.assign(clone(DEFAULTS.sources), saved.sources || {});
     S.ai = Object.assign(clone(DEFAULTS.ai), saved.ai || {});
-    // Settings saved before live data existed held a demo condition by default: start those on Live.
-    if (!saved.dataV) { S.weather = 'live'; S.dataV = 1; }
+    if (S.ai.provider === 'demo') S.ai.provider = 'builtin';   // the old "Demo" provider is now the built-in summary
+    S.dataV = DEFAULTS.dataV;
+    if (migrated) localStorage.setItem(KEY, JSON.stringify(S));
   }
 } catch (e) { /* storage unavailable: run with defaults */ }
+// The sky preview is a session-only control: every load starts on live weather.
+S.weather = 'live';
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 
 var editing = false, dragId = null, chat = null, lastRoute = '', pendingAsk = null;
