@@ -2041,84 +2041,77 @@ function nearestMapPlace() {
 }
 
 /* ---------- Ask AI ---------- */
-function bars(levels, labels) {
-  var P = pal(), max = 4;
-  var words = S.lang === 'zh' ? ['低', '中', '高', '極高'] : ['low', 'medium', 'high', 'very high'];
-  return '<div class="bars" role="img" aria-label="' + esc(labels.map(function (l, i) { return l + ': ' + words[levels[i]]; }).join(', ')) + '">' +
-    levels.map(function (l, i) { return '<div><i style="height:' + ((l + 1) / max * 100) + '%;background:' + P[l] + '"></i>' + labels[i] + '</div>'; }).join('') + '</div>';
-}
-// Which canned answer a question gets (shared by the English and 中文 versions).
+// What a question is about, for the built-in (no model) assistant. '' when it is none of these.
 function askTopic(q) {
   var l = q.toLowerCase();
-  if (/landslide|slope|suhua|highway|road|drive|hike|trail|山崩|土石流|邊坡|公路|蘇花/.test(l)) return 'landslide';
-  if (/pm|air|haze|aqi|smog|空氣|空汙|空污|霾/.test(l)) return 'pm25';
-  if (/typhoon|颱風/.test(l)) return 'typhoon';
+  if (/landslide|slope|mudslide|山崩|土石流|邊坡|坍/.test(l)) return 'landslide';
+  if (/pm ?2\.?5|\bair\b|haze|aqi|smog|pollut|空氣|空汙|空污|霾/.test(l)) return 'pm25';
+  if (/typhoon|cyclone|颱風|台風/.test(l)) return 'typhoon';
   if (/thunder|storm|lightning|hail|雷|閃電|冰雹/.test(l)) return 'thunder';
-  if (/rain|umbrella|wet|下雨|雨|傘/.test(l)) return 'rain';
+  if (/rain|umbrella|shower|drizzle|\bwet\b|下雨|雨|傘/.test(l)) return 'rain';
+  if (/wind|gust|breez|風/.test(l)) return 'wind';
+  if (/wave|swell|surf|\bsea\b|coast|浪|海/.test(l)) return 'waves';
+  if (/season|next month|climate|outlook|氣候|季|下個月/.test(l)) return 'season';
+  if (/weather|temperature|\bhot\b|\bcold\b|\bwarm\b|outside|right now|forecast|天氣|氣溫|溫度|熱|冷|現在|預報/.test(l)) return 'now';
   return '';
 }
-// Source names inside AI bubbles (the 中文 layer skips those, so translate here).
-function zhSrc(name) {
-  var m = /^CWA (.*) station$/.exec(name);
-  if (m) { var z = zh(m[1]); if (z === m[1]) z = zh(m[1] + ' District'); return '中央氣象署 ' + (z === m[1] + ' District' ? m[1] : z) + ' 測站'; }
-  return { 'Windy point forecast': 'Windy 點預報', 'No source enabled': '未啟用任何來源' }[name] || name;
-}
-// 中文 versions of the canned answers: the same sample facts as answer() below.
-function answerZh(q) {
-  var L = S.loc, b = WEATHER[S.weather] || {}, src = nearestSource(L), tw = inTW(L.lat, L.lon), topic = askTopic(q);
-  var name = esc(zh(L.name)), srcName = zhSrc(src.name);
-  if (topic === 'landslide') return {
-    text: tw ? '週六風險最高：大雨會讓東部邊坡的山崩風險升到<strong>高</strong>，週日上午 10 點後降為<strong>中</strong>。可以的話，建議週日下午再出發。' : '山崩模型只涵蓋台灣，所以無法評估' + name + '附近的邊坡。',
-    bars: tw ? [[1, 1, 2, 3, 3, 2, 1, 0], ['週五', '下午', '週六', '下午', '晚上', '週日', '下午', '週一']] : null,
-    src: ['中央氣象署雨量站', 'Windy · 降水', '★山崩模型'] };
-  if (topic === 'pm25') return {
-    text: tw ? name + '附近的 PM2.5 目前為<strong>普通（18 µg/m³）</strong>，晚上 9 點左右最高，約 30 µg/m³。明天早上東北季風增強後就會散去。' : '團隊的 PM2.5 模型只涵蓋台灣。Windy CAMS 顯示' + name + '附近的 PM2.5 屬於普通範圍（示範數值）。',
-    bars: [[0, 1, 1, 2, 1, 0], ['現在', '18 時', '20 時', '21 時', '23 時', '6 時']],
-    src: tw ? ['★PM2.5 模型', 'Windy CAMS pm2p5'] : ['Windy CAMS pm2p5'] };
-  if (topic === 'typhoon') return {
-    text: '目前有一個系統需要留意：示範颱風 <strong>TD-27</strong>，位於東南方約 860 公里，正向西北移動。中央氣象署可能在約 48 小時後發布海上警報，東部沿海會最先受影響。',
-    bars: null, src: ['中央氣象署颱風警報', 'Windy · 風、浪'] };
-  if (topic === 'thunder') return {
-    text: '今天下午對流能量偏高（CAPE 2,400 J/kg）。<strong>下午 4 到 7 點很可能有雷雨</strong>，週六可能下冰雹（Windy 警示代碼 96）。',
-    bars: [[0, 1, 2, 3, 3, 1], ['14 時', '15 時', '16 時', '17 時', '18 時', '19 時']], src: ['Windy · CAPE', 'Windy · 天氣警示'] };
-  if (topic === 'rain') return {
-    text: '記得帶傘。今天預估降雨約 <strong>32 毫米</strong>，多集中在下午 4 到 7 點。',
-    bars: [[0, 0, 1, 3, 3, 2, 1], ['14 時', '15 時', '16 時', '17 時', '18 時', '19 時', '20 時']], src: ['Windy · 降水', srcName] };
-  return {
-    text: name + '現在是 <strong>' + fmtT(b.temp + tempOffset(L)) + '</strong>：' + esc(zh(b.headline || '')) + '。資料來自' + esc(srcName) + '。可以問我 PM2.5、山崩風險、雷雨、颱風或降雨。',
-    bars: null, src: [srcName, 'Windy 點預報'] };
-}
-// A canned (Demo) answer in both languages; msgHTML shows the one for the current language.
-function cannedMsg(q) { return { me: false, canned: true, en: answer(q), zh: answerZh(q) }; }
-function cannedOf(m) { return m.canned ? (S.lang === 'zh' ? m.zh : m.en) : m; }
 function tr(s) { return S.lang === 'zh' ? zh(s) : s; }
-function answer(q) {
-  var l = askTopic(q), L = S.loc, b = WEATHER[S.weather], src = nearestSource(L);
-  var tw = inTW(L.lat, L.lon);
-  if (l === 'landslide') return {
-    text: tw ? 'Saturday is the risky day: heavy rain pushes landslide risk to <strong>High</strong> on eastern slopes. Sunday after 10 AM it drops to <strong>Medium</strong>. If you can, go Sunday afternoon.' : 'The landslide model only covers Taiwan, so I can’t rate slopes near ' + esc(L.name) + '.',
-    bars: tw ? [[1, 1, 2, 3, 3, 2, 1, 0], ['Fri', 'PM', 'Sat', 'PM', 'Night', 'Sun', 'PM', 'Mon']] : null,
-    src: ['CWA rain gauges', 'Windy · precip', '★Landslide model'] };
-  if (l === 'pm25') return {
-    text: tw ? 'PM2.5 near ' + esc(L.name) + ' is <strong>Moderate (18 µg/m³)</strong> and peaks around 9 PM at about 30 µg/m³. It clears by tomorrow morning as the northeast monsoon picks up.' : 'The team PM2.5 model covers Taiwan only. Windy CAMS puts PM2.5 near ' + esc(L.name) + ' in the moderate range (sample value).',
-    bars: [[0, 1, 1, 2, 1, 0], ['Now', '6 PM', '8 PM', '9 PM', '11 PM', '6 AM']],
-    src: tw ? ['★PM2.5 model', 'Windy CAMS pm2p5'] : ['Windy CAMS pm2p5'] };
-  if (l === 'typhoon') return {
-    text: 'There’s one system to watch: sample storm <strong>TD-27</strong>, about 860 km southeast and moving northwest. CWA could issue a sea warning in about 48 hours. The east coast would feel it first.',
-    bars: null, src: ['CWA typhoon warnings', 'Windy · wind, waves'] };
-  if (l === 'thunder') return {
-    text: 'Storm energy is high this afternoon (CAPE 2,400 J/kg). Thunderstorms are <strong>likely from 4 to 7 PM</strong>, and hail is possible on Saturday (Windy warning code 96).',
-    bars: [[0, 1, 2, 3, 3, 1], ['2 PM', '3 PM', '4 PM', '5 PM', '6 PM', '7 PM']], src: ['Windy · CAPE', 'Windy · weatherWarnings'] };
-  if (l === 'rain') return {
-    text: 'Bring an umbrella. About <strong>32 mm</strong> of rain is expected today, most of it between 4 and 7 PM.',
-    bars: [[0, 0, 1, 3, 3, 2, 1], ['2 PM', '3 PM', '4 PM', '5 PM', '6 PM', '7 PM', '8 PM']], src: ['Windy · precip', src.name] };
-  return {
-    text: 'Right now in ' + esc(L.name) + ' it’s <strong>' + fmtT(b.temp + tempOffset(L)) + '</strong>: ' + esc(b.headline) + '. Reading from ' + esc(src.name) + '. Ask me about PM2.5, landslide risk, thunderstorms, typhoons or rain.',
-    bars: null, src: [src.name, 'Windy point forecast'] };
+// The built-in assistant: no model, no network. It reads out the same live values the tiles show
+// (catalog), with their real sources, and says so. Anything else it cannot answer.
+function builtinAnswer(q, lang) {
+  var L = S.loc, isZh = lang === 'zh', z = function (s) { return isZh ? zh(s) : s; };
+  var cat = catalog(L), by = {}, lines = [], src = [], topic = askTopic(q);
+  cat.forEach(function (t) { by[t.id] = t; });
+  var use = function (s) { if (s && src.indexOf(s) < 0) src.push(s); };
+  var tile = function (id) {
+    var t = by[id]; if (!t) return;
+    if (t.na) { lines.push('<strong>' + z(t.title) + '</strong>' + (isZh ? '：' : ': ') + z(t.na.h === '—' ? t.na.msg : t.na.h) + (t.na.h === '—' ? '' : (isZh ? '。' : '. ') + z(t.na.msg))); return; }
+    lines.push('<strong>' + z(t.title) + '</strong>' + (isZh ? '：' : ': ') + z(t.value) + (t.sub ? ' · ' + z(t.sub) : ''));
+    use(z(t.src));
+  };
+  var now = function () {
+    var w = wxNow(), hl = todayHL(), name = esc(z(L.name));
+    if (!w.live) { lines.push(isZh ? name + '目前沒有即時天氣資料：' + zh(naOf(w.state, 'om').msg) : 'There’s no live weather for ' + name + ' right now: ' + naOf(w.state, 'om').msg); return; }
+    lines.push(isZh
+      ? name + '現在 <strong>' + fmtT(w.temp) + '</strong>，' + esc(zh(w.headline)) + '。' + (hl ? '今天高溫 ' + fmtT(hl.hi) + '、低溫 ' + fmtT(hl.lo) + '。' : '') + (w.stale ? '（資料為' + zh(fmtAge(w.t)) + '，尚未更新。）' : '')
+      : 'Now in ' + name + ': <strong>' + fmtT(w.temp) + '</strong>, ' + esc(w.headline) + '.' + (hl ? ' Today: high ' + fmtT(hl.hi) + ', low ' + fmtT(hl.lo) + '.' : '') + (w.stale ? ' (Data from ' + fmtAge(w.t) + '; it couldn’t be refreshed.)' : ''));
+    use(z('Open-Meteo' + liveTag('wx@' + ptKey(L))));
+  };
+  var rainPeak = function () {
+    var t = by.hourly, best = -1, bi = -1;
+    if (!t || t.na) return;
+    t.hours.forEach(function (h, i) { var v = parseInt(h.rain, 10); if (v > best) { best = v; bi = i; } });
+    if (bi < 0) return;
+    lines.push(isZh ? '未來數小時降雨機率最高 ' + best + '%（' + zh(t.hours[bi].t) + '）。' + (best >= 50 ? '建議帶傘。' : best < 20 ? '短時間內不太會下雨。' : '')
+      : 'Highest chance of rain in the next hours: ' + best + '% (' + t.hours[bi].t + ').' + (best >= 50 ? ' Take an umbrella.' : best < 20 ? ' Rain looks unlikely for now.' : ''));
+    use(z(t.src));
+  };
+  var typhoon = function () {
+    var tv = tyView();
+    if (tv.state === 'active') { lines.push('<strong>' + z('Typhoon watch') + '</strong>' + (isZh ? '：' : ': ') + esc(z(tv.title)) + (tv.sub ? ' · ' + esc(z(tv.sub)) : '')); use(esc(z(tv.src))); }
+    else if (tv.state === 'none') { lines.push('<strong>' + z('Typhoon watch') + '</strong>' + (isZh ? '：' : ': ') + z('No tropical cyclone is being tracked near Taiwan right now.')); use(esc(z(tv.src))); }
+    else if (by.typhoon) tile('typhoon');
+    else lines.push(isZh ? '颱風資料已在設定中關閉。' : 'The typhoon feed is switched off in Settings.');
+  };
+  if (topic === 'now') { now(); tile('wind'); tile('humidity'); tile('rain'); }
+  else if (topic === 'rain') { tile('rain'); rainPeak(); tile('storms'); }
+  else if (topic === 'thunder') { tile('thunder'); tile('storms'); }
+  else if (topic === 'wind') tile('wind');
+  else if (topic === 'pm25') tile('pm25');
+  else if (topic === 'waves') tile('waves');
+  else if (topic === 'season') tile('climate');
+  else if (topic === 'typhoon') typhoon();
+  else if (topic === 'landslide') { if (by.landslide) tile('landslide'); else lines.push(isZh ? '山崩模型已在設定中關閉。' : 'The landslide model is switched off in Settings.'); }
+  else {
+    lines.push(isZh ? '沒有 AI 模型，我無法回答這個問題。我只能讀出畫面上的即時資料：' : 'I can’t answer that without an AI model. All I can do is read out the live data on screen:');
+    now(); tile('rain'); tile('thunder'); tile('wind'); tile('pm25');
+  }
+  lines.push('<span class="ai-fine">' + (isZh ? '這是 Skyline 內建的即時資料摘要，不是 AI 模型；除了目前天氣、降雨、雷雨、風、PM2.5、浪高、颱風與季節展望之外，其他問題都無法回答。要問其他問題，請到「設定」選擇模型。'
+    : 'This is Skyline’s built-in summary of the live data, not an AI model. It covers current conditions, rain, thunderstorms, wind, PM2.5, waves, typhoons and the seasonal outlook, and can’t answer anything else. For other questions, choose a model in Settings.') + '</span>');
+  return { text: lines.join('<br>'), src: src };
 }
-function seedChat() {
-  return [{ me: true, text: 'Safe to drive Suhua Highway this weekend?' }, cannedMsg('suhua highway')];
-}
+// Both languages are built when the question is asked, so switching language keeps the same facts.
+function builtinMsg(q) { return { me: false, builtin: true, en: builtinAnswer(q, 'en'), zh: builtinAnswer(q, 'zh') }; }
 function msgHTML(m) {
   if (m.me) return '<div class="msg me">' + esc(m.text) + '</div>';
   // AI bubbles are skipped by the 中文 layer (model text must stay as written), so fixed strings use tr().
@@ -2126,27 +2119,30 @@ function msgHTML(m) {
     (m.error ? '<p class="err">' + esc(tr(m.error)) + ' <a class="link" href="#settings">' + tr('Check settings') + '</a></p>'
              : '<p class="body">' + (m.plain ? mdLite(m.plain) : (m.live ? '<span class="thinking">' + tr('Thinking…') + '</span>' : '')) + '</p>') +
     '<div class="srcs">' + m.src.map(function (x) { return '<span>' + esc(tr(x)) + '</span>'; }).join('') + '</div></div>';
-  if (m.typing) return '<div class="msg ai typing">' + tr('Checking the nearest sources…') + '</div>';
-  m = cannedOf(m);
-  return '<div class="msg ai"><p>' + m.text + '</p>' + (m.bars ? bars(m.bars[0], m.bars[1]) : '') +
-    '<div class="srcs">' + m.src.map(function (s) { return s.charAt(0) === '★' ? '<span class="own">' + esc(s.slice(1)) + '</span>' : '<span>' + esc(s) + '</span>'; }).join('') + '</div></div>';
+  if (m.typing) return '<div class="msg ai typing">' + tr('Reading the live data…') + '</div>';
+  var a = S.lang === 'zh' ? m.zh : m.en;
+  return '<div class="msg ai"><p>' + a.text + '</p><div class="srcs"><span class="own">' + tr('Built-in summary (no AI model)') + '</span>' + a.src.map(function (s) { return '<span>' + s + '</span>'; }).join('') + '</div></div>';
+}
+function emptyChatHTML() {
+  return '<div class="chat-empty"><h2>No questions yet</h2><p>Ask about the weather for ' + esc(S.loc.name) + ', or start with one of the suggestions below.</p></div>';
 }
 function askView() {
-  if (!chat) chat = seedChat();
-  var sugg = ['PM2.5 tonight?', 'Typhoon outlook', 'Will it storm this afternoon?', 'Do I need an umbrella?', 'Landslide risk on Highway 8'];
-  return '<div class="page light"><header><div class="eyebrow">RAG + MCP over our data</div><h1>Ask Skyline</h1>' +
-    '<p class="lede">Answers are grounded in CWA stations, Windy and the team’s PM2.5 and landslide models, for ' + esc(S.loc.name) + '.</p>' +
-    '<p class="lede ai-using">Answering with: <strong>' + esc(aiLabel()) + '</strong> · <a class="link" href="#settings">Change</a></p></header>' +
-    '<div class="chat" id="chat" aria-live="polite">' + chat.map(msgHTML).join('') + '</div>' +
+  if (!chat) chat = [];
+  var sugg = ['What’s it like outside right now?', 'Do I need an umbrella?', 'Will it storm today?', 'How is the air (PM2.5)?', 'How windy is it?', 'Any typhoon near Taiwan?'];
+  return '<div class="page light"><header><div class="eyebrow">Grounded in live data</div><h1>Ask Skyline</h1>' +
+    '<p class="lede">Answers use the live Skyline data for ' + esc(S.loc.name) + ': Open-Meteo weather, air quality and waves, plus the team PM2.5 model and the CWA typhoon feed when they are connected.</p>' +
+    '<p class="lede ai-using">Answering with: <strong>' + esc(aiLabel()) + '</strong> · <a class="link" href="#settings">Change</a></p>' +
+    '<p class="lede ai-note"' + (aiProvider() === 'builtin' ? '' : ' hidden') + '>No AI model is connected. The built-in assistant only reads out the live data on screen and can’t answer other questions.</p></header>' +
+    '<div class="chat" id="chat" aria-live="polite">' + (chat.length ? chat.map(msgHTML).join('') : emptyChatHTML()) + '</div>' +
     '<div class="suggest">' + sugg.map(function (s) { return '<button type="button" data-action="ask" data-q="' + esc(s) + '">' + esc(s) + '</button>'; }).join('') + '</div>' +
-    '<form class="ask-form" id="ask-form"><label for="ask-input" class="sr-only">Ask a question</label><input id="ask-input" type="text" placeholder="Ask about Taiwan weather…" autocomplete="off"><button type="submit" id="ask-btn">' + (aiAbort ? 'Stop' : 'Ask') + '</button></form></div>';
+    '<form class="ask-form" id="ask-form"><label for="ask-input" class="sr-only">Ask a question</label><input id="ask-input" type="text" placeholder="Ask about the weather…" autocomplete="off"><button type="submit" id="ask-btn">' + (aiAbort ? 'Stop' : 'Ask') + '</button></form></div>';
 }
 function ask(q) {
   q = q.trim(); if (!q) return;
   if (aiAbort) return;
   // Asked before the server probe came back (4 s at most): wait, so the right provider answers.
   if (skyAI.state === 'checking' && (S.ai.provider === 'skyline' || !aiConfigured())) { probeSkyAI().then(function () { ask(q); }); return; }
-  if (aiProvider() !== 'demo') {
+  if (aiProvider() !== 'builtin') {
     var btn = $('#ask-btn'); if (btn) btn.textContent = 'Stop';
     llmAsk(q).then(function () { var b2 = $('#ask-btn'); if (b2) b2.textContent = 'Ask'; });
     return;
@@ -2154,13 +2150,13 @@ function ask(q) {
   chat.push({ me: true, text: q }, { typing: true });
   renderChat();
   setTimeout(function () {
-    chat.pop(); chat.push(cannedMsg(q));
+    chat.pop(); chat.push(builtinMsg(q));
     renderChat();
-  }, 700);
+  }, 300);
 }
 function renderChat() {
   var c = $('#chat'); if (!c) return;
-  c.innerHTML = chat.map(msgHTML).join('');
+  c.innerHTML = chat.length ? chat.map(msgHTML).join('') : emptyChatHTML();
   var last = c.lastElementChild; if (last) last.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 
