@@ -1,0 +1,944 @@
+{
+  "files": [
+    {
+      "path": ".gitignore",
+      "bytes": 385,
+      "sha256": "5b54c444438a292d3831ff822c3c365f3d2ea84ced7938432c4e5117788e88d9"
+    },
+    {
+      "path": "CREDITS.md",
+      "bytes": 5199,
+      "sha256": "9c1030b45ff10830609a7e83a90e62a48fce275216a3a821df1417abcaccbd1a"
+    },
+    {
+      "path": "GITHUB_SUBMISSION.md",
+      "bytes": 1963,
+      "sha256": "175ac8499ec5f58d8813d9bda24898c106fcb1f3b05078296bb8d554eda6b428"
+    },
+    {
+      "path": "MODEL_CARD.md",
+      "bytes": 2592,
+      "sha256": "a140d193082d5397ea9ecb6e286aedf1eb6402596ddf3bf13b08512e1cd1f66d"
+    },
+    {
+      "path": "README.md",
+      "bytes": 7168,
+      "sha256": "ca9af933ccd39d964a397fb745ead31b0eb3fd93da64463f0500e60058c4e88f"
+    },
+    {
+      "path": "app.py",
+      "bytes": 35305,
+      "sha256": "4fa659f1ba9a7e6091f7d7821277ebe44bf7250643cf74b214402bcc35c058d4"
+    },
+    {
+      "path": "check_setup.py",
+      "bytes": 3115,
+      "sha256": "afa301c7f7da401e8549003118ecb6f84ff1d497476d3cd24d12b44f9f8efed5"
+    },
+    {
+      "path": "demo_scans.json",
+      "bytes": 995,
+      "sha256": "165b2334fffd7d23658fda43086234ce0a19c6336cb3ec7f16e6d3fe547e0d57"
+    },
+    {
+      "path": "docs/release-demo.jpg",
+      "bytes": 100008,
+      "sha256": "97674f594327573989b8dd1a127c784e98e5efd24cdb3918cce9f911fd584e15"
+    },
+    {
+      "path": "docs/training-source/README.md",
+      "bytes": 643,
+      "sha256": "bbc929e7558fdbd00bf7718501b73519f60923049d3659e2e139651c5d99dae7"
+    },
+    {
+      "path": "docs/training-source/audit_results.py",
+      "bytes": 9242,
+      "sha256": "7e3adbf29feebeb745a1fdcbebb8cb2d9c3739e9678a316b566e8bb817af08a1"
+    },
+    {
+      "path": "docs/training-source/core.py",
+      "bytes": 6407,
+      "sha256": "b3f84a6bfa0565497a8182a91071514d164421c6a1155298bb66725c6b5adc93"
+    },
+    {
+      "path": "docs/training-source/extend_plan.py",
+      "bytes": 2288,
+      "sha256": "b36d68c962724cd3231a12833211fb6e7284e42424c8c4af307e9f554baa9824"
+    },
+    {
+      "path": "docs/training-source/prepare.py",
+      "bytes": 7799,
+      "sha256": "d6c19bcc8bcdd17fa4df780cf53e302d75a7112be75ff03b248badc3f61090cb"
+    },
+    {
+      "path": "docs/training-source/prepare_inventory.py",
+      "bytes": 14625,
+      "sha256": "57d0ac2715b39780d969269476ad4485e17327eaee9d0840e707cbe7e981d571"
+    },
+    {
+      "path": "docs/training-source/run_pipeline.py",
+      "bytes": 527,
+      "sha256": "d2f18a72792c111ccb1b3a7039bc6aa83ca3af9cb0f53532e931751acd066eac"
+    },
+    {
+      "path": "docs/training-source/train_inventory.py",
+      "bytes": 7429,
+      "sha256": "5df05e67f6363f5949c30c9e42f73fcb422c6829ef5e6c2939e79020cc4732fb"
+    },
+    {
+      "path": "docs/training-source/train_local.py",
+      "bytes": 10567,
+      "sha256": "e17528e7ee544ce46c1157b6abc491b573ad19f226d3b96252dec0415e2e4865"
+    },
+    {
+      "path": "docs/workspace.jpg",
+      "bytes": 83082,
+      "sha256": "f1ddb0d168f97b6cf1b946095707d6cf641d20f73fa3d1b1bd72efb3938a5d8c"
+    },
+    {
+      "path": "evidence/checkpoint-verification.json",
+      "bytes": 3471,
+      "sha256": "d65a4ef603e4682d46842a5ea73dfa811f5cbeefb3e3b8d7e179daea8b31daf8"
+    },
+    {
+      "path": "evidence/clean-setup.json",
+      "bytes": 483,
+      "sha256": "2d85e31422c5bf6c40e638249754c074d44725a425fb0fa26f55bdfab90fcffb"
+    },
+    {
+      "path": "evidence/demo-filter-validation.json",
+      "bytes": 500,
+      "sha256": "d2f0d42594817f1e640a72007dbbad8cf097a4ad58442cb13e49cefc7f98dfe7"
+    },
+    {
+      "path": "evidence/error-examples.png",
+      "bytes": 1605623,
+      "sha256": "a7ba74708fa281ef6f712057554cfe4d682f717433abbf423973d8f7da241e79"
+    },
+    {
+      "path": "evidence/pm25-taichung.json",
+      "bytes": 3933,
+      "sha256": "a2d4177d16f124408d4421b4038466b80cac8b22c68a6d47ddeaba3f69a0211f"
+    },
+    {
+      "path": "evidence/region-and-threshold-audit.png",
+      "bytes": 85979,
+      "sha256": "3c91e875256c54233eb970417cc44a0cebd4a86166d1fccd5c520adb56b839a2"
+    },
+    {
+      "path": "evidence/unet-comparison.json",
+      "bytes": 17235,
+      "sha256": "340e104bce214e66395b3e0437b26ba99f3a95261faaef79219bb34b2f40e9e5"
+    },
+    {
+      "path": "evidence/unet-config.json",
+      "bytes": 1341,
+      "sha256": "6888b623e8daa76044f8b4e3aecf9c26ff1259c6c4b1c4598a6ecfe15132f745"
+    },
+    {
+      "path": "evidence/unet-history.json",
+      "bytes": 3511,
+      "sha256": "2055b3c0c51353503761482e858913e972105d6d2d6824d9e58a0018ed0f6abc"
+    },
+    {
+      "path": "evidence/validation.txt",
+      "bytes": 1623,
+      "sha256": "02004e216b79c1691ca59c0b533da892f7c6ef7ae952383e6aab1c88c91f0452"
+    },
+    {
+      "path": "evidence.py",
+      "bytes": 14848,
+      "sha256": "1b7155fabbd5df186391f44a1bc2f5c9a559b2f01d637258d2ceab218a82e176"
+    },
+    {
+      "path": "geocoder.py",
+      "bytes": 4782,
+      "sha256": "0a2534f62f0b2f0211e86fcf17625e11efd529f0dcc55c7c7bf2dc507074837a"
+    },
+    {
+      "path": "model_profiles.py",
+      "bytes": 1424,
+      "sha256": "e4a3a873833745787af92677ee0fd512a43a47cb6531400e3d2dbbfcb35de434"
+    },
+    {
+      "path": "model_selection.json",
+      "bytes": 170,
+      "sha256": "12c923c3d2846dbfacc1e3aee29f96e0ac71d4b725fa3810ce1b3a12a15b5cc2"
+    },
+    {
+      "path": "models/unet13.json",
+      "bytes": 1655,
+      "sha256": "34e47bcc3f7c5e1f4335e14028c70af7616ee1df3d465359660d01867b5fb60d"
+    },
+    {
+      "path": "models/unet13.pt",
+      "bytes": 98020607,
+      "sha256": "752989d5b2555dad4b26946ae34b3c31d6cfae97de873ad4d69aa4bf588daf8c"
+    },
+    {
+      "path": "mosaic.py",
+      "bytes": 5333,
+      "sha256": "278e79874ffa76b6b3bfbfb17f0f7c9ece973c917afaf282fa8b0c20158a603e"
+    },
+    {
+      "path": "one-page-writeup.pdf",
+      "bytes": 4349,
+      "sha256": "cdd1b32e14e1390ecb5763b8eca1a9e7c31893f5366de279a7ea27f8c730f01b"
+    },
+    {
+      "path": "one-page-writeup.txt",
+      "bytes": 3198,
+      "sha256": "951f67f95f37e0a5c5d10949a754ceeccb16738ce9bc4d2ee636446e65939db3"
+    },
+    {
+      "path": "requirements-dev.txt",
+      "bytes": 39,
+      "sha256": "2b61745f42ae94291c380be2f3403b4921f1184a81e755112873decfe93afb4c"
+    },
+    {
+      "path": "requirements-tested-macos-arm64.txt",
+      "bytes": 1220,
+      "sha256": "8ae4ed5b4b1ac6e6f0ec3e0b28a8bf4a0c2e44673cf20ae2312f736724145103"
+    },
+    {
+      "path": "requirements.txt",
+      "bytes": 213,
+      "sha256": "3f3256a187d4441b70bc58f90a51481e8e0b6366dfdc9f78a7c09cb9004144dc"
+    },
+    {
+      "path": "results/0d9f63a0dce2247f788c4147e32d97fa/before.png",
+      "bytes": 734577,
+      "sha256": "90cd9986ad92a9ee83205cb1c685ba9629cd9a060705030d899d60de36bda390"
+    },
+    {
+      "path": "results/0d9f63a0dce2247f788c4147e32d97fa/coordinates.csv",
+      "bytes": 46373,
+      "sha256": "a52640d3fc90583bc549ca78ece2df6fe53d957ab9f9f24e1811ba5bb2703b90"
+    },
+    {
+      "path": "results/0d9f63a0dce2247f788c4147e32d97fa/detections.geojson",
+      "bytes": 620022,
+      "sha256": "daf35dbe30282676c9b23df7dc2bf0cc6ef798fb96162c9f62288a95157a382a"
+    },
+    {
+      "path": "results/0d9f63a0dce2247f788c4147e32d97fa/excluded.png",
+      "bytes": 10224,
+      "sha256": "2f361339933b7fe3a453482865b5fde0183c1b89748bff0ad01677ac06206766"
+    },
+    {
+      "path": "results/0d9f63a0dce2247f788c4147e32d97fa/forecast.csv",
+      "bytes": 22042,
+      "sha256": "4102dff6ea21b2335d43368a6b71c0cc1fe3bc4344ef07550511df346b12214e"
+    },
+    {
+      "path": "results/0d9f63a0dce2247f788c4147e32d97fa/forecast.json",
+      "bytes": 72687,
+      "sha256": "3ec0b5ea9d4d72370917c698330df0dcb49784f0b4b2d0ba19112b8119d727e8"
+    },
+    {
+      "path": "results/0d9f63a0dce2247f788c4147e32d97fa/result.json",
+      "bytes": 763412,
+      "sha256": "13c14d34897fc8a8f3419b0dd8701593d4e45dcc514850c65650a0b008407624"
+    },
+    {
+      "path": "results/0d9f63a0dce2247f788c4147e32d97fa/satellite.png",
+      "bytes": 742794,
+      "sha256": "ea325e5b46b826e303ce06a0409641fcb5dfc9eac4cfddf673b4337da8dcec8d"
+    },
+    {
+      "path": "results/0d9f63a0dce2247f788c4147e32d97fa/segmentation.tif",
+      "bytes": 1237037,
+      "sha256": "7fadaab7b50c4aba0e40a4080f56e88fcfca67313ca8b79dc47997e3ef3e6a19"
+    },
+    {
+      "path": "results/0d9f63a0dce2247f788c4147e32d97fa/slope.png",
+      "bytes": 275740,
+      "sha256": "9e5956f1593e4c55f4128bfc7c481fd9dfe24c1a8df2b726d817756f04bc52c4"
+    },
+    {
+      "path": "results/0d9f63a0dce2247f788c4147e32d97fa/vegetation.png",
+      "bytes": 297033,
+      "sha256": "c4156a59a15092145968ae89f30ae304bad144232fdaafb18c4a035b62632597"
+    },
+    {
+      "path": "results/e3d6306f37f52a9b5d8de505bfc477ba/before.png",
+      "bytes": 731810,
+      "sha256": "de5455e87385eaa9d22880ffa038fa73c6a4b5a2fd5a61fe0e1d00f351818cc1"
+    },
+    {
+      "path": "results/e3d6306f37f52a9b5d8de505bfc477ba/coordinates.csv",
+      "bytes": 26757,
+      "sha256": "2e75d135dd5805bba166a9db2acdea0b7d8841fafbbbbfec5fc8d2463c1694f2"
+    },
+    {
+      "path": "results/e3d6306f37f52a9b5d8de505bfc477ba/detections.geojson",
+      "bytes": 304727,
+      "sha256": "4b4e2fe8ce26eb5583c3143d1bca20d794332d6dcc2cd38ce4b5f1218b9ff354"
+    },
+    {
+      "path": "results/e3d6306f37f52a9b5d8de505bfc477ba/excluded.png",
+      "bytes": 6425,
+      "sha256": "ec15fecd8c60ab9f8cd5bbad610ca1d53279482c67371b5608509f498d5f78c7"
+    },
+    {
+      "path": "results/e3d6306f37f52a9b5d8de505bfc477ba/forecast.csv",
+      "bytes": 21253,
+      "sha256": "2b714619f2b3f44354c935287832258c3e8b71a9d82a8654fbbd8a1e788e236a"
+    },
+    {
+      "path": "results/e3d6306f37f52a9b5d8de505bfc477ba/forecast.json",
+      "bytes": 72286,
+      "sha256": "4913c395a5dbfbee03ba8d9107361e5e7c47a6e3ab812e15c8619f4e279fd55d"
+    },
+    {
+      "path": "results/e3d6306f37f52a9b5d8de505bfc477ba/result.json",
+      "bytes": 508821,
+      "sha256": "1e3e4af0a83ffdb720425a825b2fbcee497a0a19dff3aa46588f0abccfc1b146"
+    },
+    {
+      "path": "results/e3d6306f37f52a9b5d8de505bfc477ba/satellite.png",
+      "bytes": 729305,
+      "sha256": "3f1b5e84b4c9a21875f99a5d69f8e38f203908cae7aec32711f515c83c1df4df"
+    },
+    {
+      "path": "results/e3d6306f37f52a9b5d8de505bfc477ba/segmentation.tif",
+      "bytes": 1423064,
+      "sha256": "d098edb9f191c8ff49097463e22d0c0d9ac26898d1377e3ca86c2b9469fd4882"
+    },
+    {
+      "path": "results/e3d6306f37f52a9b5d8de505bfc477ba/slope.png",
+      "bytes": 268230,
+      "sha256": "653e3e9946461825c64e40b84313e092d196652ea74456064d1292eb6cd4942e"
+    },
+    {
+      "path": "results/e3d6306f37f52a9b5d8de505bfc477ba/vegetation.png",
+      "bytes": 88837,
+      "sha256": "bbe28b34a8379de517d07d500c4e6f102b45cdd955ae37dee3b1259730f29b15"
+    },
+    {
+      "path": "rgb_preprocessing.py",
+      "bytes": 720,
+      "sha256": "ec3d234e1d59d0657231baf854e7fe0a28220aa6022b74f4e0008abadb88a03e"
+    },
+    {
+      "path": "roads.py",
+      "bytes": 5942,
+      "sha256": "63bb2ea0247c0d1912c08c75b0768e7d430f43e38dcc53f0a921edde598d8c05"
+    },
+    {
+      "path": "run.py",
+      "bytes": 404,
+      "sha256": "55b0fdcdf50f88a378e24e5348abacb33155c85eb3f5c26fb9527c0bad99a8f7"
+    },
+    {
+      "path": "scan_assistant.py",
+      "bytes": 31416,
+      "sha256": "3a815cc4d8baf14abdb74e490f64a4537b50ad339ff0f7ef6bc55f53e7b2666b"
+    },
+    {
+      "path": "skyline/README.md",
+      "bytes": 72,
+      "sha256": "c36cb185892c95d4a0c758d8dfebea23f14127aafad4e03ffe582e96e35ad385"
+    },
+    {
+      "path": "skyline/ui/HANDOFF.md",
+      "bytes": 4801,
+      "sha256": "98ea75ddc7b80d320628030e3a8be149470f87ab03d915b60ae72aea6f2dc504"
+    },
+    {
+      "path": "skyline/ui/PLANNING.md",
+      "bytes": 7545,
+      "sha256": "ac8f48e9171580a3b5bc68ca00747c034266fac2072738e88a28f01038708dda"
+    },
+    {
+      "path": "skyline/ui/README.md",
+      "bytes": 3758,
+      "sha256": "953052b3c19bdaa46db9873860c3fa3855dfbf1241f6b0336ae07188aa534697"
+    },
+    {
+      "path": "skyline/ui/app/README.md",
+      "bytes": 17631,
+      "sha256": "42f7f7b2b99f071fb11f0f68aa272df19f28bf7e63a73270eb4114ac8c82c222"
+    },
+    {
+      "path": "skyline/ui/app/model/__init__.py",
+      "bytes": 129,
+      "sha256": "0ff592890b5d94849fda9aa7a89592ca1386005d625c809fc13dbf73a3519fdf"
+    },
+    {
+      "path": "skyline/ui/app/model/cities.json",
+      "bytes": 3317,
+      "sha256": "cde8c06750e390728b40c39bab7921549ef5e2cce57523da0dba6681804bd1cb"
+    },
+    {
+      "path": "skyline/ui/app/model/fixtures/taichung_parity.json",
+      "bytes": 497913,
+      "sha256": "43b1bbbb250c6d36bebe338395c3f0f2d82c16f43c2bc76cb640b81e287ebdbb"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/changhua.json",
+      "bytes": 21646,
+      "sha256": "1f61cf9a53e12e88dac4140377e134a3130722c9157d49273397514680ee51c3"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/chiayi_city.json",
+      "bytes": 21394,
+      "sha256": "9a734a336bd4de8060377cdafe4b9722ee4c86b24c7e181be322af4a11088f60"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/chiayi_county.json",
+      "bytes": 21399,
+      "sha256": "51f7c81623816f4e543698b406676075fcf3c2bb8bb4ba81e0cfb548a5b12e6c"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/hsinchu_city.json",
+      "bytes": 21515,
+      "sha256": "22fa4cf7d361c8251f23facc8bbed1093036eaed97b3b6ffa00cb80e6e8b1bf2"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/hsinchu_county.json",
+      "bytes": 21493,
+      "sha256": "392931a68d71a1158abcd29aad6313de3cf03fdbd69a6518c4df52e9d69cc2b4"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/hualien.json",
+      "bytes": 20656,
+      "sha256": "72e76a5e9957ce93f03fd7a3e46d11e004244ab4686c4983d010268159404d86"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/kaohsiung.json",
+      "bytes": 21810,
+      "sha256": "7c0eaeffcb3a5a6040e35268d1872adf2d96c408a486bba4285f59be9b11c4b5"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/keelung.json",
+      "bytes": 21690,
+      "sha256": "ade6f8fb08432a913bf744c79b91dd9fad5a8bc67ab86dfcba3ac390173332c4"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/kinmen.json",
+      "bytes": 21503,
+      "sha256": "551b31909d8269bda196bd61c877006147b2b449c40763b6a6621a8f13c286c0"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/lienchiang.json",
+      "bytes": 21173,
+      "sha256": "3b9242d3021c799b8b9d6d046ab5839e3374ada25150b3ce6889fcc442c79206"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/miaoli.json",
+      "bytes": 21204,
+      "sha256": "795a2b732aad25580b08bce3f3b3565c96b9db5b3ff64f250e6ed7b6a2821edd"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/nantou.json",
+      "bytes": 21607,
+      "sha256": "b48406fc612f93543b840b539b1ef2760a80b89457e6188bc1255e3fb00d6fee"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/new_taipei.json",
+      "bytes": 21546,
+      "sha256": "ed3753d7c4da9ca4b593d7b1a1df9306c78f7020587f81a29c51c1a93bd48ba3"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/penghu.json",
+      "bytes": 21122,
+      "sha256": "3fad5c2c8fcd841e4041366c8c3d0595f88d92e1dd46f3ddcfed0fa3af68539c"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/pingtung.json",
+      "bytes": 21658,
+      "sha256": "94ea47030d8692488419617f38d20a4b2019f965bda7f17ecdec4be1988ca044"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/taichung.json",
+      "bytes": 21755,
+      "sha256": "59f47060b3fecd64ed9cce6bf90baa04d03b7ef479cddc143b8d83df715022b1"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/tainan.json",
+      "bytes": 21267,
+      "sha256": "0d55d533e3b6a370290bd1bd4ee3569e1b97a61acb906081800a93e6bc9d9284"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/taipei.json",
+      "bytes": 21690,
+      "sha256": "a590d1ee4d9bced4ce5225dfc162582f7b02f7f703863a1f15176fe1b4931b7b"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/taitung.json",
+      "bytes": 20344,
+      "sha256": "d6d5ff5a4cdb705fbd158c5d1f0a89d221ec426463ea15bd49a146b8853d0dc7"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/taoyuan.json",
+      "bytes": 21540,
+      "sha256": "a4d2212e7ebf0475174fea95c82cefeefa41b0efd1d4976762659a2e746e2ed5"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/yilan.json",
+      "bytes": 21066,
+      "sha256": "7175bce3acb33227bc7817aa3c884425c79aa4d9c34308a7d957723b3c117c04"
+    },
+    {
+      "path": "skyline/ui/app/model/metrics/yunlin.json",
+      "bytes": 21382,
+      "sha256": "cb4c9d14bc1eb055bdb1cd2e7b25dccf2af6f72199eb7c88d1e881c3c9793e9a"
+    },
+    {
+      "path": "skyline/ui/app/model/models/changhua.json",
+      "bytes": 336426,
+      "sha256": "5c745890cafff9795bc70c4113e7fbf34a4a9a3809df6564b3ea136c4d3b4737"
+    },
+    {
+      "path": "skyline/ui/app/model/models/chiayi_city.json",
+      "bytes": 339770,
+      "sha256": "4b02b21fd5191d7b2fe6a51eeb1c65e0fdcea2070b1e540c413d7246ee1679e1"
+    },
+    {
+      "path": "skyline/ui/app/model/models/chiayi_county.json",
+      "bytes": 339695,
+      "sha256": "c8fdf69d0c66bec9aa83e2177f0e73bcf9bf6f1b6073107c7d3bc36acd7eb70a"
+    },
+    {
+      "path": "skyline/ui/app/model/models/hsinchu_city.json",
+      "bytes": 338554,
+      "sha256": "70255264d4858faa487b897eb37d964643e5bb397d62b78002e9aec6989b7592"
+    },
+    {
+      "path": "skyline/ui/app/model/models/hsinchu_county.json",
+      "bytes": 338809,
+      "sha256": "346f3d38f1acb7a2d82652b09b3e997e0d2848d51f511b21a191a9e255d5abbc"
+    },
+    {
+      "path": "skyline/ui/app/model/models/hualien.json",
+      "bytes": 677475,
+      "sha256": "8e5366b9e34340cf762bf944dd78b8b77f34542f8617a1810de556f6a33caa92"
+    },
+    {
+      "path": "skyline/ui/app/model/models/kaohsiung.json",
+      "bytes": 341155,
+      "sha256": "7bed8bdab02c3f6b5c04939289e0b11e8f7fc1f90daee2c6c779ba55da98401d"
+    },
+    {
+      "path": "skyline/ui/app/model/models/keelung.json",
+      "bytes": 337868,
+      "sha256": "6000eea4219d115fdd3f722754f4ae0265d745c2aea54c83ef0826f32db9837c"
+    },
+    {
+      "path": "skyline/ui/app/model/models/kinmen.json",
+      "bytes": 338049,
+      "sha256": "67ddaa158fe6ed5085e8e20b7ed7d343842606a57183bd1e51909eae95d4c97a"
+    },
+    {
+      "path": "skyline/ui/app/model/models/lienchiang.json",
+      "bytes": 4940,
+      "sha256": "720686cfaea5d4437d5e7cb0ed3faf646c7b553bb5434735ba3be906e49c35d3"
+    },
+    {
+      "path": "skyline/ui/app/model/models/miaoli.json",
+      "bytes": 336697,
+      "sha256": "24740758ce1795cbb0ef89aa667a1177abec8193c5f166d0786959d1fe8e4995"
+    },
+    {
+      "path": "skyline/ui/app/model/models/nantou.json",
+      "bytes": 339415,
+      "sha256": "f255f14ff27304b61ce7ef22d32299c362f6dc67eccb207aacdd13366df62ef2"
+    },
+    {
+      "path": "skyline/ui/app/model/models/new_taipei.json",
+      "bytes": 339746,
+      "sha256": "fda1295e02a6347efd6bbdd68705f5945cff978f902f3b9038bcfc874c631a4d"
+    },
+    {
+      "path": "skyline/ui/app/model/models/penghu.json",
+      "bytes": 341313,
+      "sha256": "6051df0e0e47bceb1855e2cbc7b9b1df07cc307c3c8506414216ebc612dc716b"
+    },
+    {
+      "path": "skyline/ui/app/model/models/pingtung.json",
+      "bytes": 341205,
+      "sha256": "78ccfd393d7b96da597cf1f4dae9e9bd9222dc2b28a827b082e8c476fa6d2bb5"
+    },
+    {
+      "path": "skyline/ui/app/model/models/taichung.json",
+      "bytes": 339440,
+      "sha256": "01f3b35aa6e313f8c212f32b2d09de0784e1088d40050356d5389de36943c71e"
+    },
+    {
+      "path": "skyline/ui/app/model/models/tainan.json",
+      "bytes": 4374,
+      "sha256": "6f87e3d177c71c0972c5859f34d341505e6c32b8bbc7ca59f4dde9a3920cca26"
+    },
+    {
+      "path": "skyline/ui/app/model/models/taipei.json",
+      "bytes": 340477,
+      "sha256": "e59f1f1dd76775b7bb5497dd129091eaf616a2aa38ee91beee2640caa829870c"
+    },
+    {
+      "path": "skyline/ui/app/model/models/taitung.json",
+      "bytes": 340257,
+      "sha256": "c2c80d441cee891df23d4b65a71741224548a193532dd6747ab7c09c4aab7efd"
+    },
+    {
+      "path": "skyline/ui/app/model/models/taoyuan.json",
+      "bytes": 339375,
+      "sha256": "caf0424f7719ed7a97c0effd35f30b0fd7bac61e058473bbda2bbc4b265864c4"
+    },
+    {
+      "path": "skyline/ui/app/model/models/yilan.json",
+      "bytes": 340192,
+      "sha256": "18c72e3788fdac355f5e4a95147ec982ad2f09cbd61240ef4b89126ebe68293e"
+    },
+    {
+      "path": "skyline/ui/app/model/models/yunlin.json",
+      "bytes": 339671,
+      "sha256": "6d9ff930e235f8fcc39661b0b385a72105ea3c536bb6c34e66e00849e96270ca"
+    },
+    {
+      "path": "skyline/ui/app/model/predict.py",
+      "bytes": 30207,
+      "sha256": "5de0a2f860a65ffd84de031fd0afd7b57807954c7c67dd671d88138fa569aa6d"
+    },
+    {
+      "path": "skyline/ui/app/model/summary.json",
+      "bytes": 46032,
+      "sha256": "0e2bbe42e0b072889b3168d153465710ac2c5a2a262cbde061e267555e6b4324"
+    },
+    {
+      "path": "skyline/ui/app/model/train.py",
+      "bytes": 43353,
+      "sha256": "3b80d30bc856f7b0554edfdb3124e4a8bdb7d26a610a6172eabc519af071faea"
+    },
+    {
+      "path": "skyline/ui/app/requirements-dev.txt",
+      "bytes": 30,
+      "sha256": "d1f7a9a74d4999930cf88eba1fefc834281a91cbd10efb799ba3f72767e9c5b9"
+    },
+    {
+      "path": "skyline/ui/app/requirements-train.txt",
+      "bytes": 455,
+      "sha256": "528f51b38e2fc9acf3046ae69f31c8e4d658c335eee8ab59d39b6199afca7119"
+    },
+    {
+      "path": "skyline/ui/app/requirements.txt",
+      "bytes": 206,
+      "sha256": "8f178908cbe46f6278ac989c61f9b48ec5395e201bfd40af4ffcfcf80d1c6a1d"
+    },
+    {
+      "path": "skyline/ui/app/run.sh",
+      "bytes": 2006,
+      "sha256": "0250ec7951e65e007bb5c36202cc504b3a4ce86eae6b9a61f25982f08acfb7d7"
+    },
+    {
+      "path": "skyline/ui/app/server.py",
+      "bytes": 18259,
+      "sha256": "b0fdaf82230f21b7d69911958b7f91f131ea2e283d5a1a9d60159e040506f31c"
+    },
+    {
+      "path": "skyline/ui/app/test_predict.py",
+      "bytes": 21888,
+      "sha256": "1d6e8d83f46c60858d5832a405a2db20e30f2d418d31011dc0677782db7d3606"
+    },
+    {
+      "path": "skyline/ui/app/test_server.py",
+      "bytes": 36366,
+      "sha256": "15fac40e01b2b8ec2953d3d31cad543b8686bb70e1350fb310437e0ad8e1031b"
+    },
+    {
+      "path": "skyline/ui/app/web/app.js",
+      "bytes": 307636,
+      "sha256": "a5c0bfe2fbce9ef44028eae765972933c578c0361c5024857fa3c666f6e59636"
+    },
+    {
+      "path": "skyline/ui/app/web/field-desk.css",
+      "bytes": 4864,
+      "sha256": "da87162eba7d8aa21414c9b68e887cbd3ddd0996f5a814877d58ea6d488f5233"
+    },
+    {
+      "path": "skyline/ui/app/web/icon-maskable.svg",
+      "bytes": 353,
+      "sha256": "8df1f9a0c53a9c3434be99ef747e17edb4e30f4b30b297676cec9d39957ef64f"
+    },
+    {
+      "path": "skyline/ui/app/web/icon.svg",
+      "bytes": 305,
+      "sha256": "57c888345ab6ecb2fd1e27046aa6be276a10d40326bbf707d41aeaa6b02f0fb2"
+    },
+    {
+      "path": "skyline/ui/app/web/icons.js",
+      "bytes": 8089,
+      "sha256": "6e9ceca8601acb1ba1b1af07369cb0df31ea4d13104f1a8a88c1a557243c1bb5"
+    },
+    {
+      "path": "skyline/ui/app/web/index.html",
+      "bytes": 7272,
+      "sha256": "0002dbbdbc406b206b88b05d3ce3eeca08cce3866ab63378b521ae17489d5e68"
+    },
+    {
+      "path": "skyline/ui/app/web/location.js",
+      "bytes": 2552,
+      "sha256": "5e0b9badfe38c0f11474710a9e350ef06fe73e3cfa71174846a5de1dba130e3c"
+    },
+    {
+      "path": "skyline/ui/app/web/manifest.json",
+      "bytes": 527,
+      "sha256": "383a43178c55b586a9c0431ca9e7a57e23a4734683e7ded9fd55ebbb61c05bc2"
+    },
+    {
+      "path": "skyline/ui/app/web/sky.js",
+      "bytes": 9338,
+      "sha256": "1dfa9ade8d42c621e3b983a171602347ed03afc3fe8393c6842b37c69d0543fa"
+    },
+    {
+      "path": "skyline/ui/app/web/styles.css",
+      "bytes": 54512,
+      "sha256": "b2c21896c6b945e60dd5463a604ab063714f420cb1381b43b62c26a06b512f94"
+    },
+    {
+      "path": "skyline/ui/mcp/README.md",
+      "bytes": 3235,
+      "sha256": "76b9868c9c3c293b3e864a76ccc7f5f5760fe5392abf7b66e6abb8b0cf1cbcbc"
+    },
+    {
+      "path": "skyline/ui/mcp/requirements.txt",
+      "bytes": 12,
+      "sha256": "300346beb82f695775d7c947139985407607521da121098c27160f799a161bc4"
+    },
+    {
+      "path": "skyline/ui/mcp/skyline_mcp.py",
+      "bytes": 21484,
+      "sha256": "cda99b21b08f3ea2abb54f65b3ae47e59ce355ccb457e2de62d2ecec70162d45"
+    },
+    {
+      "path": "skyline/ui/mcp/skyline_sources.py",
+      "bytes": 7053,
+      "sha256": "c27d8959115365ccf0bbaabaced31969a73bf83c30f4f4321cb34e1ee96e20cd"
+    },
+    {
+      "path": "skyline/ui/mcp/taiwan_districts.json",
+      "bytes": 51807,
+      "sha256": "68a125124fff094bf844db65d5082ba6d8856be82a6cac90b1e932723783bd5a"
+    },
+    {
+      "path": "skyline/ui/server/README.md",
+      "bytes": 8859,
+      "sha256": "2079151c8b808a313e3b9910b1a4fd300e99ba6bd3aa1870d3c5deb674a37537"
+    },
+    {
+      "path": "skyline/ui/server/fixtures/cwa_W-C0034-005.json",
+      "bytes": 4977,
+      "sha256": "48ce7f95748f02cadaf84899cd529db464327b68a1c688bf3b2acc051bc96313"
+    },
+    {
+      "path": "skyline/ui/server/requirements-dev.txt",
+      "bytes": 27,
+      "sha256": "6603d61524204b7e415c2d1303e6ee817871ec912963584b6d11611039ca4b8c"
+    },
+    {
+      "path": "skyline/ui/server/requirements.txt",
+      "bytes": 145,
+      "sha256": "cf56a79bd121f7d4dc819b0fe758d1280d4eb39b460dc1228dc36faef248c53e"
+    },
+    {
+      "path": "skyline/ui/server/skyline_extras.py",
+      "bytes": 21562,
+      "sha256": "789f7016b1b9a149b1804408124178b46582e87582a55f83d180f7b512d78087"
+    },
+    {
+      "path": "skyline/ui/server/test_skyline_extras.py",
+      "bytes": 20285,
+      "sha256": "afeebe0f9b056899bc082c4caad66821339ae32e3d68d0e5cb74a03855eb9346"
+    },
+    {
+      "path": "skyline_integration.py",
+      "bytes": 3412,
+      "sha256": "bd90e9b8afc66105b5c243383bc96dcd5412ce3315dbc3e15d64fbd56e11508b"
+    },
+    {
+      "path": "spatial.py",
+      "bytes": 829,
+      "sha256": "83a2352ddd77ea6996d43863af0eab15de84adea69033b6f7d28feebdf67a58a"
+    },
+    {
+      "path": "start.command",
+      "bytes": 468,
+      "sha256": "32cc47c987cfd6b1f5c08f90d75b4fff6437ec70b4261ce11d7575efab4d6427"
+    },
+    {
+      "path": "static/app.js",
+      "bytes": 20762,
+      "sha256": "8d5c7d9dfe7279569a408d4ce41e5ce68a68b51ac51f0faa1d118c6aefd45bff"
+    },
+    {
+      "path": "static/assistant.js",
+      "bytes": 14218,
+      "sha256": "3d356502efc16f6b30c2ee17af0b69b266915d272df3c006daa5f2620dd15d12"
+    },
+    {
+      "path": "static/index.html",
+      "bytes": 18218,
+      "sha256": "c77ffca4350c491f849d524c2ff62ceca9c8533ffe56087f2681e68b0088c73a"
+    },
+    {
+      "path": "static/monitor-ui.js",
+      "bytes": 4440,
+      "sha256": "a985a2dae23ba2b957d2bc1b0bbd00b0fa094ce293938268d8aaacc68abf9c7c"
+    },
+    {
+      "path": "static/review.js",
+      "bytes": 7092,
+      "sha256": "0ba3b3583fe70a89339a0d70e4eba455aeaf489913802dc92da79a654ac99b8b"
+    },
+    {
+      "path": "static/review_filters.js",
+      "bytes": 721,
+      "sha256": "d5028cc20442c577747b5ff991ae589c0e2443964ac235cf730a0e00ddd6887d"
+    },
+    {
+      "path": "static/skyline-theme.css",
+      "bytes": 7952,
+      "sha256": "8c66176a7ed738513ec0ae78a973eb780ff34db2fa4988ff8c24f6b60af5f995"
+    },
+    {
+      "path": "static/skyline.js",
+      "bytes": 3237,
+      "sha256": "da08ca0c57f6b1db8b0f38ecdfbe7e153f668aa3d61016894595e668fad5f712"
+    },
+    {
+      "path": "static/style.css",
+      "bytes": 13972,
+      "sha256": "238508c0d0b7da3a993d6c148904ad2d15e5bcc243e07668a22c5df76427f3c5"
+    },
+    {
+      "path": "static/vendor/LEAFLET-LICENSE.txt",
+      "bytes": 1395,
+      "sha256": "53e8dc25862014e4324741ca18fbe3611e11d42ef69f59f86ea8c5389647d4cb"
+    },
+    {
+      "path": "static/vendor/leaflet.css",
+      "bytes": 14806,
+      "sha256": "a7837102824184820dfa198d1ebcd109ff6d0ff9a2672a074b9a1b4d147d04c6"
+    },
+    {
+      "path": "static/vendor/leaflet.js",
+      "bytes": 147552,
+      "sha256": "db49d009c841f5ca34a888c96511ae936fd9f5533e90d8b2c4d57596f4e5641a"
+    },
+    {
+      "path": "static/weather.js",
+      "bytes": 13395,
+      "sha256": "787ce9af97b2978567c9f7c4e3ab1a2678869d99723a25cc95ad8312a9cda1c8"
+    },
+    {
+      "path": "static/workspace.css",
+      "bytes": 1680,
+      "sha256": "54a965d0c8d52452bcd863fde6437211866401e8e3da8636bf16f8b6119943ab"
+    },
+    {
+      "path": "static/workspace.js",
+      "bytes": 4028,
+      "sha256": "05ff3a7566e69e81dfb821e70eac3ab9db991f75eea47021f61a64ba6e3bae16"
+    },
+    {
+      "path": "test_assistant.py",
+      "bytes": 17585,
+      "sha256": "8af49d8ea7782706014f327ad356417abd62d182bc86d805da4d3b446119f405"
+    },
+    {
+      "path": "test_demos.py",
+      "bytes": 963,
+      "sha256": "555041291c3155fda13ad9295a4eb4e1d162e3e48b4fc4d7b5d0c723659823d4"
+    },
+    {
+      "path": "test_evidence.py",
+      "bytes": 4392,
+      "sha256": "1e67b2c69610b907c8bbaa249824ca6bd14a79e535d108402ca606ad2d3321f4"
+    },
+    {
+      "path": "test_geocoder.py",
+      "bytes": 3510,
+      "sha256": "03dda8b51e93cd45da1f3d41c581dcc8b14195a82dc9dc1cf7c8ebcef4e79873"
+    },
+    {
+      "path": "test_geography.py",
+      "bytes": 8216,
+      "sha256": "a1e0c4ded36ec28f069d195dd944dd1617ad47a05ea3d117e33f45ae8bde5d3a"
+    },
+    {
+      "path": "test_location.cjs",
+      "bytes": 2609,
+      "sha256": "0dbf1101ce1578a8bac6c4cdb084955133f041ffd809164ba40255e9d62ef160"
+    },
+    {
+      "path": "test_model_promotion.py",
+      "bytes": 3972,
+      "sha256": "17ab30fbd69b474c6dd17bc14395aa3f940818e71e773214ebd84f8188b2f8de"
+    },
+    {
+      "path": "test_mosaic.py",
+      "bytes": 4713,
+      "sha256": "4a84c3e1552214215a74b3fc90341c4f194ddddb1a57cfa1a801408dd61f9a0e"
+    },
+    {
+      "path": "test_regions.py",
+      "bytes": 2605,
+      "sha256": "b511d1c9eeaeaec5372631aa4653a2b986443eb85852f199bb9b0b2360dbd41e"
+    },
+    {
+      "path": "test_review_filters.cjs",
+      "bytes": 1211,
+      "sha256": "54f33641c45655bc3c93aa7ca5e79e69279111a04296272a25773f56f8114c45"
+    },
+    {
+      "path": "test_roads.py",
+      "bytes": 3998,
+      "sha256": "d35a88ed2892d04c173fd3824a2950fb914007767ecdc6b318544c22aa1fb761"
+    },
+    {
+      "path": "test_skyline_update.py",
+      "bytes": 2914,
+      "sha256": "58af0976dd0d53c395065e2d34f8c69fae4577f17e41fc84382eb5e06c20bb2c"
+    },
+    {
+      "path": "test_unet_integration.py",
+      "bytes": 3924,
+      "sha256": "2b4d08ef7c15ee72e26849a3ee836efa46d3e44f2d6ff6de4b8b0b2820e464c5"
+    },
+    {
+      "path": "test_weather.py",
+      "bytes": 4904,
+      "sha256": "158a95437950f724b09632937723e785b5f8a9401ad1c1b0084ba8ddd0b5e64c"
+    },
+    {
+      "path": "test_workspace.py",
+      "bytes": 4722,
+      "sha256": "92728a7ebc071737ea8e2c8c7eadb1a1ca6bb5bdcbfb8c605685aaba325499f5"
+    },
+    {
+      "path": "tests/fixtures/unet-smoke.npz",
+      "bytes": 582310,
+      "sha256": "718276e93b3032b3e922d417de7ea67ef573490de56dce9debe7e1f9b7484189"
+    },
+    {
+      "path": "two-minute-demo-script.txt",
+      "bytes": 4706,
+      "sha256": "ae75a2871a7b2a72bff7b7872e9d6177f7859c1306063c8b7db7fc0838db62c1"
+    },
+    {
+      "path": "unet_inference.py",
+      "bytes": 7399,
+      "sha256": "3a011b4e1fa20f659ce03f6c745f1fc0808bdb18e5a65887c5c8919348e8fee3"
+    },
+    {
+      "path": "weather.py",
+      "bytes": 13298,
+      "sha256": "0e4b72932b2ac97fe60cd74641c19b6948dff5a478c71b5c0881dd1f787406ff"
+    },
+    {
+      "path": "workspace_assistant.py",
+      "bytes": 6384,
+      "sha256": "f03619dca742b4b4abf6419a0d65cefac2789cac43f66c763304a04e7435a8ba"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "epochs": 30,
+  "batch": 8,
+  "lr": 0.0001,
+  "weight_decay": 0.0001,
+  "positive_weight": 3,
+  "patience": 8,
+  "minimum_epochs": 12,
+  "seed": 2023,
+  "initial_checkpoint": "Prior team 14-channel U-Net hard-example experiment",
+  "initial_checkpoint_sha256": "48c8fdfad9aef7b01fe286e8811346a482a10bcd3cbe0ba81a2f5c4b722495f0",
+  "reference_type": "Official Taiwan 2023 satellite-interpreted inventory; unreviewed transfer to Sentinel-2, not field-confirmed labels",
+  "band_order": [
+    "B1",
+    "B2",
+    "B3",
+    "B4",
+    "B5",
+    "B6",
+    "B7",
+    "B8",
+    "B9",
+    "B11",
+    "B12",
+    "slope",
+    "DEM"
+  ],
+  "input_size": 128,
+  "comparison": "Frozen 13-channel transfer of best 14-channel U-Net versus local fine-tuning; both use identical local train-only normalization.",
+  "limits": [
+    "Satellite interpretation, not field-confirmed events or future landslide prediction.",
+    "Unmapped areas within 500 m are weak background labels; inventory mapping limit is 1000 m2.",
+    "Clouds, mismatched-date polygons and boundary uncertainty excluded. Up to 3-day temporal mismatch remains.",
+    "Positive-enriched geographic subset; not a representative nationwide accuracy estimate.",
+    "Geographic separation applies to this local fine-tuning split; prior pretrained exposure to these areas is unknown."
+  ]
+}

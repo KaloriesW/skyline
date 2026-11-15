@@ -1,0 +1,18 @@
+#workspace-qwen[hidden]{display:none!important}
+#workspace-qwen{position:fixed;z-index:5000;right:18px;top:18px;bottom:18px;width:min(470px,calc(100vw - 36px));box-sizing:border-box;overflow:auto;padding:24px;background:rgba(12,23,32,.97);color:#eef5f1;border:1px solid #50766b;border-radius:12px;box-shadow:0 24px 100px #0009;backdrop-filter:blur(20px);font:14px/1.65 Inter,system-ui,sans-serif}
+#workspace-qwen h2{font-size:30px;margin:6px 0 12px;color:#fff}
+#workspace-qwen .wq-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}
+#workspace-qwen button,#workspace-qwen a{font:inherit;color:#bce3d5}
+#workspace-qwen button{background:#17332f;border:1px solid #48635b;border-radius:7px;padding:8px 12px;cursor:pointer}
+#workspace-qwen button:disabled{opacity:.5;cursor:wait}
+#workspace-qwen .wq-head button{background:none;border:0;padding:0}
+.wq-kicker{font-size:10px;letter-spacing:.18em;color:#b5d6ca}
+.wq-suggestions{display:flex;gap:7px;flex-wrap:wrap;margin:20px 0}
+#workspace-qwen .wq-suggestions button{font-size:11px;padding:6px 9px}
+#workspace-qwen article{border-top:1px solid #354c46;padding:18px 0}
+#workspace-qwen article p{white-space:pre-wrap;margin:5px 0}
+#workspace-qwen .wq-user{color:#a3b7b0}
+#workspace-qwen label{display:block;color:#d7e7df;font-size:12px}
+#workspace-qwen textarea{box-sizing:border-box;width:100%;background:#081a19;color:#fff;border:1px solid #48635b;border-radius:6px;padding:12px;font:inherit;resize:vertical}
+#workspace-qwen form button{margin-top:10px;background:#c7e6d7;color:#123327;font-weight:600}
+#workspace-qwen [data-wq-status],#workspace-qwen [data-wq-context]{font-size:11px;color:#a3b7b0}

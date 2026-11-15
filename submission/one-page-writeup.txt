@@ -1,0 +1,17 @@
+SKYLINE / TERRAIN WATCH
+Taiwan landslide review with multispectral AI | Climate track
+
+PROBLEM AND PURPOSE
+Taiwan's mountainous terrain makes post-rainfall landslide screening important, but a satellite detection alone does not tell a reviewer what to inspect. Bare ground, riverbeds and roads can resemble landslides. We built a workflow that puts suspected regions, image dates, coordinates and supporting evidence together for human review.
+
+OUR APPROACH AND CONTRIBUTION
+Our team adapted a ResNet34 U-Net to eleven Sentinel-2 reflectance bands plus elevation and slope. The app fetches free imagery, stitches tiles, excludes cloud/shadow/water and runs overlapping 128-pixel windows at the 10 m analysis grid. Predicted masks become map polygons and coordinate exports. A before/after view, vegetation-change checks and road proximity help prioritize review. Local Qwen proposes scan boundaries for confirmation and answers follow-ups from structured evidence. Our teammate's Skyline weather and PM2.5 app was built during this hackathon and integrated into the same workspace. Optional monitoring checks hourly for newly published scenes while the computer and server are running; acquisitions are not hourly. Existing architectures, pretrained components and AI assistance are credited, not claimed as our inventions.
+
+MEASURED RESULTS
+On the same historical Taiwan inventory holdout, the retained model reached 54.27% pixel IoU and 70.36% Dice, versus 43.15% IoU and 60.29% Dice for the frozen transferred comparator. Precision was 62.13% and recall 81.09%. The evaluation covers 24 patches in three test regions; production inference reproduced the saved counts. Live 6 x 6 km pipeline checks took 58 seconds near Taroko and 130 seconds in Taichung, with 90.8% and 76.9% usable imagery. Taroko produced 76 candidates: a road-distance filter (200 m) retained 22, and adding a one-hectare minimum retained five. These are review priorities, not confirmed events. Skyline's Taichung PM2.5 model had 4.379 micrograms/m3 MAE versus a 5.906 persistence baseline across 365 historical test days (25.9% lower error).
+
+LIMITATIONS AND NEXT STEP
+The small, positive-enriched inventory holdout was repeatedly compared during development; live-image accuracy is unmeasured. Uncertain boundaries and unmapped landslides limit the labels. Terrain is a model input, so its supporting check is not independent validation. Road proximity does not prove blockage, and rainfall is not a calibrated landslide forecast. PM2.5 targets are CAMS estimates, not local sensor truth. Our next step is independent annotation of recent Taiwan scenes and evaluation with local reviewers. The intended benefit is easier inspection prioritization; no prevented disasters or operational time savings have been measured.
+
+SOURCES AND TOOLS
+Taiwan Ministry of Agriculture inventory (data.gov.tw/dataset/168661); Copernicus Sentinel-2 and DEM via Earth Search; Landslide4Sense initialization; OpenStreetMap; MET Norway; Open-Meteo/CAMS/ERA5; CWA; Qwen/Ollama; PyTorch/SMP; Ultralytics baseline experiments; teammate's Skyline; OpenAI Codex coding assistance. Full links and licensing notes are in the accompanying CREDITS.md.

@@ -1,0 +1,6 @@
+# Skyline app server (ui/app/server.py). Python 3.10 or newer.
+fastapi>=0.115
+uvicorn>=0.30
+httpx>=0.27
+# Serves the MCP endpoint at /mcp. Optional: without it the app runs and /mcp is skipped.
+mcp>=2.3,<3

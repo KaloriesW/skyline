@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "python": "3.14.4",
+  "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+  "checks": [
+    "/",
+    "/skyline/",
+    "/api/health",
+    "/api/models",
+    "/api/model/cities",
+    "/api/demos",
+    "saved demo taroko",
+    "saved demo taichung",
+    "model SHA-256",
+    {
+      "actual_model_inference": "passed",
+      "seconds": 2.828,
+      "candidate_pixels": 293
+    }
+  ],
+  "note": "Offline setup and inference checks; not a new accuracy evaluation."
+}

@@ -1,0 +1,19 @@
+{
+  "map_tests_passed": 73,
+  "javascript_filter_tests_passed": 2,
+  "browser_verified": {
+    "hualien_all": 76,
+    "road_within_200m": 22,
+    "road_and_minimum_1ha": 5,
+    "plus_vegetation_support": 0,
+    "reset": 76,
+    "demos": [
+      "taroko",
+      "taichung"
+    ],
+    "before_after_images_loaded_locally": true
+  },
+  "github_patch_check": "passed against user-provided source download",
+  "github_remote_status": "authentication required; not synchronized",
+  "model_changed": false
+}

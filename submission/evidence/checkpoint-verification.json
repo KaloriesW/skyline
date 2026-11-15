@@ -1,0 +1,233 @@
+{
+  "test_images": 24,
+  "threshold": 0.024,
+  "tp": 3290,
+  "fp": 2005,
+  "fn": 767,
+  "tn": 281454,
+  "pixel_iou": 0.5427251732101617,
+  "pixel_dice": 0.7035928143712575,
+  "pixel_precision": 0.6213408876298395,
+  "pixel_recall": 0.8109440473256101,
+  "matches_old_counts": true,
+  "seconds": 0.44124412500241306,
+  "rows": [
+    {
+      "id": "block_06_r0_c0",
+      "tp_fp_fn_tn": [
+        282,
+        11,
+        49,
+        13771
+      ]
+    },
+    {
+      "id": "block_06_r0_c1",
+      "tp_fp_fn_tn": [
+        273,
+        323,
+        27,
+        12774
+      ]
+    },
+    {
+      "id": "block_06_r0_c2",
+      "tp_fp_fn_tn": [
+        237,
+        201,
+        35,
+        12659
+      ]
+    },
+    {
+      "id": "block_06_r1_c0",
+      "tp_fp_fn_tn": [
+        610,
+        244,
+        73,
+        11133
+      ]
+    },
+    {
+      "id": "block_06_r1_c1",
+      "tp_fp_fn_tn": [
+        233,
+        82,
+        85,
+        13364
+      ]
+    },
+    {
+      "id": "block_06_r1_c2",
+      "tp_fp_fn_tn": [
+        165,
+        18,
+        0,
+        13565
+      ]
+    },
+    {
+      "id": "block_06_r2_c0",
+      "tp_fp_fn_tn": [
+        0,
+        6,
+        0,
+        11986
+      ]
+    },
+    {
+      "id": "block_06_r2_c1",
+      "tp_fp_fn_tn": [
+        631,
+        155,
+        102,
+        12608
+      ]
+    },
+    {
+      "id": "block_06_r2_c2",
+      "tp_fp_fn_tn": [
+        109,
+        25,
+        64,
+        13191
+      ]
+    },
+    {
+      "id": "block_15_r0_c0",
+      "tp_fp_fn_tn": [
+        150,
+        103,
+        21,
+        9713
+      ]
+    },
+    {
+      "id": "block_15_r0_c1",
+      "tp_fp_fn_tn": [
+        18,
+        28,
+        24,
+        11523
+      ]
+    },
+    {
+      "id": "block_15_r1_c0",
+      "tp_fp_fn_tn": [
+        18,
+        122,
+        100,
+        12901
+      ]
+    },
+    {
+      "id": "block_15_r1_c1",
+      "tp_fp_fn_tn": [
+        31,
+        35,
+        76,
+        11235
+      ]
+    },
+    {
+      "id": "block_15_r2_c0",
+      "tp_fp_fn_tn": [
+        283,
+        75,
+        38,
+        14352
+      ]
+    },
+    {
+      "id": "block_15_r2_c1",
+      "tp_fp_fn_tn": [
+        16,
+        5,
+        20,
+        13844
+      ]
+    },
+    {
+      "id": "block_15_r2_c2",
+      "tp_fp_fn_tn": [
+        0,
+        0,
+        31,
+        7069
+      ]
+    },
+    {
+      "id": "block_31_r0_c0",
+      "tp_fp_fn_tn": [
+        0,
+        180,
+        1,
+        10119
+      ]
+    },
+    {
+      "id": "block_31_r0_c1",
+      "tp_fp_fn_tn": [
+        3,
+        5,
+        0,
+        7144
+      ]
+    },
+    {
+      "id": "block_31_r0_c2",
+      "tp_fp_fn_tn": [
+        16,
+        38,
+        11,
+        14347
+      ]
+    },
+    {
+      "id": "block_31_r1_c0",
+      "tp_fp_fn_tn": [
+        135,
+        153,
+        4,
+        7635
+      ]
+    },
+    {
+      "id": "block_31_r1_c1",
+      "tp_fp_fn_tn": [
+        12,
+        9,
+        1,
+        14868
+      ]
+    },
+    {
+      "id": "block_31_r1_c2",
+      "tp_fp_fn_tn": [
+        56,
+        47,
+        5,
+        14372
+      ]
+    },
+    {
+      "id": "block_31_r2_c1",
+      "tp_fp_fn_tn": [
+        0,
+        3,
+        0,
+        7615
+      ]
+    },
+    {
+      "id": "block_31_r2_c2",
+      "tp_fp_fn_tn": [
+        12,
+        137,
+        0,
+        9666
+      ]
+    }
+  ],
+  "scope": "Reproduction of historical inventory test metrics through the production inference code. This is not an accuracy evaluation of the new 2026 live scenes."
+}
