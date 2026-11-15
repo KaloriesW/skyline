@@ -2135,7 +2135,9 @@ function askView() {
 function ask(q) {
   q = q.trim(); if (!q) return;
   if (aiAbort) return;
-  if (S.ai.provider !== 'demo') {
+  // Asked before the server probe came back (4 s at most): wait, so the right provider answers.
+  if (skyAI.state === 'checking' && (S.ai.provider === 'skyline' || !aiConfigured())) { probeSkyAI().then(function () { ask(q); }); return; }
+  if (aiProvider() !== 'demo') {
     var btn = $('#ask-btn'); if (btn) btn.textContent = 'Stop';
     llmAsk(q).then(function () { var b2 = $('#ask-btn'); if (b2) b2.textContent = 'Ask'; });
     return;
@@ -2183,8 +2185,10 @@ var CLAUDE_FALLBACK_MODELS = ['claude-opus-5-5', 'claude-opus-5', 'claude-sonnet
 var AnthropicSDK = null, aiAbort = null, aiModels = [];
 
 function aiLabel() {
-  if (S.ai.provider === 'openai') return (S.ai.oaModel || 'no model set') + ' via ' + hostOf(S.ai.oaBase);
-  if (S.ai.provider === 'claude') return 'Claude · ' + (S.ai.claudeModel || 'claude-opus-5-5');
+  var p = aiProvider();
+  if (p === 'openai') return (S.ai.oaModel || 'no model set') + ' via ' + hostOf(S.ai.oaBase);
+  if (p === 'claude') return 'Claude · ' + (S.ai.claudeModel || 'claude-opus-5-5');
+  if (p === 'skyline') return 'Skyline AI' + (skyAI.model ? ' · ' + skyAI.model : '');
   return 'Demo answers';
 }
 function hostOf(u) { try { return new URL(u).host; } catch (e) { return u || 'no URL set'; } }
@@ -2422,7 +2426,9 @@ async function llmAsk(q) {
   var onDelta = function (d) { msg.plain += d; if (!pending) { pending = true; requestAnimationFrame(paint); } };
   try {
     var system = skylineContext();
-    if (S.ai.provider === 'claude') await streamClaude(history, system, onDelta, ctrl.signal);
+    var prov = aiProvider();
+    if (prov === 'claude') await streamClaude(history, system, onDelta, ctrl.signal);
+    else if (prov === 'skyline') await streamSkyline(history, system, onDelta, ctrl.signal);
     else await streamOpenAI(history, system, onDelta, ctrl.signal);
     if (!msg.plain.trim()) msg.plain = '(No answer came back.)';
   } catch (e) {
@@ -2435,12 +2441,19 @@ async function llmAsk(q) {
 
 /* ---------- Settings ---------- */
 function aiSettingsHTML() {
-  var p = S.ai.provider;
-  var segH = '<div class="seg" role="group" aria-label="AI provider">' + [['demo', 'Demo'], ['openai', 'OpenAI-compatible'], ['claude', 'Claude']].map(function (o) {
-    return '<button type="button" data-action="ai-provider" data-val="' + o[0] + '" aria-pressed="' + (p === o[0]) + '">' + o[1] + '</button>';
+  var p = aiProvider(), skyOff = skyAI.state === 'off';
+  var segH = '<div class="seg" role="group" aria-label="AI provider" style="flex-wrap:wrap">' + [['skyline', 'Skyline (no setup)'], ['demo', 'Demo'], ['openai', 'OpenAI-compatible'], ['claude', 'Claude']].map(function (o) {
+    var dis = o[0] === 'skyline' && skyOff;
+    return '<button type="button" data-action="ai-provider" data-val="' + o[0] + '" aria-pressed="' + (p === o[0]) + '"' + (dis ? ' disabled style="opacity:.45;cursor:not-allowed"' : '') + '>' + o[1] + '</button>';
   }).join('') + '</div>';
+  if (skyOff) segH += '<p class="hint">Skyline (no setup) isn’t available on this server. Demo or your own provider still work. <button type="button" class="light-btn" data-action="ai-recheck">Check again</button></p>';
   var body = '';
-  if (p === 'openai') {
+  if (p === 'skyline') {
+    body = '<p class="hint">No key and nothing to set up. Your question and the Skyline data shown for your location go to the Skyline server, which asks a shared model for you.</p>' +
+      (skyAI.state === 'checking' ? '<p class="hint" role="status">Checking whether Skyline AI is available…</p>' : '') +
+      (skyAI.model ? '<p class="hint"><span>Model:</span> <b>' + esc(skyAI.model) + '</b></p>' : '') +
+      (skyAI.remaining != null ? '<p class="hint"><span>Shared budget left:</span> <b>$' + Math.max(0, skyAI.remaining).toFixed(2) + '</b></p>' : '');
+  } else if (p === 'openai') {
     body = '<div class="field"><span class="lbl">Preset</span><div class="chips-row">' + OA_PRESETS.map(function (x) {
         return '<button type="button" class="chip-btn" data-action="ai-preset" data-base="' + esc(x[1]) + '" aria-pressed="' + (S.ai.oaBase === x[1]) + '">' + esc(x[0]) + '</button>';
       }).join('') + '</div></div>' +
@@ -2453,12 +2466,12 @@ function aiSettingsHTML() {
   } else {
     body = '<p class="hint">Canned answers with no network. Pick a provider to use a real model.</p>';
   }
-  if (p !== 'demo') {
+  if (p === 'openai' || p === 'claude') {
     body += setRow('Remember the key on this device', 'Otherwise it’s forgotten when you close the tab', '<button type="button" class="switch" role="switch" aria-checked="' + !!S.ai.remember + '" aria-label="Remember the key on this device" data-action="ai-remember"></button>') +
       '<p class="hint">The key stays in this browser and is sent only to ' + (p === 'claude' ? 'api.anthropic.com' : esc(hostOf(S.ai.oaBase))) + '. Don’t save it on a shared computer.</p>' +
       '<p class="hint ai-status" id="ai-status" role="status"></p>';
   }
-  return '<section class="card" aria-labelledby="st-ai"><h2 id="st-ai">AI assistant</h2><p class="hint">Ask AI can answer with your own model. It gets the same Skyline data the screens show for your location.</p>' + segH + body + '</section>';
+  return '<section class="card" id="ai-card" aria-labelledby="st-ai"><h2 id="st-ai">AI assistant</h2><p class="hint">Ask AI can answer with Skyline’s shared model or your own. It gets the same Skyline data the screens show for your location.</p>' + segH + body + '</section>';
 }
 function aiField(id, label, input) { return '<div class="field"><label for="' + id + '" class="lbl">' + label + '</label>' + input + '</div>'; }
 function modelField(id, key, val, ph) {
@@ -2550,7 +2563,7 @@ function settingsView() {
 
   '<section class="card" aria-labelledby="st-units"><h2 id="st-units">Units &amp; language</h2>' +
     setRow('Temperature', '', seg('units', 'Temperature unit', [['C', '°C'], ['F', '°F']])) +
-    setRow('Language', 'AI answers stay in English in the mockup', seg('lang', 'Language', [['zh', '中文'], ['en', 'English']])) +
+    setRow('Language', 'Demo AI answers follow this too', seg('lang', 'Language', [['zh', '中文'], ['en', 'English']])) +
   '</section>' +
   '<button type="button" class="light-btn" data-action="reset-all">Reset everything to default</button>' +
   '</div></div></div>';
@@ -2645,7 +2658,8 @@ var ACTIONS = {
   'pin-up': function (el) { S.pins = moveIn(S.pins, el.dataset.id, -1); save(); rerender(); },
   'pin-down': function (el) { S.pins = moveIn(S.pins, el.dataset.id, 1); save(); rerender(); },
   'reset-theme': function () { THEME_KEYS.forEach(function (k) { S[k] = DEFAULTS[k]; }); save(); applyTheme(); render(); toast('Theme reset to default'); },
-  'ai-provider': function (el) { S.ai.provider = el.dataset.val; aiModels = []; save(); rerender(); },
+  'ai-provider': function (el) { S.ai.provider = el.dataset.val; S.ai.chosen = true; aiModels = []; save(); rerender(); },
+  'ai-recheck': function (el) { el.disabled = true; el.textContent = 'Checking…'; probeSkyAI(true); },
   'ai-preset': function (el) { S.ai.oaBase = el.dataset.base; aiModels = []; save(); rerender(); },
   'ai-remember': function () { S.ai.remember = !S.ai.remember; save(); saveKeys(); rerender(); },
   'ai-models': function () {
