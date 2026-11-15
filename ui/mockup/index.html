@@ -1152,9 +1152,22 @@ function nearestSource(L) {
 // nearest city elsewhere, never from a university, airport or landmark. Those only become the
 // location name when the user picks them in search.
 function nearestPlace(lat, lon) {
-  var best = null, bd = Infinity, kind = inTW(lat, lon) ? 'District' : 'City';
-  PLACES.forEach(function (p) { if (p.kind !== kind) return; var d = km(lat, lon, p.lat, p.lon); if (d < bd) { bd = d; best = p; } });
-  return { place: best, d: bd };
+  var best = null, bd = Infinity, second = null, sd = Infinity, kind = inTW(lat, lon) ? 'District' : 'City';
+  PLACES.forEach(function (p) {
+    if (p.kind !== kind) return;
+    var d = km(lat, lon, p.lat, p.lon);
+    if (d < bd) { second = best; sd = bd; bd = d; best = p; }
+    else if (d < sd) { sd = d; second = p; }
+  });
+  return { place: best, d: bd, second: second, d2: sd };
+}
+// We only have district centres, not boundaries, so "nearest centre" can name the neighbour for a
+// point close to a border. When the two nearest centres are almost equally far (within 20%), the
+// point is in that uncertain band: keep the nearest as the name but say which district it borders.
+function borderDistrict(np) {
+  var p = np.place, s = np.second;
+  if (!p || !s || p.kind !== 'District' || !(np.d2 < 25) || np.d < 0.8 * np.d2 === false && false) return null;
+  return np.d >= 0.8 * np.d2 ? s : null;
 }
 // Location record for a point: "Nantun District · Taichung · 408 南屯區" in Taiwan, the city elsewhere.
 function autoLoc(lat, lon, kind, extraSub) {
