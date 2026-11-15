@@ -5,6 +5,7 @@ UI design for **Skyline**, a Taiwan-focused weather app built for the hackathon.
 - **Design canvas (Claude Design):** https://claude.ai/artifact/LV5MG4J2AGih4Ew2fPBuC5. It's private until you share it from the page's Share menu.
 - **Planning notes:** [PLANNING.md](PLANNING.md)
 - **Clickable HTML mockup:** [mockup/index.html](mockup/index.html). It's a single file with no build step.
+- **MCP server:** [mcp/](mcp/README.md) lets Claude, ChatGPT, Cursor or any MCP client use Skyline's weather tools.
 
 ## Using the design
 - Press Play on a desktop artboard to click through it. The nav links connect Home, Predictions, and AI Assistant.
@@ -25,13 +26,21 @@ Then open http://localhost:8765.
   - place names in English or 中文
   - coordinates: decimal (`25.03, 121.56`), degrees/minutes/seconds (`23°58′N 121°36′E`), or `lat: … lon: …`
   - IATA (`TPE`) and ICAO (`RCTP`) airport codes
+  - Taiwan postal codes (`408` → 南屯區, `406` → 北屯區; 5-digit codes and addresses starting with a code work too) and district names in English or 中文
   - universities by name or short form (`NTU`, `NYCU`, `清華大學`)
   - "Search worldwide" for anything else (uses the free Open-Meteo geocoding API)
   - "Use my location" (browser GPS)
+- Locations chosen automatically (typed coordinates, "Use my location") are named by district, e.g. "South District · Taichung · 402 南區". A university, airport or landmark is used as the name only when you pick it.
 - The chosen location sets the skyline, the nearest data source, and the "you" pin on prediction maps. Places outside Taiwan get a generic skyline and a Taiwan-only note.
 - Home: use the **Demo** picker to switch the sky. Under **All stats → Customize**, you can drag, resize, hide and restore tiles.
 - Settings actually work: pinned count and order, accent color, risk scale, background, tile style, fonts, corner radius, skyline, map base, reduce motion and °C/°F. They're saved in the browser.
 - 中文 / English switches the whole interface to Traditional Chinese, except the canned AI answers, which stay in English.
 - Turning off a data source in Settings (PM2.5 model, landslide model, typhoon warnings, Windy map) hides the tiles and prediction cards it powers.
+
+- **Sky:** clouds, rain and lightning are drawn on a canvas. You get layered clouds, rain at three depths with wind and splashes, branching lightning that lights the clouds, and lit windows at night. Lightning flashes at most twice per strike, with 3.5 seconds or more between strikes. Reduce motion turns all of it off.
+- **Ask AI** can use your own model (Settings → AI assistant):
+  - **OpenAI-compatible:** OpenAI, OpenRouter, Ollama, LM Studio, or any `/v1/chat/completions` server.
+  - **Claude:** uses the official Anthropic SDK, with Claude Opus 5.5 by default.
+  - Keys stay in the browser and go only to the provider you choose. The model gets the same Skyline data the screens show for your location.
 
 All values are sample data for layout only.

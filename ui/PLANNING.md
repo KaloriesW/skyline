@@ -44,8 +44,14 @@ HTML mockup: [mockup/index.html](mockup/index.html)
   - decimal or degrees/minutes/seconds coordinates
   - IATA and ICAO airport codes
   - university names and short forms
-- An offline list covers Taiwan cities, landmarks, airports and universities, plus a few international ones. Anything else goes to a worldwide geocoder.
+- An offline list covers all 368 Taiwan districts with their 3-digit postal codes (coordinates from Wikidata), plus cities, landmarks, airports and universities, and a few international places. Anything else goes to a worldwide geocoder.
+- Automatic locations (typed coordinates, GPS) are named by district. Universities, airports and landmarks are used as names only when the user picks them.
 - Picking a result sets the location, which drives the skyline, the nearest source, and the map pin.
+
+## AI assistant
+- **Bring your own model:** any OpenAI-compatible API (OpenAI, OpenRouter, Ollama, LM Studio) or Claude through the Anthropic SDK. Ask AI streams the answer and grounds it on the Skyline data for the user's location.
+- **MCP:** `ui/mcp/skyline_mcp.py` exposes find_location, get_weather, get_air_quality, get_thunderstorm_risk and get_pm25_forecast_taichung. This lets people use Skyline from Claude, ChatGPT, Cursor and other MCP clients.
+- **Next:** add landslide and typhoon tools once those have APIs. To give the assistant a public URL, the organizer needs to set up a second public URL.
 
 ## Data-source rule
 - Weather data can come from several APIs (CWA stations, Windy, others). **Each reading always comes from the source closest to the user's current location.**
