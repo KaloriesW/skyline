@@ -607,10 +607,107 @@
     "pm25: cross-validation chose blend (test-year MAE 3.966); boosted did better on the test year (3.878). The choice was not changed.",
     "pm10: cross-validation chose ridge (test-year MAE 4.730); blend did better on the test year (4.212). The choice was not changed."
    ]
+  },
+  {
+   "id": "keelung",
+   "name": "Keelung City",
+   "name_zh": "基隆市",
+   "lat": 25.1317,
+   "lon": 121.7447,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "boosted",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "boosted",
+    "baseline_mae": 6.291,
+    "model_mae": 4.09,
+    "improvement_pct": 35.0,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.254,
+     "ridge": 5.369,
+     "boosted": 4.771,
+     "blend": 4.794,
+     "baseline": 7.092
+    },
+    "test_mae": {
+     "baseline": 6.291,
+     "v1": 4.541,
+     "ridge": 4.494,
+     "boosted": 4.09,
+     "blend": 3.984,
+     "blend_no_weather": 4.981
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 6.825,
+    "model_mae": 5.469,
+    "improvement_pct": 19.9,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 6.854,
+     "ridge": 6.9,
+     "boosted": 8.85,
+     "blend": 7.097,
+     "baseline": 7.467
+    },
+    "test_mae": {
+     "baseline": 6.825,
+     "v1": 5.469,
+     "ridge": 5.309,
+     "boosted": 5.415,
+     "blend": 4.851,
+     "blend_no_weather": 5.853
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 27.5,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 54,
+     "warned": 52,
+     "caught": 41,
+     "false_alarms": 11,
+     "missed": 13,
+     "precision": 0.788,
+     "recall": 0.759
+    },
+    "tuned": {
+     "threshold": 27.5,
+     "bad_days": 54,
+     "warned": 109,
+     "caught": 51,
+     "false_alarms": 58,
+     "missed": 3,
+     "precision": 0.468,
+     "recall": 0.944
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 54,
+     "warned": 54,
+     "caught": 31,
+     "false_alarms": 23,
+     "missed": 23,
+     "precision": 0.574,
+     "recall": 0.574
+    }
+   },
+   "notes": [
+    "pm25: cross-validation chose boosted (test-year MAE 4.090); blend did better on the test year (3.984). The choice was not changed.",
+    "pm10: cross-validation chose v1 (test-year MAE 5.469); blend did better on the test year (4.851). The choice was not changed."
+   ]
   }
  ],
  "missing": [
-  "keelung",
   "hsinchu_city",
   "chiayi_city",
   "hsinchu_county",
