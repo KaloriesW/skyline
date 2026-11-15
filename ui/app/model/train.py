@@ -663,6 +663,10 @@ def write_parity_fixture(path: Path, city: dict, model: dict, aq_raw: dict, wx_r
     }
     cols = {"v1": list(Xv.columns), "full": list(Xf.columns)}
     kinds = {k: export_target(k, sk[k], cols["v1" if k == "v1" else "full"]) for k in ("v1", "ridge", "boosted", "blend")}
+    # The blend's two parts are the same fits as the "ridge" and "boosted" candidates, so the fixture
+    # stores them once (in model.targets.pm25) and the test takes the ridge and boosted kinds from there.
+    if kinds["boosted"]["trees"] != kinds["blend"]["trees"] or kinds["ridge"]["ridge"] != kinds["blend"]["ridge"]:
+        raise RuntimeError("the blend's parts differ from the ridge / boosted candidates")
     fixture_model = copy.deepcopy(model)
     fixture_model["chosen"] = {"pm25": "blend", "pm10": "v1"}
     fixture_model["targets"] = {"pm25": kinds["blend"], "pm10": export_target("v1", sk["pm10_v1"], cols["v1"])}
@@ -683,12 +687,12 @@ def write_parity_fixture(path: Path, city: dict, model: dict, aq_raw: dict, wx_r
 
     doc = {"about": "Recorded Open-Meteo hourly rows (CAMS global + ERA5 + the four upwind points) for the parity tests; "
                     "written by train.py --parity-fixture. `daily`, `up_daily` and `expected[].features` are what pandas "
-                    "computes from them; `expected[].pm25/pm10` are scikit-learn predictions; `kinds` and `model` are the "
-                    "JSON exports of the same fitted models.",
+                    "computes from them; `expected[].pm25/pm10` are scikit-learn predictions of each model kind; `model` "
+                    "(pm25 = blend, pm10 = v1) and `v1_pm25` are the JSON exports of the same fitted models. The ridge and "
+                    "boosted kinds are the two parts of the blend.",
            "city": city["id"], "sklearn": sklearn.__version__, "blanked": blanks, "feature_names": cols,
            "aq": aq, "wx": wx, "up": up, "daily": table(d), "up_daily": table(up_daily), "expected": rows,
-           "kinds": {k: kinds[k] for k in ("v1", "ridge", "boosted")},  # blend is model.targets.pm25
-           "model": fixture_model}
+           "v1_pm25": kinds["v1"], "model": fixture_model}
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(doc, separators=(",", ":")) + "\n")
     print(f"  parity fixture: {path} ({path.stat().st_size / 1024:.0f} KB, {len(rows)} rows)")
