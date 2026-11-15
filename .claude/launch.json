@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "ui-mockup",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "ui/mockup"],
-      "port": 8765
+      "name": "skyline-app",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "PORT=8766 exec ui/app/run.sh"],
+      "port": 8766
     }
   ]
 }
