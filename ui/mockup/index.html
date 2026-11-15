@@ -90,11 +90,12 @@ main{min-height:100vh}
 .bolt{position:absolute;left:26%;top:60px;filter:drop-shadow(0 0 10px #CFD8FF) drop-shadow(0 0 30px #9FB2FF)}
 
 .hero-main{position:relative;z-index:1;flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:96px 24px 8px;text-align:center}
-.loc{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:6px 16px;border-radius:999px;border:0;background:rgba(255,255,255,.14);color:#fff;font-size:20px;font-weight:600;text-shadow:0 1px 12px rgba(0,0,0,.2)}
-.loc:hover{background:rgba(255,255,255,.24)}
-.loc .loc-sub{font-weight:500;opacity:.8;font-size:16px}
-.temp{font-family:var(--display);font-weight:800;font-size:clamp(132px,15vw,210px);line-height:.92;letter-spacing:-.04em;margin-left:.08em;text-shadow:0 6px 40px rgba(0,0,0,.12)}
-.headline{font-family:var(--display);font-weight:700;font-size:clamp(20px,2.2vw,28px);text-shadow:0 1px 14px rgba(0,0,0,.25)}
+.hero-main::before{content:"";position:absolute;left:50%;top:54%;width:min(980px,120%);height:min(520px,90%);transform:translate(-50%,-50%);background:radial-gradient(closest-side,rgba(8,22,52,.26),rgba(8,22,52,.12) 55%,rgba(8,22,52,0));z-index:-1;pointer-events:none}
+.loc{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:6px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(8,24,56,.46);color:#fff;font-size:20px;font-weight:600;text-shadow:0 1px 3px rgba(0,0,0,.35);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.loc:hover{background:rgba(8,24,56,.6)}
+.loc .loc-sub{font-weight:500;opacity:.88;font-size:16px}
+.temp{font-family:var(--display);font-weight:800;font-size:clamp(132px,15vw,210px);line-height:.92;letter-spacing:-.04em;margin-left:.08em;text-shadow:0 2px 6px rgba(0,0,0,.18),0 6px 40px rgba(0,0,0,.22)}
+.headline{font-family:var(--display);font-weight:700;font-size:clamp(20px,2.2vw,28px);text-shadow:0 1px 3px rgba(0,0,0,.4),0 2px 18px rgba(0,0,0,.35)}
 .chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:10px}
 .chip{display:inline-flex;align-items:center;gap:8px;padding:7px 13px;border-radius:999px;background:rgba(8,24,56,.42);font-size:13px;font-weight:600;color:#fff;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .chip .dot{width:8px;height:8px;border-radius:50%;background:#4ADE80;box-shadow:0 0 0 3px rgba(74,222,128,.25)}
@@ -994,10 +995,11 @@ var SKYLINES = (function () {
       mtnFar: 'M0,220 L0,120 Q140,60 300,100 Q420,40 560,90 Q640,70 700,110 L1200,140 L1200,220 Z', mtnNear: 'M820,220 L820,170 Q900,120 980,150 Q1060,110 1200,160 L1200,220 Z',
       blds: mk([60, 90, 70, 110, 80, 50, 95, 120, 70], 420, 30).concat(mk([70, 100, 60, 85, 55], 860, 34)),
       landmark: 'M752,220 V160 H744 L752,142 H746 L754,124 H748 L756,106 H750 L758,88 H752 L760,70 H756 V44 H760 V14 H764 V44 H768 V70 H764 L772,88 H766 L774,106 H768 L776,124 H770 L778,142 H772 L780,160 H772 V220 Z' },
-    Taichung: { lat: 24.1477, lon: 120.6736, label: 'Taichung skyline: the National Theater’s wave roof in front of the Dakeng hills',
+    Taichung: { lat: 24.1477, lon: 120.6736, label: 'Taichung skyline: the National Taichung Theater, a box cut by curved openings, in front of the Dakeng hills',
       mtnFar: 'M0,220 L0,140 L160,80 L260,120 L380,60 L520,110 L660,70 L800,120 L960,80 L1200,120 L1200,220 Z', mtnNear: 'M0,220 L0,180 Q200,140 400,170 Q600,150 800,175 Q1000,150 1200,180 L1200,220 Z',
       blds: mk([50, 80, 65, 95, 70, 55], 300, 34).concat(mk([60, 85, 75, 50], 860, 34)),
-      landmark: 'M520,220 V160 Q560,120 600,160 Q640,118 680,160 Q720,122 760,160 V220 Z' },
+      landmark: 'M520,220 V124 H780 V220 Z M538,124 a7,7 0 0 1 14,0 Z M582,124 a5,5 0 0 1 10,0 Z M634,124 a8,8 0 0 1 16,0 Z M694,124 a6,6 0 0 1 12,0 Z M748,124 a7,7 0 0 1 14,0 Z',
+      glass: 'M530,220 C531,168 589,168 590,220 Z M620,220 C621,168 679,168 680,220 Z M710,220 C711,168 769,168 770,220 Z M582,172 C583,204 627,204 628,172 Z M672,172 C673,204 717,204 718,172 Z M532,124 C533,166 587,166 588,124 Z M622,124 C623,166 677,166 678,124 Z M712,124 C713,166 767,166 768,124 Z M583,172 C584,128 626,128 627,172 Z M673,172 C674,128 716,128 717,172 Z' },
     Tainan: { lat: 22.9999, lon: 120.2270, label: 'Tainan skyline: a temple roof with upturned eaves among low old-town houses',
       mtnFar: 'M0,220 L0,170 Q300,140 600,165 Q900,145 1200,170 L1200,220 Z', mtnNear: 'M0,220 L1200,220 L1200,219 L0,219 Z',
       blds: mk([40, 55, 45, 60, 50, 42], 300, 40).concat(mk([45, 58, 40, 52, 48], 820, 40)),
@@ -1494,8 +1496,9 @@ function skyLayers(b) {
   h += '<canvas class="wx-back" aria-hidden="true"></canvas>';
   return h + '</div>';
 }
+function litShare() { return { 'clear-night': 0.42, 'dusk': 0.34, 'thunderstorm': 0.38, 'rain': 0.28, 'dawn': 0.16, 'cloudy': 0.1 }[S.weather] || 0; }
 function litWindows(city) {
-  var share = { 'clear-night': 0.42, 'dusk': 0.34, 'thunderstorm': 0.38, 'rain': 0.28, 'dawn': 0.16, 'cloudy': 0.1 }[S.weather] || 0;
+  var share = litShare();
   if (!share) return '';
   var R = SkyFX.rng(7), w = '';
   city.blds.forEach(function (r) {
@@ -1510,6 +1513,7 @@ function skylineSVG(city, b) {
     '<path d="' + city.mtnNear + '" fill="#0B1B3F" fill-opacity="0.4"/>' +
     '<g fill="#0B1B3F" fill-opacity="0.82">' + blds + '</g>' + litWindows(city) +
     (city.landmark ? '<path d="' + city.landmark + '" fill="#0B1B3F" fill-opacity="0.95"/>' : '') +
+    (city.glass ? '<path d="' + city.glass + '" fill="' + (litShare() >= 0.28 ? '#FFD58A' : '#C7D6EE') + '" fill-opacity="' + (litShare() >= 0.28 ? 0.62 : 0.42) + '"/>' : '') +
     '<rect x="0" y="214" width="1200" height="8" fill="#0B1B3F"/></svg>';
 }
 
