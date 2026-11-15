@@ -14,7 +14,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<!-- ?v= forces a fresh copy: Cloudflare lets browsers cache .js/.css for 4 hours. Bump it on each deploy. -->
+<link rel="stylesheet" href="styles.css?v=20261115b">
 </head>
 <body data-page="home" data-mood="neutral" data-day="1">
 <!-- Sky behind every screen: mood gradient, haze and the effects canvas (sky.js) -->
@@ -99,9 +100,9 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="icons.js"></script>
-<script src="sky.js"></script>
-<script src="horizon.js"></script>
-<script src="app.js"></script>
+<script src="icons.js?v=20261115b"></script>
+<script src="sky.js?v=20261115b"></script>
+<script src="horizon.js?v=20261115b"></script>
+<script src="app.js?v=20261115b"></script>
 </body>
 </html>
