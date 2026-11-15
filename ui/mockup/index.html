@@ -363,7 +363,7 @@ input[type=range].plain{width:100%;accent-color:#1E5BC6}
   main{padding-bottom:78px}
   .hero{min-height:calc(100vh - 78px)}
   .hero-main{padding:112px 16px 4px}
-  .loc{font-size:17px}.loc .loc-sub{font-size:14px}
+  .loc{font-size:17px;max-width:100%;white-space:nowrap}.loc>span:not(.loc-sub){flex:none}.loc .loc-sub{font-size:13px;min-width:0;overflow:hidden;text-overflow:ellipsis}
   .temp{font-size:124px}
   .headline{font-size:20px}
   .demo{left:50%;right:auto;top:64px;transform:translateX(-50%);white-space:nowrap}
