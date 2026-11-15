@@ -1,17 +1,23 @@
-"""Train next-day PM2.5 / PM10 models, one per Taiwan city/county, and export them as small JSON.
+"""Train next-day PM2.5 / PM10 models, one per Taiwan city/county, and export them as JSON.
 
-Same recipe as the team's Taichung model (branch `app`, skyline/backend/train.py + airmodel.py), with the
-coordinates as a parameter:
+This is the team's "Model v2" (branch `app`, skyline/backend/train.py + airmodel.py + sources.py, commit
+0a863c3) with the city coordinates as the only parameter:
 
-- Inputs: CAMS global PM2.5/PM10 and ERA5 weather, both hourly from Open-Meteo (no key).
+- Inputs: CAMS global PM2.5/PM10 and ERA5 weather, both hourly from Open-Meteo (no key), plus daily mean
+  CAMS PM2.5 at four fixed upwind points (the same four for every city).
 - Row t describes day t (plus tomorrow's weather) and predicts day t+1's mean PM2.5 / PM10.
+- Feature sets: "v1" (the first model's 25 features), "full" (v1 + rolling means, trend, upwind PM2.5 and
+  north_push = 33) and "nowx" (full without tomorrow's weather, for the report only).
+- Candidates per target: v1 (ridge on v1), ridge (full), boosted (HistGradientBoosting on full) and
+  blend (mean of that ridge and those trees).
 - Split by time: the last 365 days are the test set, everything before (minus a 1-day gap) is training.
-  A validation slice (the last 180 days of training) says which model would be picked; the test year
-  is scored once and never used for a choice.
+- Every choice (model per target, bad-day warning threshold) is made with rolling-origin cross-validation
+  inside the training period: 4 folds of 91 days covering its last year. The test year is scored once.
 - Baseline: "tomorrow = same as today".
-- Deployed model: ridge (StandardScaler + Ridge) for every city, exported as plain numbers so the server
-  needs no scikit-learn / pandas / pickle. The boosted model is still fitted and scored like the original;
-  each city's metrics say which one validation would have chosen and what the test gap is.
+- The live model is the cross-validation winner, refitted on every day, and exported as plain numbers:
+  ridge as mean/scale/coef/intercept, trees as node tables. The server (predict.py) needs no
+  scikit-learn, pandas or pickle. Each export is checked against scikit-learn on every row before it is
+  written (the difference is recorded in the model file as `parity`).
 
 Run (from a virtualenv with requirements-train.txt; keep the cache OUTSIDE the repo):
 
@@ -20,18 +26,21 @@ Run (from a virtualenv with requirements-train.txt; keep the cache OUTSIDE the r
     python ui/app/model/train.py --cache-dir /some/dir/pm_data --force         # retrain everything
 
 It is resumable: raw downloads are cached per city, cities whose output already exists for the same END
-date are skipped, and summary.json is rebuilt from whatever metrics files exist.
+date and recipe are skipped, and summary.json is rewritten after every city.
 
 Open-Meteo's free tier (https://open-meteo.com/en/pricing, read 2026-11-15): 600 calls/minute, 5,000/hour,
 10,000/day. A request for more than two weeks or more than 10 variables counts as several calls
 (fractionally: days/14 x variables/10), so one city's ~4.3 years costs about 110 calls per request and two
-requests per city. 22 cities are about 4,900 calls: under the daily limit and just under the hourly one,
-so downloads are spaced out (--pause) and 429s are retried with a long back-off.
+requests per city, and the four upwind points about 450 once. 22 cities are about 5,300 calls: under the
+daily limit and over the hourly one, so downloads are spaced out (--pause) and 429s are retried with a
+long back-off.
 """
 from __future__ import annotations
 
 import argparse
+import copy
 import json
+import math
 import sys
 import time
 from datetime import date, timedelta
@@ -40,12 +49,17 @@ from pathlib import Path
 import httpx
 import numpy as np
 import pandas as pd
+import sklearn
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.linear_model import Ridge
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import predict as pyinfer  # noqa: E402  (the server-side, plain-Python inference: used to check every export)
+
+FORMAT = 2  # model file format / recipe version; a city trained with another one is retrained
 TZ = "Asia/Taipei"
 AQ_URL = "https://air-quality-api.open-meteo.com/v1/air-quality"
 ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
@@ -53,17 +67,23 @@ MODEL_WX = ["temperature_2m", "relative_humidity_2m", "precipitation", "wind_spe
             "wind_direction_10m", "surface_pressure", "boundary_layer_height"]
 WX_DAY = ["temp", "rh", "rain", "wind", "u", "v", "pres", "blh"]
 BAD_DAY_PM25 = 35.0  # µg/m³, US EPA 24-hour standard used by the brief
+UPWIND = {  # CAMS points that pollution often blows in from (the team's four, used for every city)
+    "north": (25.0, 121.2),      # Taoyuan / Hsinchu
+    "fujian": (25.0, 119.0),     # mainland coast across the strait
+    "southwest": (23.8, 120.3),  # Changhua / Yunlin coast (Mailiao)
+    "south": (22.6, 120.3),      # Kaohsiung
+}
 
 START = "2022-08-05"  # CAMS global data via Open-Meteo starts 2022-08-04
 TEST_DAYS = 365
-VAL_DAYS = 180
+FOLDS, FOLD_DAYS = 4, 91
 MIN_HOURS = 20
-RIDGE_ALPHA = 1.0
-MIN_USABLE_DAYS = TEST_DAYS + VAL_DAYS + 365  # refuse to train a city with less than this
+MIN_USABLE_DAYS = TEST_DAYS + FOLDS * FOLD_DAYS + 365  # refuse to train a city with less than this
+PARITY_TOLERANCE = 1e-6
 DATA_NOTE = "PM2.5/PM10: CAMS global via Open-Meteo (model estimates). Weather: ERA5 via Open-Meteo archive."
 
 
-# ---------- features: copied from the team's airmodel.py (must stay identical) ----------
+# ---------- features: copied from the team's airmodel.py v2 (must stay identical) ----------
 
 def daily_table(aq: pd.DataFrame, wx: pd.DataFrame) -> pd.DataFrame:
     """Hourly air quality + weather (local time index) -> one row per day."""
@@ -90,8 +110,12 @@ def daily_table(aq: pd.DataFrame, wx: pd.DataFrame) -> pd.DataFrame:
     return d
 
 
-def features(d: pd.DataFrame, tomorrow_weather: bool = True) -> pd.DataFrame:
-    """Row t describes day t and is used to predict day t+1."""
+def features(d: pd.DataFrame, up: pd.DataFrame | None = None, tomorrow_weather: bool = True) -> pd.DataFrame:
+    """Row t describes day t and is used to predict day t+1.
+
+    Without `up` this is the first model's 25 features. With `up` (daily upwind PM2.5) it adds
+    rolling averages, the day-to-day trend and pollution levels upwind.
+    """
     X = pd.DataFrame(index=d.index)
     for c in ["pm25", "pm25_max", "pm25_eve", "pm10"]:
         X[c] = d[c]
@@ -106,6 +130,15 @@ def features(d: pd.DataFrame, tomorrow_weather: bool = True) -> pd.DataFrame:
     X["doy_sin"] = np.sin(2 * np.pi * tmr.day_of_year / 365.25)
     X["doy_cos"] = np.cos(2 * np.pi * tmr.day_of_year / 365.25)
     X["tmr_weekend"] = (tmr.day_of_week >= 5).astype(int)
+    if up is not None:
+        X["pm25_3d"] = d["pm25"].rolling(3).mean()
+        X["pm25_7d"] = d["pm25"].rolling(7).mean()
+        X["pm25_trend"] = d["pm25"] - d["pm25"].shift(1)
+        for c in up.columns:
+            X["up_" + c] = up[c].reindex(d.index)
+        if tomorrow_weather:
+            # A northerly wind tomorrow (v < 0) carries the northern air south.
+            X["north_push"] = X["up_north"] * np.clip(-d["v"].shift(-1), 0, None)
     return X
 
 
@@ -115,10 +148,25 @@ def hourly_frame(data: dict) -> pd.DataFrame:
     return df
 
 
+def upwind_frame(locations: list) -> pd.DataFrame:
+    """Daily mean CAMS PM2.5 at each UPWIND point, one column per point (the team's sources.upwind())."""
+    cols = {}
+    for name, loc in zip(UPWIND, locations):
+        h = hourly_frame(loc)["pm2_5"]
+        cols[name] = h.groupby(h.index.normalize()).mean()
+    return pd.DataFrame(cols)
+
+
 # ---------- polite, cached downloads ----------
 
 class RateLimited(RuntimeError):
-    """Open-Meteo said no and waiting a sensible time did not help."""
+    """Open-Meteo said no (or could not be reached) and waiting a sensible time did not help."""
+
+
+def _usable(data) -> bool:
+    if isinstance(data, list):
+        return len(data) > 0 and all(isinstance(x, dict) and "hourly" in x for x in data)
+    return isinstance(data, dict) and "hourly" in data
 
 
 class Downloader:
@@ -130,13 +178,13 @@ class Downloader:
         self.calls = 0
         self.client = httpx.Client(timeout=120, headers={"User-Agent": "skyline-train/1.0"})
 
-    def get(self, name: str, url: str, params: dict) -> dict:
+    def get(self, name: str, url: str, params: dict):
         """Cached GET. `name` is the cache file name; a cached file is never re-downloaded."""
         path = self.cache_dir / name
         if path.exists():
             try:
                 data = json.loads(path.read_text())
-                if "hourly" in data:
+                if _usable(data):
                     return data
             except ValueError:
                 pass  # a truncated file from an interrupted run: fetch again
@@ -156,13 +204,15 @@ class Downloader:
             self.calls += 1
             if r.status_code == 200:
                 data = r.json()
+                if not _usable(data):
+                    raise RuntimeError(f"{name}: unexpected answer")
                 tmp = path.with_suffix(".tmp")
                 tmp.write_text(json.dumps(data))
                 tmp.replace(path)
                 return data
             try:
                 reason = str(r.json().get("reason", ""))
-            except ValueError:
+            except (ValueError, AttributeError):
                 reason = r.text[:200]
             if r.status_code == 429:
                 low = reason.lower()
@@ -189,16 +239,44 @@ class Downloader:
         wx = self.get(f"{city['id']}_wx_{start}_{end}.json", ARCHIVE_URL, {**base, "hourly": ",".join(MODEL_WX)})
         return aq, wx
 
+    def upwind(self, start: str, end: str) -> list:
+        """Raw hourly PM2.5 at the four upwind points: one multi-point request, shared by every city."""
+        return self.get(f"upwind_{start}_{end}.json", AQ_URL, {
+            "latitude": ",".join(str(p[0]) for p in UPWIND.values()),
+            "longitude": ",".join(str(p[1]) for p in UPWIND.values()),
+            "timezone": TZ, "domains": "cams_global", "hourly": "pm2_5", "start_date": start, "end_date": end,
+        })
 
-# ---------- models and scores ----------
+
+# ---------- models and scores (the team's train.py v2) ----------
 
 def hgb():
-    return HistGradientBoostingRegressor(max_iter=400, learning_rate=0.04, max_leaf_nodes=15,
+    return HistGradientBoostingRegressor(max_iter=200, learning_rate=0.05, max_leaf_nodes=31,
                                          min_samples_leaf=20, l2_regularization=1.0, random_state=0)
 
 
 def ridge():
-    return make_pipeline(StandardScaler(), Ridge(alpha=RIDGE_ALPHA))
+    return make_pipeline(StandardScaler(), Ridge(alpha=1.0))
+
+
+class Blend:
+    """Average of a Ridge regression and gradient-boosted trees."""
+
+    def __init__(self):
+        self.parts = [ridge(), hgb()]
+
+    def fit(self, X, y):
+        for m in self.parts:
+            m.fit(X, y)
+        return self
+
+    def predict(self, X):
+        return np.mean([m.predict(X) for m in self.parts], axis=0)
+
+
+# name -> (model factory, feature set). "v1" is the first model the team shipped (Ridge, 25 features).
+CANDIDATES = {"v1": (ridge, "v1"), "ridge": (ridge, "full"), "boosted": (hgb, "full"), "blend": (Blend, "full")}
+EXTRA = {"blend_no_weather": (Blend, "nowx")}
 
 
 def mae(a, b):
@@ -209,10 +287,11 @@ def rmse(a, b):
     return float(np.sqrt(np.mean((np.asarray(a) - np.asarray(b)) ** 2)))
 
 
-def warn_scores(actual, pred):
-    act, prd = np.asarray(actual) > BAD_DAY_PM25, np.asarray(pred) > BAD_DAY_PM25
+def warn_scores(actual, pred, threshold=BAD_DAY_PM25):
+    act, prd = np.asarray(actual) > BAD_DAY_PM25, np.asarray(pred) > threshold
     tp = int((act & prd).sum())
     return {
+        "threshold": threshold,
         "bad_days": int(act.sum()),
         "warned": int(prd.sum()),
         "caught": tp,
@@ -221,8 +300,34 @@ def warn_scores(actual, pred):
     }
 
 
+def cv_predict(make, X, y, train_idx):
+    """Out-of-fold predictions for the last FOLDS*FOLD_DAYS training days (expanding window)."""
+    pred = pd.Series(np.nan, index=train_idx)
+    end = train_idx.max()
+    for k in range(FOLDS, 0, -1):
+        v0 = end - pd.Timedelta(days=k * FOLD_DAYS - 1)
+        val = train_idx[(train_idx >= v0) & (train_idx < v0 + pd.Timedelta(days=FOLD_DAYS))]
+        fit = train_idx[train_idx < v0 - pd.Timedelta(days=1)]  # 1-day gap, as for the test year
+        pred[val] = make().fit(X.loc[fit], y[fit]).predict(X.loc[val])
+    return pred.dropna()
+
+
+def f2(w):
+    """F2 score: like F1 but a missed bad day counts twice as much as a false alarm."""
+    p, r = w["precision"] or 0, w["recall"] or 0
+    return 5 * p * r / (4 * p + r) if p + r else 0.0
+
+
+def tune_threshold(actual, pred):
+    """Warning threshold (predicted PM2.5 above it -> warn) with the best F2 score."""
+    return max((float(t) for t in np.arange(20, BAD_DAY_PM25 + 0.1, 0.5)),
+               key=lambda t: (f2(warn_scores(actual, pred, t)), t))
+
+
+# ---------- export to plain numbers ----------
+
 def export_ridge(pipe) -> dict:
-    """StandardScaler + Ridge as plain numbers: prediction = sum(coef * (x - mean) / scale) + intercept."""
+    """StandardScaler + Ridge: prediction = sum(coef * (x - mean) / scale) + intercept."""
     scaler, reg = pipe.named_steps["standardscaler"], pipe.named_steps["ridge"]
     return {
         "mean": [float(v) for v in scaler.mean_],
@@ -232,53 +337,119 @@ def export_ridge(pipe) -> dict:
     }
 
 
-def prepare(aq_raw: dict, wx_raw: dict):
-    """Raw downloads -> (daily table, features, features without tomorrow's weather, targets), usable rows only."""
+def export_trees(model: HistGradientBoostingRegressor) -> dict:
+    """HistGradientBoostingRegressor as node tables, one flat set of parallel arrays for all trees.
+
+    Checked against scikit-learn 1.9.1 (ensemble/_hist_gradient_boosting: gradient_boosting.py
+    `_raw_predict`, `_predictor.pyx` `_predict_one_from_raw_data`, grower.py `make_predictor`):
+    prediction = _baseline_prediction + sum over iterations of one tree's leaf value (the learning rate is
+    already in the leaf values); in a split node a NaN goes left when missing_go_to_left, otherwise
+    x <= num_threshold goes left; num_threshold is +inf when every non-missing value goes left.
+
+    Per node: f = feature index (-1 = leaf), v = num_threshold of a split (null = +inf) or the value of a
+    leaf, l / r = children as positions inside the node's own tree, m = "1" when a missing value goes left.
+    `root` holds each tree's first position in the flat arrays.
+    """
+    if model.n_trees_per_iteration_ != 1 or getattr(model, "_preprocessor", None) is not None:
+        raise ValueError("only single-output trees on numeric features can be exported")
+    base = np.asarray(model._baseline_prediction, dtype=float).ravel()
+    if base.size != 1:
+        raise ValueError("unexpected baseline prediction shape")
+    f, v, left, right, m, root = [], [], [], [], [], []
+    for (predictor,) in model._predictors:
+        root.append(len(f))
+        for node in predictor.nodes:
+            if node["is_leaf"]:
+                f.append(-1), v.append(float(node["value"])), left.append(0), right.append(0), m.append("0")
+            else:
+                if node["is_categorical"]:
+                    raise ValueError("categorical splits cannot be exported")
+                threshold = float(node["num_threshold"])
+                f.append(int(node["feature_idx"]))
+                v.append(None if math.isinf(threshold) else threshold)
+                left.append(int(node["left"])), right.append(int(node["right"]))
+                m.append("1" if node["missing_go_to_left"] else "0")
+    return {"baseline": float(base[0]), "root": root, "f": f, "v": v, "l": left, "r": right, "m": "".join(m)}
+
+
+def export_target(kind: str, fitted, columns: list[str]) -> dict:
+    """One target's live model, by candidate name."""
+    out = {"kind": kind, "features": list(columns)}
+    if kind in ("v1", "ridge"):
+        out["ridge"] = export_ridge(fitted)
+    elif kind == "boosted":
+        out["trees"] = export_trees(fitted)
+    elif kind == "blend":
+        out["ridge"], out["trees"] = export_ridge(fitted.parts[0]), export_trees(fitted.parts[1])
+    else:
+        raise ValueError(kind)
+    return out
+
+
+def parity(exported: dict, fitted, X: pd.DataFrame) -> float:
+    """Largest |plain-Python prediction - scikit-learn prediction| over the rows of X, through a JSON round trip."""
+    loaded = pyinfer.load_target(json.loads(json.dumps(exported)))
+    want = np.asarray(fitted.predict(X), dtype=float)
+    got = np.array([pyinfer.predict_target(loaded, row) for row in X.to_numpy(dtype=float).tolist()])
+    return float(np.max(np.abs(got - want)))
+
+
+# ---------- one city ----------
+
+def prepare(aq_raw: dict, wx_raw: dict, up: pd.DataFrame):
+    """Raw downloads -> (daily table, {feature set: frame}, targets), usable rows only (the team's filter)."""
     d = daily_table(hourly_frame(aq_raw), hourly_frame(wx_raw))
     d = d[d["hours"] >= MIN_HOURS]
-    full = features(d)
-    nowx = features(d, tomorrow_weather=False)
+    X = {"full": features(d, up), "nowx": features(d, up, tomorrow_weather=False), "v1": features(d)}
     targets = pd.DataFrame({"pm25": d["pm25"].shift(-1), "pm10": d["pm10"].shift(-1)}, index=d.index)
-    # The target day must exist (consecutive days only).
+    # The target day must exist (consecutive days only), and every feature set must be complete.
     nxt = d.index.to_series().shift(-1)
-    ok = (nxt - d.index.to_series() == pd.Timedelta(days=1)) & full.notna().all(axis=1) & targets.notna().all(axis=1)
-    return d, full[ok], nowx[ok], targets[ok]
+    ok = (nxt - d.index.to_series() == pd.Timedelta(days=1)) & X["full"].notna().all(axis=1) \
+        & targets.notna().all(axis=1)
+    return d, {k: v[ok] for k, v in X.items()}, targets[ok]
 
 
-def train_city(city: dict, aq_raw: dict, wx_raw: dict, end: str) -> tuple[dict, dict, dict]:
-    """Returns (model json, metrics json, fitted final pipelines by target)."""
-    d, full, nowx, targets = prepare(aq_raw, wx_raw)
+def train_city(city: dict, aq_raw: dict, wx_raw: dict, up: pd.DataFrame, end: str) -> tuple[dict, dict, dict]:
+    """Returns (model json, metrics json, {"X": feature frames, "targets": frame}) for one city."""
+    d, X, targets = prepare(aq_raw, wx_raw, up)
+    full = X["full"]
     if len(full) < MIN_USABLE_DAYS:
-        raise ValueError(f"only {len(full)} usable days (need {MIN_USABLE_DAYS}); first day with data: "
-                         f"{d.index.min():%Y-%m-%d}" if len(d) else "no days with PM data at all")
-    cols, cols_nowx = list(full.columns), list(nowx.columns)
+        raise ValueError(f"only {len(full)} usable days (need {MIN_USABLE_DAYS}); days with PM data: {len(d)}"
+                         + (f", first {d.index.min():%Y-%m-%d}" if len(d) else ""))
 
     test_start = full.index.max() - pd.Timedelta(days=TEST_DAYS - 1)
     train_mask = full.index < test_start - pd.Timedelta(days=1)  # 1-day gap so no target overlaps the test inputs
     test_mask = full.index >= test_start
-    val_start = full.index[train_mask].max() - pd.Timedelta(days=VAL_DAYS - 1)
-    fit_mask = train_mask & (full.index < val_start)
-    val_mask = train_mask & (full.index >= val_start)
+    train_idx = full.index[train_mask]
 
-    results, validation_choice, series, failures, intervals, monthly, exported, finals = {}, {}, {}, [], {}, {}, {}, {}
+    results, chosen, series, failures, intervals, monthly, cv, feature_cols = {}, {}, {}, [], {}, {}, {}, {}
+    exported, parity_diff = {}, {}
+    warn_threshold, cv_warn = BAD_DAY_PM25, {}
     test_dates = full.index[test_mask]
     for target in ["pm25", "pm10"]:
         y = targets[target]
-        # Which model would the validation slice pick? (Recorded; ridge is deployed either way.)
-        val_scores = {}
-        for name, make in [("ridge", ridge), ("boosted", hgb)]:
-            m = make().fit(full[fit_mask], y[fit_mask])
-            val_scores[name] = mae(y[val_mask], m.predict(full[val_mask]))
-        validation_choice[target] = min(val_scores, key=val_scores.get)
+        # 1. Choose the model with cross-validation on training days.
+        oof = {name: cv_predict(make, X[fs], y, train_idx) for name, (make, fs) in CANDIDATES.items()}
+        cv_idx = oof["ridge"].index
+        cv[target] = {name: mae(y[cv_idx], p) for name, p in oof.items()}
+        cv[target]["baseline"] = mae(y[cv_idx], full.loc[cv_idx, target])
+        best = min(CANDIDATES, key=lambda n: cv[target][n])
+        chosen[target] = best
+        if target == "pm25":
+            warn_threshold = tune_threshold(y[cv_idx], oof[best])
+            cv_warn = {"baseline": warn_scores(y[cv_idx], full.loc[cv_idx, "pm25"]),
+                       "model_35": warn_scores(y[cv_idx], oof[best]),
+                       "model_tuned": warn_scores(y[cv_idx], oof[best], warn_threshold)}
 
-        # Refit on all training days, score once on the test year.
+        # 2. Refit on all training days, score once on the test year.
         preds = {"baseline": full.loc[test_mask, target].values}
-        for name, make, X in [("ridge", ridge, full), ("boosted", hgb, full), ("boosted_no_weather", hgb, nowx)]:
-            preds[name] = make().fit(X[train_mask], y[train_mask]).predict(X[test_mask])
+        for name, (make, fs) in {**CANDIDATES, **EXTRA}.items():
+            m = make().fit(X[fs][train_mask], y[train_mask])
+            preds[name] = m.predict(X[fs][test_mask])
         actual = y[test_mask].values
         results[target] = {name: {"mae": mae(actual, p), "rmse": rmse(actual, p)} for name, p in preds.items()}
-        results[target]["validation_mae"] = val_scores
-        main_pred = preds["ridge"]  # the deployed model: intervals, series and failures describe what is served
+        results[target]["cv_mae"] = cv[target]
+        main_pred = preds[best]
         resid = actual - main_pred
         intervals[target] = [float(np.percentile(resid, 10)), float(np.percentile(resid, 90))]
         series[target] = {
@@ -294,6 +465,7 @@ def train_city(city: dict, aq_raw: dict, wx_raw: dict, end: str) -> tuple[dict, 
         ]
         if target == "pm25":
             results["warnings"] = {name: warn_scores(actual, p) for name, p in preds.items()}
+            results["warnings"]["tuned"] = warn_scores(actual, main_pred, warn_threshold)
             worst = np.argsort(-np.abs(resid))[:5]
             rows = np.where(test_mask)[0]
             failures = [{
@@ -305,23 +477,25 @@ def train_city(city: dict, aq_raw: dict, wx_raw: dict, end: str) -> tuple[dict, 
                 "tomorrow_wind_kmh": round(float(full["tmr_wind"].iloc[rows[i]]), 1),
             } for i in worst]
 
-        # Live model: same recipe, refit on every day we have (train + test).
-        finals[target] = ridge().fit(full, y)
-        exported[target] = export_ridge(finals[target])
+        # 3. Live model: same recipe, refit on every day we have (train + test), exported and checked.
+        make, fs = CANDIDATES[best]
+        feature_cols[target] = list(X[fs].columns)
+        final = make().fit(X[fs], y)
+        exported[target] = export_target(best, final, feature_cols[target])
+        parity_diff[target] = parity(exported[target], final, X[fs])
+        if not parity_diff[target] < PARITY_TOLERANCE:
+            raise RuntimeError(f"{target}: the exported {best} model differs from scikit-learn by {parity_diff[target]:.3g}")
 
     notes = []
     for target in ["pm25", "pm10"]:
-        r = results[target]
-        if validation_choice[target] != "ridge":
-            gap = r["ridge"]["mae"] - r["boosted"]["mae"]
-            notes.append(
-                f"{target}: validation would have chosen the boosted model (validation MAE {r['validation_mae']['boosted']:.2f} "
-                f"vs ridge {r['validation_mae']['ridge']:.2f}). Ridge is deployed for portability; on the test year ridge MAE is "
-                f"{r['ridge']['mae']:.2f} and boosted {r['boosted']['mae']:.2f} (ridge is {abs(gap):.2f} µg/m³ "
-                f"{'worse' if gap > 0 else 'better'}).")
-        if r["ridge"]["mae"] >= r["baseline"]["mae"]:
-            notes.append(f"{target}: the deployed ridge model does NOT beat the 'same as today' baseline on the test year "
-                         f"(MAE {r['ridge']['mae']:.2f} vs {r['baseline']['mae']:.2f}).")
+        r, best = results[target], chosen[target]
+        winner = min(CANDIDATES, key=lambda n: r[n]["mae"])
+        if winner != best:
+            notes.append(f"{target}: cross-validation chose {best} (test-year MAE {r[best]['mae']:.3f}); "
+                         f"{winner} did better on the test year ({r[winner]['mae']:.3f}). The choice was not changed.")
+        if r[best]["mae"] >= r["baseline"]["mae"]:
+            notes.append(f"{target}: the chosen {best} model does NOT beat the 'same as today' baseline on the test year "
+                         f"(MAE {r[best]['mae']:.3f} vs {r['baseline']['mae']:.3f}).")
 
     city_info = {
         "id": city["id"], "name": city["name"], "name_zh": city["name_zh"], "lat": city["lat"], "lon": city["lon"],
@@ -330,21 +504,19 @@ def train_city(city: dict, aq_raw: dict, wx_raw: dict, end: str) -> tuple[dict, 
         "aq_grid": [aq_raw.get("latitude"), aq_raw.get("longitude")],
         "wx_grid": [wx_raw.get("latitude"), wx_raw.get("longitude")],
     }
-    trained_through = f"{full.index.max():%Y-%m-%d}"
+    upwind = {k: list(v) for k, v in UPWIND.items()}
     metrics = {
-        "city": city_info,
         "trained_on": f"{full.index.min():%Y-%m-%d} .. {full.index[train_mask].max():%Y-%m-%d}",
         "tested_on": f"{test_dates.min():%Y-%m-%d} .. {test_dates.max():%Y-%m-%d}",
+        "cv_on": f"{train_idx[-FOLDS * FOLD_DAYS]:%Y-%m-%d} .. {train_idx.max():%Y-%m-%d} ({FOLDS} folds)",
         "n_train": int(train_mask.sum()),
         "n_test": int(test_mask.sum()),
-        "features": cols,
-        "features_no_weather": cols_nowx,
-        # `chosen` is what is served (the team UI reads results[target][chosen[target]]): ridge everywhere.
-        "chosen": {"pm25": "ridge", "pm10": "ridge"},
-        "deployed": "ridge",
-        "validation_choice": validation_choice,
-        "notes": notes,
+        "features": feature_cols,
+        "upwind": upwind,
+        "chosen": chosen,
         "results": results,
+        "warn_threshold": warn_threshold,
+        "cv_warnings": cv_warn,
         "interval": intervals,
         "monthly": monthly,
         "failures": failures,
@@ -352,49 +524,62 @@ def train_city(city: dict, aq_raw: dict, wx_raw: dict, end: str) -> tuple[dict, 
         "series": series,
         "bad_day_threshold": BAD_DAY_PM25,
         "data": DATA_NOTE,
+        # Not in the team's file: which city this is, honest remarks, and what data there was.
+        "city": city_info,
+        "notes": notes,
         "data_range": {"requested": f"{START} .. {end}", "first_day": f"{d.index.min():%Y-%m-%d}",
                        "last_day": f"{d.index.max():%Y-%m-%d}", "days_with_data": int(len(d)),
                        "usable_days": int(len(full))},
     }
     model = {
+        "format": FORMAT,
         "city": city_info,
-        "kind": "ridge",
-        "alpha": RIDGE_ALPHA,
-        "features": cols,
+        "sklearn": sklearn.__version__,  # the version the trees were grown and read with (see export_trees)
+        "chosen": chosen,
         "targets": exported,
         "interval": intervals,
-        "test_mae": {t: round(results[t]["ridge"]["mae"], 2) for t in ["pm25", "pm10"]},
-        "baseline_mae": {t: round(results[t]["baseline"]["mae"], 2) for t in ["pm25", "pm10"]},
+        "warn_threshold": warn_threshold,
         "bad_day_threshold": BAD_DAY_PM25,
-        "trained_through": trained_through,
+        "upwind": upwind,
+        "test_mae": {t: round(results[t][chosen[t]]["mae"], 2) for t in ["pm25", "pm10"]},
+        "baseline_mae": {t: round(results[t]["baseline"]["mae"], 2) for t in ["pm25", "pm10"]},
+        "parity": parity_diff,  # largest difference from scikit-learn over every row, checked at export
+        "trained_through": f"{full.index.max():%Y-%m-%d}",
         "n_days": int(len(full)),
         "end": end,
     }
-    return model, metrics, finals
+    return model, metrics, {"X": X, "targets": targets}
 
 
 # ---------- summary ----------
 
+def _warn_row(w: dict) -> dict:
+    rnd = lambda v: None if v is None else round(v, 3)  # noqa: E731
+    return {"threshold": w["threshold"], "bad_days": w["bad_days"], "warned": w["warned"], "caught": w["caught"],
+            "false_alarms": w["warned"] - w["caught"], "missed": w["bad_days"] - w["caught"],
+            "precision": rnd(w["precision"]), "recall": rnd(w["recall"])}
+
+
 def summary_row(m: dict) -> dict:
     row = {**{k: m["city"][k] for k in ["id", "name", "name_zh", "lat", "lon"]},
-           "n_train": m["n_train"], "n_test": m["n_test"], "tested_on": m["tested_on"], "deployed": m["deployed"]}
+           "n_train": m["n_train"], "n_test": m["n_test"], "tested_on": m["tested_on"], "cv_on": m["cv_on"],
+           "chosen": m["chosen"]}
     for t in ["pm25", "pm10"]:
-        r = m["results"][t]
-        base, model = r["baseline"]["mae"], r["ridge"]["mae"]
+        r, best = m["results"][t], m["chosen"][t]
+        base, model = r["baseline"]["mae"], r[best]["mae"]
         row[t] = {
+            "chosen": best,
             "baseline_mae": round(base, 3), "model_mae": round(model, 3),
             "improvement_pct": round(100 * (base - model) / base, 1),
             "beats_baseline": bool(model < base),
-            "boosted_mae": round(r["boosted"]["mae"], 3),
-            "validation_choice": m["validation_choice"][t],
+            "cv_mae": {k: round(v, 3) for k, v in r["cv_mae"].items()},
+            "test_mae": {k: round(v["mae"], 3) for k, v in r.items() if k != "cv_mae"},
+            "best_on_test": min(CANDIDATES, key=lambda n: r[n]["mae"]),
         }
     w = m["results"]["warnings"]
-    rnd = lambda v: None if v is None else round(v, 3)  # noqa: E731
-    row["warnings"] = {
-        "bad_days": w["ridge"]["bad_days"], "warned": w["ridge"]["warned"], "caught": w["ridge"]["caught"],
-        "precision": rnd(w["ridge"]["precision"]), "recall": rnd(w["ridge"]["recall"]),
-        "baseline_precision": rnd(w["baseline"]["precision"]), "baseline_recall": rnd(w["baseline"]["recall"]),
-    }
+    row["warn_threshold"] = m["warn_threshold"]
+    row["warnings"] = {"at_35": _warn_row(w[m["chosen"]["pm25"]]), "tuned": _warn_row(w["tuned"]),
+                       "baseline": _warn_row(w["baseline"])}
     row["notes"] = m.get("notes", [])
     return row
 
@@ -402,23 +587,30 @@ def summary_row(m: dict) -> dict:
 def write_summary(cities: list[dict], out_dir: Path) -> list[dict]:
     rows, missing = [], []
     for c in cities:
-        p = out_dir / "metrics" / f"{c['id']}.json"
-        if p.exists() and (out_dir / "models" / f"{c['id']}.json").exists():
-            rows.append(summary_row(json.loads(p.read_text())))
-        else:
+        try:
+            model = json.loads((out_dir / "models" / f"{c['id']}.json").read_text())
+            if model.get("format") != FORMAT:
+                raise ValueError("old format")
+            rows.append(summary_row(json.loads((out_dir / "metrics" / f"{c['id']}.json").read_text())))
+        except (OSError, ValueError, KeyError):
             missing.append(c["id"])
-    doc = {"model": "ridge", "bad_day_threshold": BAD_DAY_PM25, "data": DATA_NOTE,
-           "baseline": "tomorrow = same as today", "cities": rows, "missing": missing}
+    doc = {"model": "v2: cross-validation winner per city and target (v1, ridge, boosted or blend)",
+           "bad_day_threshold": BAD_DAY_PM25, "data": DATA_NOTE, "baseline": "tomorrow = same as today",
+           "upwind": {k: list(v) for k, v in UPWIND.items()}, "cities": rows, "missing": missing}
     (out_dir / "summary.json").write_text(json.dumps(doc, ensure_ascii=False, indent=1) + "\n")
     return rows
 
 
 # ---------- parity fixture ----------
 
-def write_parity_fixture(path: Path, city: dict, model: dict, aq_raw: dict, wx_raw: dict, finals: dict, days: int = 12) -> None:
-    """A small recorded slice (the last `days` days of raw hourly input) with the pandas features and the
-    scikit-learn predictions for it, so a test can check the pure-Python path without pandas or a network.
+def write_parity_fixture(path: Path, city: dict, model: dict, aq_raw: dict, wx_raw: dict, up_raw: list,
+                         fitted: dict, days: int = 30) -> None:
+    """A recorded slice (the last `days` days of raw hourly input) with the pandas features and the
+    scikit-learn predictions of every model kind for it, so a test can check the plain-Python path
+    without pandas, scikit-learn or a network.
 
+    All four kinds are fitted on every day for PM2.5 (v1, ridge, boosted, blend) and v1 for PM10, whatever
+    cross-validation chose; `model` in the fixture is the city's model file with pm25 = blend and pm10 = v1.
     A few values are blanked on purpose so the missing-value rules (mean/sum skip gaps, the evening mean
     uses the last six hourly rows) are covered too.
     """
@@ -428,31 +620,54 @@ def write_parity_fixture(path: Path, city: dict, model: dict, aq_raw: dict, wx_r
         return {"hourly": {k: list(v[-n:]) for k, v in raw["hourly"].items()}}
 
     aq, wx = tail(aq_raw), tail(wx_raw)
-    blanks = {"aq": [["pm2_5", 3 * 24 + 5], ["pm2_5", 3 * 24 + 22], ["pm10", 3 * 24 + 5], ["pm2_5", 6 * 24 + 23]],
-              "wx": [["precipitation", 4 * 24 + 7], ["wind_direction_10m", 5 * 24 + 12], ["boundary_layer_height", 5 * 24 + 3]]}
+    up = [{"latitude": loc.get("latitude"), "longitude": loc.get("longitude"), **tail(loc)} for loc in up_raw]
+    blanks = {"aq": [["pm2_5", 9 * 24 + 5], ["pm2_5", 9 * 24 + 22], ["pm10", 9 * 24 + 5], ["pm2_5", 12 * 24 + 23]],
+              "wx": [["precipitation", 10 * 24 + 7], ["wind_direction_10m", 11 * 24 + 12], ["boundary_layer_height", 11 * 24 + 3]],
+              "up": [[0, 13 * 24 + 4], [2, 14 * 24 + 20]]}
     for src, frame in (("aq", aq), ("wx", wx)):
         for name, i in blanks[src]:
             frame["hourly"][name][i] = None
+    for k, i in blanks["up"]:
+        up[k]["hourly"]["pm2_5"][i] = None
 
     d = daily_table(hourly_frame(aq), hourly_frame(wx))
-    X = features(d)
-    cols = list(X.columns)
-    ok = X.notna().all(axis=1)
+    up_daily = upwind_frame(up)
+    Xf, Xv = features(d, up_daily), features(d)
+    ok = Xf.notna().all(axis=1)
+    X, y = fitted["X"], fitted["targets"]
+    sk = {
+        "v1": ridge().fit(X["v1"], y["pm25"]), "ridge": ridge().fit(X["full"], y["pm25"]),
+        "boosted": hgb().fit(X["full"], y["pm25"]), "blend": Blend().fit(X["full"], y["pm25"]),
+        "pm10_v1": ridge().fit(X["v1"], y["pm10"]),
+    }
+    cols = {"v1": list(Xv.columns), "full": list(Xf.columns)}
+    kinds = {k: export_target(k, sk[k], cols["v1" if k == "v1" else "full"]) for k in ("v1", "ridge", "boosted", "blend")}
+    fixture_model = copy.deepcopy(model)
+    fixture_model["chosen"] = {"pm25": "blend", "pm10": "v1"}
+    fixture_model["targets"] = {"pm25": kinds["blend"], "pm10": export_target("v1", sk["pm10_v1"], cols["v1"])}
     rows = []
-    for day in X.index[ok]:
-        x = X.loc[[day], cols]
+    for day in Xf.index[ok]:
+        xf, xv = Xf.loc[[day]], Xv.loc[[day]]
         rows.append({
             "today": f"{day:%Y-%m-%d}",
-            "features": [float(v) for v in x.iloc[0]],
-            "pm25": float(finals["pm25"].predict(x)[0]),
-            "pm10": float(finals["pm10"].predict(x)[0]),
+            "features": [float(v) for v in xf.iloc[0]],
+            "pm25": {"v1": float(sk["v1"].predict(xv)[0]), "ridge": float(sk["ridge"].predict(xf)[0]),
+                     "boosted": float(sk["boosted"].predict(xf)[0]), "blend": float(sk["blend"].predict(xf)[0])},
+            "pm10": {"v1": float(sk["pm10_v1"].predict(xv)[0])},
         })
-    daily = {f"{day:%Y-%m-%d}": {c: (None if pd.isna(v) else float(v)) for c, v in row.items()} for day, row in d.iterrows()}
-    doc = {"about": "Recorded Open-Meteo hourly rows (CAMS global + ERA5) for the parity test; written by train.py "
-                    "--parity-fixture. `expected` holds the pandas features and the scikit-learn ridge predictions; "
-                    "`model` is the JSON export of the same fitted pipelines.",
-           "city": city["id"], "blanked": blanks, "feature_names": cols, "model": model, "aq": aq, "wx": wx,
-           "daily": daily, "expected": rows}
+
+    def table(frame: pd.DataFrame) -> dict:
+        return {f"{day:%Y-%m-%d}": {c: (None if pd.isna(v) else float(v)) for c, v in row.items()}
+                for day, row in frame.iterrows()}
+
+    doc = {"about": "Recorded Open-Meteo hourly rows (CAMS global + ERA5 + the four upwind points) for the parity tests; "
+                    "written by train.py --parity-fixture. `daily`, `up_daily` and `expected[].features` are what pandas "
+                    "computes from them; `expected[].pm25/pm10` are scikit-learn predictions; `kinds` and `model` are the "
+                    "JSON exports of the same fitted models.",
+           "city": city["id"], "sklearn": sklearn.__version__, "blanked": blanks, "feature_names": cols,
+           "aq": aq, "wx": wx, "up": up, "daily": table(d), "up_daily": table(up_daily), "expected": rows,
+           "kinds": {k: kinds[k] for k in ("v1", "ridge", "boosted")},  # blend is model.targets.pm25
+           "model": fixture_model}
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(doc, separators=(",", ":")) + "\n")
     print(f"  parity fixture: {path} ({path.stat().st_size / 1024:.0f} KB, {len(rows)} rows)")
@@ -489,20 +704,26 @@ def main() -> int:
     dl = Downloader(cache_dir, args.pause, args.max_wait)
     done, skipped, failed, stopped = [], [], {}, None
     fixture_pending = args.parity_fixture
+    up_raw, up = None, None
     for city in todo:
         cid = city["id"]
         model_path = args.out_dir / "models" / f"{cid}.json"
         if model_path.exists() and not args.force and not fixture_pending:
             try:
-                if json.loads(model_path.read_text()).get("end") == args.end:
+                old = json.loads(model_path.read_text())
+                if old.get("end") == args.end and old.get("format") == FORMAT:
                     skipped.append(cid)
                     continue
             except ValueError:
                 pass
         print(f"{cid}: {city['lat']}, {city['lon']}  ({START} .. {args.end})", flush=True)
         try:
+            if up is None:
+                up_raw = dl.upwind(START, args.end)
+                up = upwind_frame(up_raw)
             aq_raw, wx_raw = dl.history(city, START, args.end)
-            model, metrics, finals = train_city(city, aq_raw, wx_raw, args.end)
+            t0 = time.time()
+            model, metrics, fitted = train_city(city, aq_raw, wx_raw, up, args.end)
         except RateLimited as e:
             stopped = f"{cid}: {e}"
             print(f"  STOPPED: {e}", flush=True)
@@ -515,14 +736,19 @@ def main() -> int:
         (args.out_dir / "metrics" / f"{cid}.json").write_text(
             json.dumps(metrics, ensure_ascii=False, separators=(",", ":")) + "\n")
         if fixture_pending:
-            write_parity_fixture(fixture_pending, city, model, aq_raw, wx_raw, finals)
+            write_parity_fixture(fixture_pending, city, model, aq_raw, wx_raw, up_raw, fitted)
             fixture_pending = None
-        r, w = metrics["results"], metrics["results"]["warnings"]["ridge"]
-        print(f"  {metrics['n_train']} train / {metrics['n_test']} test days ({metrics['tested_on']}); "
-              f"pm25 MAE baseline {r['pm25']['baseline']['mae']:.2f} ridge {r['pm25']['ridge']['mae']:.2f} "
-              f"boosted {r['pm25']['boosted']['mae']:.2f}; pm10 baseline {r['pm10']['baseline']['mae']:.2f} "
-              f"ridge {r['pm10']['ridge']['mae']:.2f}; validation picks {metrics['validation_choice']}; "
-              f"bad days {w['bad_days']}, warned {w['warned']}, caught {w['caught']}", flush=True)
+        r, w = metrics["results"], metrics["results"]["warnings"]
+        line = []
+        for t in ["pm25", "pm10"]:
+            line.append(f"{t} -> {metrics['chosen'][t]}: baseline {r[t]['baseline']['mae']:.3f}, " + ", ".join(
+                f"{n} {r[t][n]['mae']:.3f} (cv {r[t]['cv_mae'][n]:.3f})" for n in CANDIDATES))
+        print(f"  {metrics['n_train']} train / {metrics['n_test']} test days ({metrics['tested_on']}), {time.time() - t0:.0f}s\n  "
+              + "\n  ".join(line)
+              + f"\n  warnings: threshold {metrics['warn_threshold']}: {w['tuned']['caught']} of {w['tuned']['bad_days']} caught, "
+                f"{w['tuned']['warned']} warned; at 35: {w[metrics['chosen']['pm25']]['caught']} caught, "
+                f"{w[metrics['chosen']['pm25']]['warned']} warned"
+              + f"\n  export parity vs scikit-learn: {model['parity']}; model file {model_path.stat().st_size / 1024:.0f} KB", flush=True)
         done.append(cid)
         write_summary(cities, args.out_dir)  # after every city, so an interrupted run leaves a correct summary
 
