@@ -1249,7 +1249,7 @@ function liveArrived() {
   clearTimeout(liveTimer);
   liveTimer = setTimeout(function () {
     var ae = document.activeElement, r = route();
-    if (dragId || (ae && ae.id === 'demo-weather')) { liveArrived(); return; }
+    if (dragId || (ae && ae.id === 'demo-weather' && r.page === 'home')) { liveArrived(); return; }
     loadLive(r.page);   // starts any follow-up request (the coast point for an inland location)
     var ch = applyLiveSets();
     if (r.page === 'home') rerender();
@@ -1506,12 +1506,12 @@ function tySet() {
   var lv = STEP_H.map(function (hh, s) {
     var pos = tyPosAt(ty, s);
     return MAP_PLACES.map(function (p) {
-      if (!pos) return 0;
+      if (!pos) return null;   // this time is outside the track: no distance is claimed
       var ll = PLACE_LL[p.name], d = km(ll[0], ll[1], pos[0], pos[1]);
       return (d < 700) + (d < 400) + (d < 200);
     });
   });
-  return { lv: lv, sig: 'ty:' + stamp + ':' + S.lang + src, src: src, basis: 'Forecast track',
+  return { lv: lv, sig: 'ty:' + stamp + ':' + S.lang + src, src: src, basis: 'Forecast track', none: 'Outside the track',
     note: 'Track of ' + esc(ty.name) + '. Each region shows how far the storm centre is from it along the track. These are distances, not official warnings.' };
 }
 // Live levels, source and note for a dataset, or null when it has no data (setNA says why)
@@ -2509,6 +2509,7 @@ function mcpSettingsHTML() {
     '<div class="field"><span class="lbl">Claude Code</span>' + codeBlock('mcp-cc', 'claude mcp add skyline -- python3 ' + path) + '</div>' +
     '<div class="field"><span class="lbl">Claude Desktop, Cursor and other clients (JSON config)</span>' + codeBlock('mcp-json', cfg) + '</div>' +
     '<div class="field"><span class="lbl">Over HTTP, for clients that connect to a URL</span>' + codeBlock('mcp-http', 'python3 ui/mcp/skyline_mcp.py --http --port 8790\n# then add http://localhost:8790/mcp in your client') + '</div>' +
+    (feat('mcp') === true ? '<div class="field"><span class="lbl">This server (connect by URL)</span>' + codeBlock('mcp-here', location.origin + '/mcp') + '</div>' : '') +
     '<p class="hint">Setup steps are in ui/mcp/README.md in the repo.</p></section>';
 }
 function codeBlock(id, text) { return '<div class="code"><pre id="' + id + '">' + esc(text) + '</pre><button type="button" class="light-btn" data-action="copy" data-target="' + id + '">Copy</button></div>'; }
@@ -3207,7 +3208,7 @@ var ZH_APP = {
   'Windy maps': 'Windy 地圖', 'Live map embeds': '嵌入的即時地圖',
   'Not connected on this server': '這台伺服器尚未連接', 'Couldn’t be reached': '無法連線', 'Connected': '已連接',
   'Follows live weather at your location': '跟隨你所在位置的即時天氣',
-  'Sky preview': '天空預覽', 'Default: live weather': '預設：即時天氣',
+  'Sky preview': '天空預覽', 'This server (connect by URL)': '這台伺服器（以網址連線）', 'Outside the track': '不在路徑時間範圍內', 'Default: live weather': '預設：即時天氣',
   'A preview control for demos and testing. It shows another sky on Home until you switch back or reload. Readings are never changed: they stay live.': '示範與測試用的預覽控制。首頁會顯示另一種天空，直到你切換回來或重新載入。數據不會改變，一律維持即時資料。'
 };
 Object.keys(ZH_APP).forEach(function (k) { if (!Object.prototype.hasOwnProperty.call(ZH, k)) ZH[k] = ZH_APP[k]; });
