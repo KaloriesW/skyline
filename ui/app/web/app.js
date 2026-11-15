@@ -1022,7 +1022,6 @@ function retryLive() {
 
 // ----- current conditions -----
 function wmoText(code) { return WMO_TEXT[code] || 'Unknown'; }
-function wmoKind(code) { return code >= 95 ? 'storm' : (code >= 51 && code <= 86) ? 'rain' : code >= 2 ? 'cloud' : 'sun'; }
 function compass(deg) { return COMPASS[Math.round((((+deg % 360) + 360) % 360) / 45) % 8]; }
 function bearing(aLat, aLon, bLat, bLon) {
   var r = Math.PI / 180, dl = (bLon - aLon) * r;
@@ -3729,7 +3728,8 @@ var ZH_WIDGETS = {
   'A widget whose source isn’t connected or can’t be reached says so and shows no number.': '來源尚未連接或無法取得時，小工具會直接說明，不顯示任何數字。',
   'Open Home': '開啟首頁', 'On Home, use + to add widgets and ··· (or a long press on a widget) to drag them around or remove them.': '在首頁用 + 新增小工具，用 ···（或長按小工具）拖曳排列或移除。',
   'No city model within 25 km of this location': '這個位置 25 公里內沒有城市模型',
-  'The model report for this city isn’t available right now.': '目前無法取得這個城市的模型報告。'
+  'The model report for this city isn’t available right now.': '目前無法取得這個城市的模型報告。',
+  'AI assistant': 'AI 助理', 'Copy': '複製', 'Copied': '已複製', 'Use Skyline in your own assistant (MCP)': '在你自己的助理中使用 Skyline（MCP）', 'Model': '模型', 'Preset': '預設組合', 'Base URL': '基礎網址'
 };
 Object.keys(ZH_WIDGETS).forEach(function (k) { if (!Object.prototype.hasOwnProperty.call(ZH, k)) ZH[k] = ZH_WIDGETS[k]; });
 ZHP.push(

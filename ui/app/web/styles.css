@@ -119,6 +119,7 @@ main { position: relative; z-index: 1; min-height: 100vh; }
 
 /* ---------- home: hero ---------- */
 .home { max-width: 1140px; margin: 0 auto; padding: 0 20px 60px; }
+.hero[style*="opacity: 0;"] { pointer-events: none; }
 .hero { text-align: center; padding: 84px 0 0; text-shadow: 0 1px 12px rgba(0,0,0,.18); will-change: transform, opacity; display: flex; flex-direction: column; align-items: center; }
 .place { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; padding: 4px 12px; border: 0; border-radius: 999px; background: none; font-family: var(--display); font-size: 32px; font-weight: 600; letter-spacing: .005em; text-shadow: inherit; transition: background .2s; }
 .place span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -203,7 +204,7 @@ main { position: relative; z-index: 1; min-height: 100vh; }
 .tile-load i:last-child { width: 72%; }
 .tile-na { flex: 1; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; min-height: 0; }
 .tile-na .na-h { font-family: var(--display); font-size: 18px; font-weight: 700; line-height: 1.2; margin-top: 8px; color: rgba(255,255,255,.92); }
-.tile-na p { margin: 0; font-size: 12.5px; line-height: 1.35; color: var(--dim); }
+.tile-na p { margin: 0; font-size: 12.5px; line-height: 1.35; color: var(--dim); overflow: hidden; }
 .tile-retry { margin-top: auto; padding: 4px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.4); background: rgba(255,255,255,.1); font-size: 12px; font-weight: 600; }
 .tile-retry:hover { background: rgba(255,255,255,.2); }
 .tile.is-na { border-style: dashed; }
