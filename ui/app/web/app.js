@@ -670,19 +670,7 @@ function inkFor(hex) {
   var L = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
   return L > 0.35 ? '#2A1A00' : '#FFFFFF';
 }
-function tempOffset(L) { return inTW(L.lat, L.lon) ? 0 : Math.max(-26, Math.min(8, Math.round((23.7 - Math.abs(L.lat)) * 0.45))); }
 function fmtT(c) { return (S.units === 'F' ? Math.round(c * 9 / 5 + 32) : Math.round(c)) + '°'; }
-function nearestSource(L) {
-  var best = null, bd = Infinity;
-  STATIONS.forEach(function (s) {
-    if (s.cwa && !S.sources.cwa) return;
-    var d = km(L.lat, L.lon, s.lat, s.lon);
-    if (d < bd) { bd = d; best = s; }
-  });
-  if (best && bd <= 30) return { name: best.name, dist: fmtKm(bd), station: true };
-  if (S.sources.windyPoint) return { name: 'Windy point forecast', dist: 'at your exact point', station: false };
-  return best ? { name: best.name, dist: fmtKm(bd), station: true } : { name: 'No source enabled', dist: '', station: false };
-}
 // Automatic names (typed coordinates, GPS, default) come from the district in Taiwan or the
 // nearest city elsewhere, never from a university, airport or landmark. Those only become the
 // location name when the user picks them in search.
