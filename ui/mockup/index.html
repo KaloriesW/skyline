@@ -3529,7 +3529,6 @@ ZHP.push(
   [/^(Low|Moderate|High|Very high|Extreme) at today’s peak$/, function (m) { return '今日最高時：' + ZH_LIVE[m[1]]; }],
   [/^(Good|Moderate|Sensitive|Unhealthy) · peaks (\d+) µg\/m³ around (.+)$/, function (m) { return zh(m[1]) + ' · ' + zh(m[3]) + '前後最高 ' + m[2] + ' µg/m³'; }],
   [/^(Good|Moderate|Sensitive|Unhealthy) · tomorrow ([\d.]+) µg\/m³ \(team model\)$/, function (m) { return zh(m[1]) + ' · 明天 ' + m[2] + ' µg/m³（團隊模型）'; }],
-  [/^(Good|Moderate|Sensitive|Unhealthy)$/, function (m) { return m[1]; }],
   [/^Tomorrow’s average, (.*) \(team model\)$/, function (m) { return '明日平均，' + zh(m[1]) + '（團隊模型）'; }],
   [/^(?:Swell ([\d.]+) m · )?(?:from ([NSEW]{1,2}) · )?nearest sea point$/, function (m) { return (m[1] ? '湧浪 ' + m[1] + ' 公尺 · ' : '') + (m[2] ? '來自' + ZH_DIR[m[2]] + '方 · ' : '') + '最近的海面格點'; }],
   [/^(.+) · ([\d.,]+) km (N|NE|E|SE|S|SW|W|NW)$/, function (m) { return m[1] + ' · ' + ZH_DIR[m[3]] + '方 ' + m[2] + ' 公里'; }],
@@ -3583,6 +3582,8 @@ window.addEventListener('hashchange', render);
 applyTheme();
 render();
 startI18n();
+// Refresh live feeds once their 10-minute cache runs out (only while the tab is visible)
+setInterval(function () { if (!document.hidden) loadLive(route().page); }, 60000);
 })();
 </script>
 </body>
