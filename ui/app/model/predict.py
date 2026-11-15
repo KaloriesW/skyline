@@ -118,13 +118,68 @@ def _num(v: Any) -> float:
     return NAN
 
 
-def _mean(vals: List[float]) -> float:
-    ok = [v for v in vals if v == v]
-    return math.fsum(ok) / len(ok) if ok else NAN
+# Sums, the way pandas 3.1 does them. The trees split on thresholds that can sit between two training
+# values one rounding step apart (two days with the same rainfall, added up in a different order), so a
+# daily sum that is "equal up to rounding" is not good enough: the additions must happen in pandas' order.
+#  - A column with no gap anywhere: numpy's add.reduceat per day = first value + numpy's pairwise sum of the rest.
+#  - A column with a gap somewhere: Kahan summation over the values present (pandas' group_sum / group_mean).
+#  - A plain Series.mean() (the evening mean): gaps count as 0 in numpy's sum; divide by the values present.
+
+def _np_sum(a: List[float]) -> float:
+    """numpy's pairwise summation of a float64 array (what a.sum() adds up, in the same order)."""
+    n = len(a)
+    if n < 8:
+        res = -0.0
+        for v in a:
+            res += v
+        return res
+    if n <= 128:
+        r = a[:8]
+        top = n - n % 8
+        for i in range(8, top, 8):
+            for j in range(8):
+                r[j] += a[i + j]
+        res = ((r[0] + r[1]) + (r[2] + r[3])) + ((r[4] + r[5]) + (r[6] + r[7]))
+        for v in a[top:]:
+            res += v
+        return res
+    half = n // 2
+    half -= half % 8
+    return _np_sum(a[:half]) + _np_sum(a[half:])
 
 
-def _sum(vals: List[float]) -> float:
-    return math.fsum(v for v in vals if v == v)  # all gaps -> 0.0, like pandas
+def _kahan(a: List[float]) -> Tuple[float, int]:
+    """(Kahan sum of the values present, how many there are): pandas' group_sum / group_mean kernels."""
+    total = comp = 0.0
+    n = 0
+    for v in a:
+        if v == v:
+            n += 1
+            y = v - comp
+            t = total + y
+            comp = t - total - y
+            total = t
+    return total, n
+
+
+def _group_sum(a: List[float], gaps: bool) -> float:
+    """One day's sum of a column; `gaps` says whether the column has a gap on any day."""
+    if gaps:
+        return _kahan(a)[0]  # all gaps -> 0.0, like pandas
+    return a[0] + _np_sum(a[1:]) if len(a) > 1 else a[0]
+
+
+def _group_mean(a: List[float], gaps: bool) -> float:
+    if gaps:
+        total, n = _kahan(a)
+        return total / n if n else NAN
+    return _group_sum(a, False) / len(a)
+
+
+def _series_mean(a: List[float]) -> float:
+    """Series.mean(): numpy's sum with gaps as 0, divided by the number of values present."""
+    n = sum(1 for v in a if v == v)
+    return _np_sum([v if v == v else 0.0 for v in a]) / n if n else NAN
 
 
 def _max(vals: List[float]) -> float:
@@ -135,8 +190,9 @@ def _max(vals: List[float]) -> float:
 def daily_table(aq_hourly: Dict[str, list], wx_hourly: Dict[str, list]) -> Dict[str, Dict[str, float]]:
     """Open-Meteo `hourly` blocks (air quality, weather; local time) -> {"YYYY-MM-DD": daily row}.
 
-    Same result as airmodel.daily_table(): hours present in both blocks, grouped by local day; means and
-    sums skip gaps; `pm25_eve` is the mean of the day's last six hourly rows; `hours` counts PM2.5 values.
+    Same result as airmodel.daily_table(), to the last bit of every daily mean and sum (see the note on
+    sums above): hours present in both blocks, grouped by local day; means and sums skip gaps; `pm25_eve`
+    is the mean of the day's last six hourly rows; `hours` counts PM2.5 values.
     """
     wx_at = {t: i for i, t in enumerate(wx_hourly["time"])}
     days: Dict[str, Dict[str, List[float]]] = {}
@@ -152,22 +208,28 @@ def daily_table(aq_hourly: Dict[str, list], wx_hourly: Dict[str, list]) -> Dict[
         speed, rad = row["wind_speed_10m"][-1], math.radians(row["wind_direction_10m"][-1])
         row["u"].append(-speed * math.sin(rad))  # NaN when either part is a gap
         row["v"].append(-speed * math.cos(rad))
+    cols = ("pm2_5", "pm10", "u", "v", *MODEL_WX)
+    gaps = {k: any(v != v for r in days.values() for v in r[k]) for k in cols}  # per column, over every day
+
+    def mean(r: Dict[str, List[float]], k: str) -> float:
+        return _group_mean(r[k], gaps[k])
+
     out: Dict[str, Dict[str, float]] = {}
     for day in sorted(days):
         r = days[day]
         out[day] = {
-            "pm25": _mean(r["pm2_5"]),
+            "pm25": mean(r, "pm2_5"),
             "pm25_max": _max(r["pm2_5"]),
-            "pm25_eve": _mean(r["pm2_5"][-6:]),
-            "pm10": _mean(r["pm10"]),
-            "temp": _mean(r["temperature_2m"]),
-            "rh": _mean(r["relative_humidity_2m"]),
-            "rain": _sum(r["precipitation"]),
-            "wind": _mean(r["wind_speed_10m"]),
-            "u": _mean(r["u"]),
-            "v": _mean(r["v"]),
-            "pres": _mean(r["surface_pressure"]),
-            "blh": _mean(r["boundary_layer_height"]),
+            "pm25_eve": _series_mean(r["pm2_5"][-6:]),
+            "pm10": mean(r, "pm10"),
+            "temp": mean(r, "temperature_2m"),
+            "rh": mean(r, "relative_humidity_2m"),
+            "rain": _group_sum(r["precipitation"], gaps["precipitation"]),
+            "wind": mean(r, "wind_speed_10m"),
+            "u": mean(r, "u"),
+            "v": mean(r, "v"),
+            "pres": mean(r, "surface_pressure"),
+            "blh": mean(r, "boundary_layer_height"),
             "hours": float(sum(1 for v in r["pm2_5"] if v == v)),
         }
     return out
@@ -182,7 +244,8 @@ def upwind_daily(locations: List[dict]) -> Dict[str, Dict[str, float]]:
         days: Dict[str, List[float]] = {}
         for t, v in zip(hourly["time"], hourly["pm2_5"]):
             days.setdefault(t[:10], []).append(_num(v))
-        out[name] = {day: _mean(vals) for day, vals in days.items()}
+        gaps = any(v != v for vals in days.values() for v in vals)
+        out[name] = {day: _group_mean(vals, gaps) for day, vals in days.items()}
     return out
 
 
@@ -212,6 +275,8 @@ def features(d: Dict[str, Dict[str, float]], today: date, up: Optional[Dict[str,
     x["tmr_weekend"] = 1.0 if tmr.weekday() >= 5 else 0.0
     if up is not None:
         def rolling(n: int) -> float:  # a gap anywhere in the window makes the mean a gap, as in pandas
+            # pandas keeps a running sum over the whole series here, so its last bits depend on how far
+            # back the series starts; no window of recent days can reproduce them. This is the exact mean.
             vals = [(row_of(-k) or {}).get("pm25", NAN) for k in range(n)]
             return math.fsum(vals) / n if all(v == v for v in vals) else NAN
 
