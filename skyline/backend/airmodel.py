@@ -35,8 +35,12 @@ def daily_table(aq: pd.DataFrame, wx: pd.DataFrame) -> pd.DataFrame:
     return d
 
 
-def features(d: pd.DataFrame, tomorrow_weather: bool = True) -> pd.DataFrame:
-    """Row t describes day t and is used to predict day t+1."""
+def features(d: pd.DataFrame, up: pd.DataFrame | None = None, tomorrow_weather: bool = True) -> pd.DataFrame:
+    """Row t describes day t and is used to predict day t+1.
+
+    Without `up` this is the first model's 25 features. With `up` (daily upwind PM2.5) it adds
+    rolling averages, the day-to-day trend and pollution levels upwind of Taichung.
+    """
     X = pd.DataFrame(index=d.index)
     for c in ["pm25", "pm25_max", "pm25_eve", "pm10"]:
         X[c] = d[c]
@@ -51,7 +55,37 @@ def features(d: pd.DataFrame, tomorrow_weather: bool = True) -> pd.DataFrame:
     X["doy_sin"] = np.sin(2 * np.pi * tmr.dayofyear / 365.25)
     X["doy_cos"] = np.cos(2 * np.pi * tmr.dayofyear / 365.25)
     X["tmr_weekend"] = (tmr.dayofweek >= 5).astype(int)
+    if up is not None:
+        X["pm25_3d"] = d["pm25"].rolling(3).mean()
+        X["pm25_7d"] = d["pm25"].rolling(7).mean()
+        X["pm25_trend"] = d["pm25"] - d["pm25"].shift(1)
+        for c in up.columns:
+            X["up_" + c] = up[c].reindex(d.index)
+        if tomorrow_weather:
+            # A northerly wind tomorrow (v < 0) carries the northern air south to Taichung.
+            X["north_push"] = X["up_north"] * np.clip(-d["v"].shift(-1), 0, None)
     return X
+
+
+class Blend:
+    """Average of a Ridge regression and gradient-boosted trees."""
+
+    def __init__(self, alpha=1.0):
+        from sklearn.ensemble import HistGradientBoostingRegressor
+        from sklearn.linear_model import Ridge
+        from sklearn.pipeline import make_pipeline
+        from sklearn.preprocessing import StandardScaler
+        self.parts = [make_pipeline(StandardScaler(), Ridge(alpha=alpha)),
+                      HistGradientBoostingRegressor(max_iter=200, learning_rate=0.05, max_leaf_nodes=31,
+                                                    min_samples_leaf=20, l2_regularization=1.0, random_state=0)]
+
+    def fit(self, X, y):
+        for m in self.parts:
+            m.fit(X, y)
+        return self
+
+    def predict(self, X):
+        return np.mean([m.predict(X) for m in self.parts], axis=0)
 
 
 # US EPA AQI breakpoints (2024 revision), 24-hour averages.
@@ -110,11 +144,12 @@ class AirModel:
         self.pm10 = joblib.load(MODEL_DIR / "pm10.joblib")
         self.metrics = json.loads((MODEL_DIR / "metrics.json").read_text())
 
-    def predict(self, d: pd.DataFrame, today: pd.Timestamp) -> dict:
-        """d must contain rows for yesterday, today and tomorrow (tomorrow = forecast weather)."""
-        X = features(d).loc[[today], self.metrics["features"]]
-        p25 = max(0.0, float(self.pm25.predict(X)[0]))
-        p10 = max(0.0, float(self.pm10.predict(X)[0]))
+    def predict(self, d: pd.DataFrame, up: pd.DataFrame, today: pd.Timestamp) -> dict:
+        """d must contain the last week, today and tomorrow (tomorrow = forecast weather)."""
+        X = features(d, up).loc[[today]]
+        cols = self.metrics["features"]
+        p25 = max(0.0, float(self.pm25.predict(X[cols["pm25"]])[0]))
+        p10 = max(0.0, float(self.pm10.predict(X[cols["pm10"]])[0]))
         lo25, hi25 = self.metrics["interval"]["pm25"]
         lo10, hi10 = self.metrics["interval"]["pm10"]
         a = aqi(p25, p10)
@@ -129,7 +164,7 @@ class AirModel:
             "aqi": a,
             "category": name,
             "color": color,
-            "bad_day": p25 > BAD_DAY_PM25,
+            "bad_day": p25 > self.metrics.get("warn_threshold", BAD_DAY_PM25),
             "advice": school_advice(a),
             "today": {
                 "pm25": round(float(d.loc[today, "pm25"]), 1),

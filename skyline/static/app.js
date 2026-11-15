@@ -602,10 +602,11 @@
     const m = S.metrics, p = S.pred;
     if (!m) return;
     const ch = m.chosen.pm25, R = m.results;
-    const NAMES = { baseline: 'Tomorrow = today (baseline)', ridge: 'Linear regression (Ridge)', boosted: 'Gradient-boosted trees', boosted_no_weather: 'Boosted trees without weather forecast' };
-    const W = R.warnings;
+    const NAMES = { baseline: 'Tomorrow = today (baseline)', v1: 'First model: Ridge, 25 inputs', ridge: 'Ridge + upwind inputs', boosted: 'Boosted trees + upwind inputs', blend: 'Ridge + trees blend + upwind inputs', blend_no_weather: 'Blend without weather forecast' };
+    const W = R.warnings, ch10 = m.chosen.pm10, WT = W.tuned;
     const better = Math.round((1 - R.pm25[ch].mae / R.pm25.baseline.mae) * 100);
-    const rows = Object.keys(NAMES).map((k) => `<tr class="${k === ch ? 'best' : ''}"><td>${NAMES[k]}${k === ch ? ' ✓' : ''}</td><td>${fmt(R.pm25[k].mae, 2)}</td><td>${fmt(R.pm10[k].mae, 2)}</td><td>${W[k].caught}/${W[k].bad_days}</td><td>${W[k].warned - W[k].caught}</td></tr>`).join('');
+    const rows = Object.keys(NAMES).map((k) => `<tr class="${k === ch ? 'best' : ''}"><td>${NAMES[k]}</td><td>${fmt(R.pm25[k].mae, 2)}${k === ch ? ' ✓' : ''}</td><td>${fmt(R.pm10[k].mae, 2)}${k === ch10 ? ' ✓' : ''}</td><td>${W[k].caught}/${W[k].bad_days}</td><td>${W[k].warned - W[k].caught}</td></tr>`).join('')
+      + `<tr class="best"><td>Skyline warning (forecast above ${fmt(WT.threshold, 1)})</td><td></td><td></td><td>${WT.caught}/${WT.bad_days} ✓</td><td>${WT.warned - WT.caught}</td></tr>`;
     const months = m.monthly.pm25;
     const mmax = Math.max(...months.flatMap((x) => [x.model, x.baseline]));
     const monthBars = months.map((x) => `<div style="display:grid;grid-template-columns:62px 1fr 92px;gap:8px;align-items:center;font-size:12px">
@@ -621,7 +622,7 @@
         <div class="kpi"><b>${fmt(R.pm25[ch].mae, 1)}</b><span>µg/m³ average error, Skyline</span></div>
         <div class="kpi"><b>${fmt(R.pm25.baseline.mae, 1)}</b><span>µg/m³ average error, “same as today”</span></div>
         <div class="kpi"><b style="color:var(--gold)">${better}%</b><span>less error than the baseline</span></div>
-        <div class="kpi"><b>${W[ch].caught}/${W[ch].bad_days}</b><span>days over 35 µg/m³ warned (${W[ch].warned - W[ch].caught} false alarms)</span></div>
+        <div class="kpi"><b>${WT.caught}/${WT.bad_days}</b><span>days over 35 µg/m³ warned (${WT.warned - WT.caught} false alarms)</span></div>
       </div>
       <div class="bigchart">${lineChart(m.series.pm25, ['actual', 'model', 'baseline'], ['#9fd8ff', '#FFC24B', '#ffffff'], 40)}</div>
       <div style="position:relative;height:16px;font-size:11px;color:var(--faint)">${ticks}</div>
@@ -629,13 +630,13 @@
       <h3>All models compared</h3>
       <p style="font-size:12.5px;color:var(--dim);margin-top:-4px">PM2.5 and PM10 columns are mean absolute error in µg/m³ (lower is better).</p>
       <table class="metrics"><tr><th>Model</th><th>PM2.5</th><th>PM10</th><th>Bad days warned</th><th>False alarms</th></tr>${rows}</table>
-      <p style="font-size:12.5px;color:var(--dim)">The model is picked on a validation slice of the training data, not on the test year. Removing tomorrow's weather forecast from the inputs makes the error noticeably worse, so rain and wind are a big part of what the model learns.</p>
+      <p style="font-size:12.5px;color:var(--dim)">✓ marks what Skyline uses. Every choice was made by cross-validation on the training years (${m.cv_on}), not on the test year. That picked the blend for PM2.5 and kept the first model for PM10. The warning threshold is set lower than 35 on purpose: for a school, a missed bad-air day is worse than a false alarm, so Skyline warns when its forecast is above ${fmt(WT.threshold, 1)} µg/m³. Removing tomorrow's weather forecast makes the error noticeably worse, so rain and wind are a big part of what the model learns.</p>
       <h3>Error by month (Skyline vs baseline)</h3><div style="display:grid;gap:6px">${monthBars}</div>
       <h3>Where it fails</h3>
-      <p>Our five biggest misses on the test year. Most are sudden pollution spikes that the model under-predicted. We think this is because it only knows Taichung's own weather and today's levels, so polluted air blown in from elsewhere, or a sudden stagnant day, can push PM2.5 far above what today suggests. Two of the misses had rain in the forecast, so the model may expect rain to clean the air more than it really does. We haven't checked that yet.</p>
+      <p>Our five biggest misses on the test year. Three are sudden spikes the model under-predicted and two are days that cleared up faster than it expected. Adding pollution levels upwind of Taichung helped a little, but the model still only sees daily averages at a few points, so a sudden stagnant day or a short burst of polluted air can still surprise it. Two of the under-predicted days had rain in the forecast, so the model may expect rain to clean the air more than it really does. We haven't checked that yet.</p>
       <div class="fails">${fails}</div>
       <h3>How it works</h3>
-      <p><b>Inputs:</b> today's and yesterday's PM2.5 and PM10 (daily average, peak, evening level), today's weather, and the weather forecast for tomorrow (rain, wind speed and direction, humidity, temperature, pressure, mixing-layer height), plus season and weekend.</p>
+      <p><b>Inputs:</b> today's and yesterday's PM2.5 and PM10 (daily average, peak, evening level), 3- and 7-day averages, today's weather, and the weather forecast for tomorrow (rain, wind speed and direction, humidity, temperature, pressure, mixing-layer height), plus season and weekend. The PM2.5 model also gets today's PM2.5 at four upwind points (Taoyuan, the Fujian coast, the Changhua/Yunlin coast and Kaohsiung), and how hard tomorrow's north wind will push the northern air south.</p>
       <p><b>Training:</b> ${m.n_train} days (${m.trained_on}). Tested once on the next ${m.n_test} days. The live model is then refit on every day for today's forecast.</p>
       <p><b>Honest caveats:</b> the PM2.5/PM10 history comes from the Copernicus CAMS model via Open-Meteo, not from ground stations. It puts ${W.baseline.bad_days} of ${m.n_test} test days above 35 µg/m³, which looks high for Taichung, so the absolute numbers need checking against Ministry of Environment (MOENV) station data. In training we used the weather that actually happened as the “forecast”, so live accuracy will be a little worse than the test score. The next step is to retrain on MOENV station measurements.</p>`);
   }

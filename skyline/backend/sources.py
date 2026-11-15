@@ -12,6 +12,12 @@ FC_URL = "https://api.open-meteo.com/v1/forecast"
 ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 MOENV_URL = "https://data.moenv.gov.tw/api/v2/aqx_p_432"
 MOENV_STATION = "忠明"  # Zhongming station, central Taichung
+UPWIND = {  # CAMS points around Taichung that pollution often blows in from
+    "north": (25.0, 121.2),      # Taoyuan / Hsinchu
+    "fujian": (25.0, 119.0),     # mainland coast across the strait
+    "southwest": (23.8, 120.3),  # Changhua / Yunlin coast (Mailiao)
+    "south": (22.6, 120.3),      # Kaohsiung
+}
 
 MODEL_WX = ["temperature_2m", "relative_humidity_2m", "precipitation", "wind_speed_10m",
             "wind_direction_10m", "surface_pressure", "boundary_layer_height"]
@@ -60,21 +66,35 @@ def air() -> dict:
     })
 
 
-def model_inputs() -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Hourly frames covering yesterday..tomorrow for the live model."""
+def upwind(params: dict, ttl: int = 600) -> pd.DataFrame:
+    """Daily mean CAMS PM2.5 at each UPWIND point, one column per point."""
+    data = _get(AQ_URL, {
+        "latitude": ",".join(str(p[0]) for p in UPWIND.values()),
+        "longitude": ",".join(str(p[1]) for p in UPWIND.values()),
+        "timezone": TZ, "domains": "cams_global", "hourly": "pm2_5", **params,
+    }, ttl=ttl)
+    cols = {}
+    for name, loc in zip(UPWIND, data):
+        h = hourly_frame(loc)["pm2_5"]
+        cols[name] = h.groupby(h.index.normalize()).mean()
+    return pd.DataFrame(cols)
+
+
+def model_inputs() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Hourly frames covering the last week..tomorrow for the live model, plus upwind daily PM2.5."""
     aq = hourly_frame(_get(AQ_URL, {
         "latitude": LAT, "longitude": LON, "timezone": TZ, "domains": "cams_global",
-        "past_days": 2, "forecast_days": 3, "hourly": "pm2_5,pm10",
+        "past_days": 8, "forecast_days": 3, "hourly": "pm2_5,pm10",
     }))
     wx = hourly_frame(_get(FC_URL, {
         "latitude": LAT, "longitude": LON, "timezone": TZ,
-        "past_days": 2, "forecast_days": 3, "hourly": ",".join(MODEL_WX),
+        "past_days": 8, "forecast_days": 3, "hourly": ",".join(MODEL_WX),
     }))
-    return aq, wx
+    return aq, wx, upwind({"past_days": 8, "forecast_days": 3})
 
 
-def history(start: str, end: str) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Hourly history for training (CAMS air quality + ERA5 weather)."""
+def history(start: str, end: str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Hourly history for training (CAMS air quality + ERA5 weather), plus upwind daily PM2.5."""
     aq = hourly_frame(_get(AQ_URL, {
         "latitude": LAT, "longitude": LON, "timezone": TZ, "domains": "cams_global",
         "start_date": start, "end_date": end, "hourly": "pm2_5,pm10",
@@ -83,7 +103,7 @@ def history(start: str, end: str) -> tuple[pd.DataFrame, pd.DataFrame]:
         "latitude": LAT, "longitude": LON, "timezone": TZ,
         "start_date": start, "end_date": end, "hourly": ",".join(MODEL_WX),
     }, ttl=0))
-    return aq, wx
+    return aq, wx, upwind({"start_date": start, "end_date": end}, ttl=0)
 
 
 def moenv_station() -> dict | None:

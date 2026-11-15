@@ -43,12 +43,12 @@ def predict():
     if hit and time.time() - hit[0] < 1800:
         return hit[1]
     try:
-        aq, wx = sources.model_inputs()
+        aq, wx, up = sources.model_inputs()
     except Exception as e:
         raise HTTPException(502, f"Weather source unavailable: {e}")
     d = daily_table(aq, wx)
     today = pd.Timestamp.now(tz=sources.TZ).normalize().tz_localize(None)
-    result = model.predict(d, today)
+    result = model.predict(d, up, today)
     result["model"] = {
         "kind": model.metrics["chosen"]["pm25"],
         "test_mae": round(model.metrics["results"]["pm25"][model.metrics["chosen"]["pm25"]]["mae"], 2),
