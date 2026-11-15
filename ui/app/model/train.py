@@ -415,7 +415,7 @@ def write_summary(cities: list[dict], out_dir: Path) -> list[dict]:
 
 # ---------- parity fixture ----------
 
-def write_parity_fixture(path: Path, city: dict, aq_raw: dict, wx_raw: dict, finals: dict, days: int = 12) -> None:
+def write_parity_fixture(path: Path, city: dict, model: dict, aq_raw: dict, wx_raw: dict, finals: dict, days: int = 12) -> None:
     """A small recorded slice (the last `days` days of raw hourly input) with the pandas features and the
     scikit-learn predictions for it, so a test can check the pure-Python path without pandas or a network.
 
@@ -449,8 +449,9 @@ def write_parity_fixture(path: Path, city: dict, aq_raw: dict, wx_raw: dict, fin
         })
     daily = {f"{day:%Y-%m-%d}": {c: (None if pd.isna(v) else float(v)) for c, v in row.items()} for day, row in d.iterrows()}
     doc = {"about": "Recorded Open-Meteo hourly rows (CAMS global + ERA5) for the parity test; written by train.py "
-                    "--parity-fixture. `expected` holds the pandas features and the scikit-learn ridge predictions.",
-           "city": city["id"], "blanked": blanks, "feature_names": cols, "aq": aq, "wx": wx,
+                    "--parity-fixture. `expected` holds the pandas features and the scikit-learn ridge predictions; "
+                    "`model` is the JSON export of the same fitted pipelines.",
+           "city": city["id"], "blanked": blanks, "feature_names": cols, "model": model, "aq": aq, "wx": wx,
            "daily": daily, "expected": rows}
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(doc, separators=(",", ":")) + "\n")
@@ -514,7 +515,7 @@ def main() -> int:
         (args.out_dir / "metrics" / f"{cid}.json").write_text(
             json.dumps(metrics, ensure_ascii=False, separators=(",", ":")) + "\n")
         if fixture_pending:
-            write_parity_fixture(fixture_pending, city, aq_raw, wx_raw, finals)
+            write_parity_fixture(fixture_pending, city, model, aq_raw, wx_raw, finals)
             fixture_pending = None
         r, w = metrics["results"], metrics["results"]["warnings"]["ridge"]
         print(f"  {metrics['n_train']} train / {metrics['n_test']} test days ({metrics['tested_on']}); "
