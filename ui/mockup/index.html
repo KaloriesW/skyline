@@ -1768,7 +1768,11 @@ function windyURL(layer, zoom) {
 function windyFrame(title, src) {
   return '<iframe class="windy-frame" title="' + esc(title) + '" src="' + esc(src) + '" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>';
 }
-function destroyLive() { if (live && live.map) live.map.remove(); live = null; }
+function destroyLive() {
+  // stop any zoom animation first; removing a map mid-animation throws inside Leaflet
+  if (live && live.map) { try { live.map.stop(); live.map.off(); live.map.remove(); } catch (e) {} }
+  live = null;
+}
 
 function renderLive(d, t, base) {
   var host = $('#pm-live'); if (!host) return;
@@ -1832,7 +1836,7 @@ function thumbHTML(d, base) {
   var px = function (ll) { return [((ll[1] - TW_BOX[0]) / (TW_BOX[2] - TW_BOX[0]) * W).toFixed(1), ((TW_BOX[3] - ll[0]) / (TW_BOX[3] - TW_BOX[1]) * H).toFixed(1)]; };
   var spots = MAP_PLACES.map(function (p, i) {
     var l = d.base[i], q = px(PLACE_LL[p.name]);
-    return '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="' + (20 + l * 9) + '" fill="' + P[l] + '" fill-opacity="' + (base === 'sat' ? 0.7 : 0.8) + '" filter="url(#sk-b16)"/>';
+    return '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="' + (20 + l * 9) + '" fill="' + P[l] + '" fill-opacity="' + (base === 'sat' ? 0.55 : 0.7) + '" filter="url(#sk-b16)"/>';
   }).join('');
   var windy = base === 'windy'
     ? '<rect width="' + W + '" height="' + H + '" fill="url(#sk-windy)" fill-opacity="0.72"/>' +
@@ -1840,7 +1844,7 @@ function thumbHTML(d, base) {
       [60, 140, 220, 300, 380].map(function (y) { return '<path class="sk-flow" d="M-10,' + y + ' C90,' + (y - 24) + ' 180,' + (y + 24) + ' 280,' + (y - 6) + ' S370,' + (y - 20) + ' 400,' + y + '"/>'; }).join('') + '</g>'
     : '';
   return '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid slice" role="img" aria-label="' + esc(d.title) + ' preview on ' + (base === 'sat' ? 'satellite' : 'Windy') + ' map">' +
-    '<rect width="' + W + '" height="' + H + '" fill="#05172E"/><image href="' + TW_IMG + '" width="' + W + '" height="' + H + '" preserveAspectRatio="none"/>' + windy + spots + '</svg>';
+    '<rect width="' + W + '" height="' + H + '" fill="#05172E"/><image href="' + TW_IMG + '" width="' + W + '" height="' + H + '" preserveAspectRatio="none" style="filter:brightness(1.45) saturate(1.15)"/>' + windy + spots + '</svg>';
 }
 
 function predView(sub) {
