@@ -1482,10 +1482,106 @@
    "notes": [
     "pm10: cross-validation chose v1 (test-year MAE 4.396); blend did better on the test year (3.778). The choice was not changed."
    ]
+  },
+  {
+   "id": "pingtung",
+   "name": "Pingtung County",
+   "name_zh": "屏東縣",
+   "lat": 22.6832,
+   "lon": 120.488,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "ridge"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 5.552,
+    "model_mae": 4.451,
+    "improvement_pct": 19.8,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 4.549,
+     "ridge": 4.535,
+     "boosted": 4.968,
+     "blend": 4.508,
+     "baseline": 6.154
+    },
+    "test_mae": {
+     "baseline": 5.552,
+     "v1": 4.768,
+     "ridge": 4.731,
+     "boosted": 4.557,
+     "blend": 4.451,
+     "blend_no_weather": 4.934
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "ridge",
+    "baseline_mae": 5.762,
+    "model_mae": 5.186,
+    "improvement_pct": 10.0,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 6.228,
+     "ridge": 6.165,
+     "boosted": 9.574,
+     "blend": 7.237,
+     "baseline": 6.339
+    },
+    "test_mae": {
+     "baseline": 5.762,
+     "v1": 5.235,
+     "ridge": 5.186,
+     "boosted": 5.237,
+     "blend": 4.776,
+     "blend_no_weather": 5.242
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 30.5,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 90,
+     "warned": 71,
+     "caught": 51,
+     "false_alarms": 20,
+     "missed": 39,
+     "precision": 0.718,
+     "recall": 0.567
+    },
+    "tuned": {
+     "threshold": 30.5,
+     "bad_days": 90,
+     "warned": 140,
+     "caught": 76,
+     "false_alarms": 64,
+     "missed": 14,
+     "precision": 0.543,
+     "recall": 0.844
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 90,
+     "warned": 91,
+     "caught": 59,
+     "false_alarms": 32,
+     "missed": 31,
+     "precision": 0.648,
+     "recall": 0.656
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose ridge (test-year MAE 5.186); blend did better on the test year (4.776). The choice was not changed."
+   ]
   }
  ],
  "missing": [
-  "pingtung",
   "yilan",
   "hualien",
   "taitung",
