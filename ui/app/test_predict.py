@@ -58,6 +58,12 @@ def test_sums_follow_numpy_and_pandas_order():
     assert pm._group_sum([9.7, 49.7, 40.6], True) == 100.0                                       # Kahan when there is one
     assert pm._group_sum([float("nan")] * 3, True) == 0.0 and pm._group_mean([float("nan")] * 3, True) != pm._group_mean([1.0], True)
     assert pm._series_mean([1.0, float("nan"), 2.0]) == 1.5 and pm._series_mean([float("nan")]) != pm._series_mean([1.0])
+    nan = float("nan")
+    got = pm._rolling_mean([1.0, 2.0, 4.0, nan, 5.0, 5.0, 5.0, 0.1, 0.2, 0.3], 3)
+    assert got[:2] != got[:2] or all(v != v for v in got[:2])        # no full window yet
+    assert got[2] == 7.0 / 3 and all(v != v for v in got[3:6])       # a gap empties the windows that hold it
+    assert got[6] == 5.0                                              # one repeated value: exactly that value
+    assert abs(got[9] - 0.2) < 1e-15 and len(got) == 10
 
 
 def test_fixture_is_what_the_test_needs():
@@ -98,10 +104,7 @@ def test_features_match_pandas():
         x = pm.features(D, today, UP)
         assert list(x) == FULL  # same order as the training columns
         for name, got, want in zip(FULL, x.values(), row["features"]):
-            if name in ("pm25_3d", "pm25_7d"):  # pandas' running window sum: equal to rounding only
-                assert close(got, want, rel=1e-13), (row["today"], name, got, want)
-            else:
-                assert got == want, (row["today"], name, got, want)
+            assert got == want, (row["today"], name, got, want)  # every feature, to the last bit
         v1 = pm.features(D, today)
         assert list(v1) == V1 and list(v1.values()) == list(x.values())[:25]
 

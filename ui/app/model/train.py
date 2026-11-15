@@ -405,12 +405,14 @@ def end_to_end_parity(d: pd.DataFrame, aq_raw: dict, wx_raw: dict, up_raw: list,
     Serving: raw hourly rows -> predict.py's daily table and features -> the JSON model.
     Training: pandas daily table and features (X) -> the scikit-learn model.
     Compared on every usable day whose week before and day after are all in the pandas table (around a hole
-    in the data pandas' row-based windows and the server's calendar-based ones mean different days).
-    The 3- and 7-day means cannot agree to the last bit (pandas keeps a running sum over the whole series),
-    so a tree could in principle take another branch; `over_tolerance` counts the days where that mattered.
+    in the data pandas works on neighbouring rows where the server insists on neighbouring days).
+    Boosted trees split exactly on values seen in training, so this only agrees when predict.py rebuilds
+    every feature to the last bit; `over_tolerance` counts the days where it did not.
     """
-    table = pyinfer.daily_table(aq_raw["hourly"], wx_raw["hourly"])
+    table = {day: row for day, row in pyinfer.daily_table(aq_raw["hourly"], wx_raw["hourly"]).items()
+             if row["hours"] >= MIN_HOURS}  # the same days training kept
     up = pyinfer.upwind_daily(up_raw)
+    rolled = pyinfer.rolling_pm25(table)
     loaded = pyinfer.load_target(json.loads(json.dumps(exported)))
     have = set(d.index)
     want = np.asarray(fitted.predict(X), dtype=float)
@@ -418,7 +420,7 @@ def end_to_end_parity(d: pd.DataFrame, aq_raw: dict, wx_raw: dict, up_raw: list,
     for day, w in zip(X.index, want):
         if any(day + pd.Timedelta(days=k) not in have for k in range(-7, 2)):
             continue
-        feats = pyinfer.features(table, day.date(), up)
+        feats = pyinfer.features(table, day.date(), up, rolled)
         diff = abs(pyinfer.predict_target(loaded, [feats[c] for c in exported["features"]]) - w)
         rows, worst, over = rows + 1, max(worst, diff), over + (diff > PARITY_TOLERANCE)
     return {"rows": rows, "max_diff": float(worst), "over_tolerance": int(over)}

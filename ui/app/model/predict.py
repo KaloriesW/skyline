@@ -124,6 +124,9 @@ def _num(v: Any) -> float:
 #  - A column with no gap anywhere: numpy's add.reduceat per day = first value + numpy's pairwise sum of the rest.
 #  - A column with a gap somewhere: Kahan summation over the values present (pandas' group_sum / group_mean).
 #  - A plain Series.mean() (the evening mean): gaps count as 0 in numpy's sum; divide by the values present.
+#  - rolling(n).mean(): one running sum for the whole series, each step adding the new day and taking away
+#    the day that left the window, both with Kahan compensation (pandas' roll_mean).
+# train.py replays every city's whole history through this module and compares with pandas + scikit-learn.
 
 def _np_sum(a: List[float]) -> float:
     """numpy's pairwise summation of a float64 array (what a.sum() adds up, in the same order)."""
@@ -185,6 +188,53 @@ def _series_mean(a: List[float]) -> float:
 def _max(vals: List[float]) -> float:
     ok = [v for v in vals if v == v]
     return max(ok) if ok else NAN
+
+
+def _rolling_mean(values: List[float], window: int) -> List[float]:
+    """Series.rolling(window).mean() (min_periods = window), step for step as pandas' roll_mean does it."""
+    out: List[float] = []
+    total = comp_add = comp_remove = 0.0
+    nobs = negative = same = 0
+    prev = values[0] if values else NAN
+    for i, val in enumerate(values):
+        if i >= window:
+            old = values[i - window]
+            if old == old:
+                nobs -= 1
+                y = -old - comp_remove
+                t = total + y
+                comp_remove = t - total - y
+                total = t
+                if math.copysign(1.0, old) < 0:
+                    negative -= 1
+        if val == val:
+            nobs += 1
+            y = val - comp_add
+            t = total + y
+            comp_add = t - total - y
+            total = t
+            if math.copysign(1.0, val) < 0:
+                negative += 1
+            same = same + 1 if val == prev else 1  # a window of one repeated value gives exactly that value
+            prev = val
+        if nobs >= window:
+            mean = total / nobs
+            if same >= nobs:
+                mean = prev
+            elif (negative == 0 and mean < 0) or (negative == nobs and mean > 0):
+                mean = 0.0
+            out.append(mean)
+        else:
+            out.append(NAN)
+    return out
+
+
+def rolling_pm25(d: Dict[str, Dict[str, float]]) -> Dict[int, Dict[str, float]]:
+    """{3: {day: 3-day mean}, 7: {day: 7-day mean}} of the table's daily PM2.5, row after row as pandas rolls
+    over the table (the first value that has a full window is on the table's 3rd / 7th day)."""
+    days = sorted(d)
+    values = [d[day]["pm25"] for day in days]
+    return {n: dict(zip(days, _rolling_mean(values, n))) for n in (3, 7)}
 
 
 def daily_table(aq_hourly: Dict[str, list], wx_hourly: Dict[str, list]) -> Dict[str, Dict[str, float]]:
@@ -249,11 +299,13 @@ def upwind_daily(locations: List[dict]) -> Dict[str, Dict[str, float]]:
     return out
 
 
-def features(d: Dict[str, Dict[str, float]], today: date, up: Optional[Dict[str, Dict[str, float]]] = None) -> Dict[str, float]:
+def features(d: Dict[str, Dict[str, float]], today: date, up: Optional[Dict[str, Dict[str, float]]] = None,
+             rolled: Optional[Dict[int, Dict[str, float]]] = None) -> Dict[str, float]:
     """The feature row for `today` (it predicts today + 1), in the training column order.
 
     Without `up`: the first model's 25 features (needs yesterday, today and tomorrow in `d`).
     With `up` (upwind_daily()): the full 33, which also need the six days before today.
+    `rolled` is rolling_pm25(d), for callers that ask for many days of one table.
     """
     def row_of(offset: int) -> Optional[Dict[str, float]]:
         return d.get((today + timedelta(days=offset)).isoformat())
@@ -274,11 +326,14 @@ def features(d: Dict[str, Dict[str, float]], today: date, up: Optional[Dict[str,
     x["doy_cos"] = math.cos(2 * math.pi * doy / 365.25)
     x["tmr_weekend"] = 1.0 if tmr.weekday() >= 5 else 0.0
     if up is not None:
-        def rolling(n: int) -> float:  # a gap anywhere in the window makes the mean a gap, as in pandas
-            # pandas keeps a running sum over the whole series here, so its last bits depend on how far
-            # back the series starts; no window of recent days can reproduce them. This is the exact mean.
-            vals = [(row_of(-k) or {}).get("pm25", NAN) for k in range(n)]
-            return math.fsum(vals) / n if all(v == v for v in vals) else NAN
+        if rolled is None:
+            rolled = rolling_pm25(d)
+
+        def rolling(n: int) -> float:
+            # pandas rolls over the table's rows; that is the last n days only when none is missing
+            if any(row_of(-k) is None for k in range(n)):
+                return NAN
+            return rolled[n].get(today.isoformat(), NAN)
 
         x["pm25_3d"] = rolling(3)
         x["pm25_7d"] = rolling(7)
