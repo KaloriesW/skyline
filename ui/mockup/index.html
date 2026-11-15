@@ -2258,6 +2258,11 @@ async function streamOpenAI(messages, system, onDelta, signal) {
     var known = { 401: 'The API key was rejected', 403: 'Access denied', 404: 'Not found (check the base URL and model)', 429: 'Rate limited or out of credit' }[res.status];
     throw new Error((known || 'Error ' + res.status) + ': ' + String(msg).slice(0, 200));
   }
+  await readSSE(res, onDelta);
+}
+// Reads an OpenAI-style SSE stream (data: {"choices":[{"delta":{"content":"…"}}]} … data: [DONE]).
+// Shared by the OpenAI-compatible provider and the Skyline server proxy.
+async function readSSE(res, onDelta) {
   var reader = res.body.getReader(), dec = new TextDecoder(), buf = '';
   for (;;) {
     var r = await reader.read();
@@ -2270,12 +2275,82 @@ async function streamOpenAI(messages, system, onDelta, signal) {
       var data = line.slice(5).trim();
       if (data === '[DONE]') return;
       var j2; try { j2 = JSON.parse(data); } catch (e4) { continue; }
-      if (j2.error) throw new Error(j2.error.message || 'The provider returned an error.');
+      if (j2.error) throw new Error(j2.error.message || (typeof j2.error === 'string' && j2.error) || 'The provider returned an error.');
       var c = j2.choices && j2.choices[0] && j2.choices[0].delta && j2.choices[0].delta.content;
       if (c) onDelta(c);
     }
   }
 }
+
+/* Skyline (no setup): a same-origin proxy on the Skyline server holds the team's key, so this
+   page never sees one. GET /api/ask/status says whether the proxy is there (it is not on
+   localhost or a plain static host); POST /api/ask streams the answer in the OpenAI SSE format. */
+var skyAI = { state: 'checking', model: '', remaining: null, promise: null };   // state: checking | ok | off
+var SKY_ERR = {
+  budget: 'The shared Skyline AI budget is used up for now. Demo answers still work, or add your own key in Settings.',
+  rate: 'Skyline AI is busy: too many questions in a short time. Wait a moment and ask again.',
+  gone: 'Skyline AI isn’t available on this server. Pick Demo or your own provider in Settings.',
+  server: 'Skyline AI had a problem answering. Try again in a moment.',
+  net: 'Couldn’t reach the Skyline server. Check your connection and try again.'
+};
+// Has the user picked a provider themselves? (Untouched installs get Skyline AI when the server offers it.)
+function aiConfigured() { return !!S.ai.chosen || S.ai.provider !== 'demo'; }
+// The provider actually used right now.
+function aiProvider() {
+  var p = S.ai.provider;
+  if (p === 'skyline') return skyAI.state === 'off' ? 'demo' : 'skyline';
+  if (p === 'demo' && !S.ai.chosen && skyAI.state === 'ok') return 'skyline';
+  return p;
+}
+function probeSkyAI(force) {
+  if (skyAI.promise && !force) return skyAI.promise;
+  var done = function () { skyAIChanged(); return skyAI; };
+  if (!/^https?:$/.test(location.protocol)) { skyAI.state = 'off'; return (skyAI.promise = Promise.resolve().then(done)); }
+  var ctrl = new AbortController(), timer = setTimeout(function () { ctrl.abort(); }, 4000);
+  skyAI.promise = fetch('/api/ask/status', { signal: ctrl.signal, cache: 'no-store', headers: { Accept: 'application/json' } })
+    .then(function (r) { if (!r.ok) throw new Error('status ' + r.status); return r.json(); })
+    .then(function (j) {
+      skyAI.state = j && j.available === true ? 'ok' : 'off';
+      skyAI.model = j && typeof j.model === 'string' ? j.model : '';
+      skyAI.remaining = j && typeof j.remaining_usd === 'number' ? j.remaining_usd : null;
+    })
+    .catch(function () { skyAI.state = 'off'; })
+    .then(function () { clearTimeout(timer); return done(); });
+  return skyAI.promise;
+}
+// Refresh what is on screen after a probe, without rebuilding a form someone is typing in.
+function skyAIChanged() {
+  var r = route();
+  if (r.page === 'ask') { var s = $('.ai-using strong'); if (s) s.textContent = aiLabel(); }
+  if (r.page === 'settings') {
+    var card = $('#ai-card'), a = document.activeElement, inside = !!(card && a && card.contains(a));
+    if (!card || (inside && a.tagName === 'INPUT')) return;
+    var sel = inside ? selectorFor(a) : null;
+    card.outerHTML = aiSettingsHTML();
+    if (sel) { var el = document.querySelector(sel); if (el && !el.disabled) el.focus({ preventScroll: true }); }
+  }
+}
+async function streamSkyline(messages, system, onDelta, signal) {
+  var res;
+  try {
+    res = await fetch('/api/ask', { method: 'POST', signal: signal, headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+      body: JSON.stringify({ messages: messages, context: system }) });
+  } catch (e) {
+    if (e.name === 'AbortError') throw e;
+    throw new Error(SKY_ERR.net);
+  }
+  if (!res.ok) {
+    var why = ''; try { var j = await res.json(); why = String((j && j.error && (j.error.message || j.error)) || ''); } catch (e2) {}
+    if (res.status === 429) {
+      probeSkyAI(true);   // the status endpoint knows whether the budget is gone for good
+      throw new Error(/budget|credit|quota|spend|exhaust|cap/i.test(why) ? SKY_ERR.budget : SKY_ERR.rate);
+    }
+    if (res.status === 404 || res.status === 405 || res.status === 501) { skyAI.state = 'off'; skyAIChanged(); throw new Error(SKY_ERR.gone); }
+    throw new Error(SKY_ERR.server);
+  }
+  await readSSE(res, onDelta);
+}
+probeSkyAI();
 
 async function claudeClient() {
   if (!AI_KEYS.claude) throw new Error('Add your Anthropic API key in Settings → AI assistant.');
