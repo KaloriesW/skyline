@@ -18,7 +18,6 @@ the rate limits and the caches live in this one process.
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import os
 import sys
@@ -190,9 +189,11 @@ def _coordinate(raw: Optional[str], limit: float) -> Optional[float]:
     return v if abs(v) <= limit else None  # also rejects nan and inf
 
 
-async def _cached(key: str, tag: str, ttl: float, produce: Any) -> JSONResponse:
-    """Serve cache[key] while it is fresh and carries the same tag; otherwise call produce() (one caller at
-    a time per key). When produce() fails, serve the last good answer with a stale header, else its error."""
+async def _cached(key: str, tag: str, ttl: float, produce: Any, extra: Dict[str, Any]) -> JSONResponse:
+    """Answer from cache[key] while it is fresh and carries the same tag; otherwise call produce() (one
+    caller at a time per key). produce() returns the body, or a JSONResponse when it failed: then the last
+    good answer is served with a stale header, or that error when there has never been one. `extra` is
+    added to a good answer on the way out (it is not cached)."""
     st = predict_state
 
     def fresh() -> Optional[Any]:
@@ -200,20 +201,20 @@ async def _cached(key: str, tag: str, ttl: float, produce: Any) -> JSONResponse:
         return hit[2] if hit and hit[1] == tag and time.time() - hit[0] < ttl else None
 
     body = fresh()
-    if body is not None:
-        return JSONResponse(body)
-    async with st.lock(key):  # one upstream round at a time per city; the others reuse its answer
-        body = fresh()
-        if body is not None:
-            return JSONResponse(body)
-        result = await produce()
-        if isinstance(result, JSONResponse):  # failed
-            hit = st.cache.get(key)
-            if hit:  # the last good answer, unchanged; the headers say it is old
-                return JSONResponse(hit[2], headers={"X-Skyline-Stale": "1", "Age": str(int(time.time() - hit[0]))})
-            return result
-        st.cache[key] = (time.time(), tag, result)
-        return JSONResponse(result)
+    if body is None:
+        async with st.lock(key):  # one upstream round at a time per city; the others reuse its answer
+            body = fresh()
+            if body is None:
+                result = await produce()
+                if isinstance(result, JSONResponse):  # failed
+                    hit = st.cache.get(key)
+                    if not hit:
+                        return result
+                    return JSONResponse({**hit[2], **extra},  # the last good answer; the headers say it is old
+                                        headers={"X-Skyline-Stale": "1", "Age": str(int(time.time() - hit[0]))})
+                st.cache[key] = (time.time(), tag, result)
+                body = result
+    return JSONResponse({**body, **extra})
 
 
 async def _predict_local(city: dict, city_block: dict, model: dict) -> JSONResponse:
@@ -232,12 +233,8 @@ async def _predict_local(city: dict, city_block: dict, model: dict) -> JSONRespo
             return JSONResponse({"error": f"Weather source returned incomplete data ({e})"}, status_code=502)
         return body
 
-    # The cached body has no `city` block: the distance depends on who asks. A new local day drops the cache.
-    r = await _cached("city:" + city["id"], today.isoformat(), _pm25_ttl(), produce)
-    if r.status_code != 200:
-        return r
-    headers = {k: v for k, v in r.headers.items() if k.lower() in ("x-skyline-stale", "age")}
-    return JSONResponse({**json.loads(r.body), "city": city_block}, headers=headers)
+    # The cached body has no `city` block: the distance depends on who asks. A new local day ends the cache.
+    return await _cached("city:" + city["id"], today.isoformat(), _pm25_ttl(), produce, {"city": city_block})
 
 
 async def _predict_proxy(url: str, city_block: dict) -> JSONResponse:
@@ -258,11 +255,7 @@ async def _predict_proxy(url: str, city_block: dict) -> JSONResponse:
             return JSONResponse({"error": f"PM2.5 model unavailable ({reason})"}, status_code=503)
         return body
 
-    r = await _cached("proxy", url, _pm25_ttl(), produce)
-    if r.status_code != 200:
-        return r
-    headers = {k: v for k, v in r.headers.items() if k.lower() in ("x-skyline-stale", "age")}
-    return JSONResponse({**json.loads(r.body), "city": city_block}, headers=headers)
+    return await _cached("proxy", url, _pm25_ttl(), produce, {"city": city_block})
 
 
 async def predict(request: Request) -> JSONResponse:
