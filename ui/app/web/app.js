@@ -3032,66 +3032,48 @@ document.addEventListener('keydown', function (e) {
 var ZH = {
   'Home': '首頁', 'Predictions': '預測', 'Ask AI': '問 AI', 'Settings': '設定', 'Search': '搜尋',
   'Search any place, coordinates, airport…': '搜尋地點、座標、機場…',
-  
   'Clear day': '晴天', 'Partly cloudy': '晴時多雲', 'Cloudy': '多雲', 'Rain': '雨', 'Thunderstorm': '雷雨', 'Clear night': '晴朗夜晚', 'Dawn': '清晨', 'Dusk': '黃昏',
-  
-  
-  
-  
+
+
   'Outside Taiwan: PM2.5, landslide and Predictions cover Taiwan only': '台灣以外：PM2.5、山崩與預測僅涵蓋台灣',
   'All stats ↓': '所有數據 ↓', 'All stats': '所有數據', 'Customize': '自訂', 'Done': '完成', 'Reset layout': '重設版面',
   'Drag a tile to move it, or use its buttons. Make tiles bigger or smaller, or hide the ones you don’t need. Hidden tiles wait below so you can bring them back.': '拖曳磚塊即可移動，或使用按鈕。可以放大、縮小或隱藏不需要的磚塊，隱藏的會留在下方，隨時加回來。',
   'Hidden:': '已隱藏：', 'Smaller': '縮小', 'Bigger': '放大', 'Hide': '隱藏',
-  
   'Hourly': '逐時', 'Live map': '即時地圖', 'Thunderstorm risk': '雷雨風險', 'Storm outlook · 72h': '風暴展望 · 72 小時', 'Typhoon watch': '颱風動態',
   'Landslide risk': '山崩風險', '7-day forecast': '7 天預報', 'Wind & gusts': '風與陣風', 'Rain today': '今日雨量', 'Cloud layers': '雲層',
-  'Humidity': '濕度', 'Pressure': '氣壓', 'Visibility': '能見度', 'Coast & waves': '海岸與浪高', 'UV index': '紫外線指數', 
-  'High': '高', 'Low': '低', 
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+  'Humidity': '濕度', 'Pressure': '氣壓', 'Visibility': '能見度', 'Coast & waves': '海岸與浪高', 'UV index': '紫外線指數',
+  'High': '高', 'Low': '低',
+
+
+
+
+
   'Open map': '開啟地圖', 'Now': '現在', 'Today': '今天', 'Sun': '週日', 'Mon': '週一', 'Tue': '週二', 'Wed': '週三', 'Thu': '週四', 'Fri': '週五', 'Sat': '週六',
   'Taiwan only': '僅限台灣',
   'Pick a dataset to open its map, then scrub back through the past or forward into the forecast.': '選擇資料集開啟地圖，再拖曳時間軸查看過去或未來的預測。',
-  'By Skyline': 'Skyline 自製', 'Our own Taiwan models': '我們自己的台灣模型', 'Others': '其他來源', 
-  'Satellite': '衛星', 'PM2.5 forecast': 'PM2.5 預報', 'Thunderstorms': '雷雨', 'Typhoon track': '颱風路徑', 
-  
+  'By Skyline': 'Skyline 自製', 'Our own Taiwan models': '我們自己的台灣模型', 'Others': '其他來源',
+  'Satellite': '衛星', 'PM2.5 forecast': 'PM2.5 預報', 'Thunderstorms': '雷雨', 'Typhoon track': '颱風路徑',
   'Slope-failure risk from satellite data, rain and soil saturation.': '依衛星資料、降雨與土壤飽和度推估的邊坡崩塌風險。',
-  
-  
-  
-  '← All predictions': '← 所有預測', 'Past ← Now → Prediction': '過去 ← 現在 → 預測', 'Prediction': '預測', 
+
+  '← All predictions': '← 所有預測', 'Past ← Now → Prediction': '過去 ← 現在 → 預測', 'Prediction': '預測',
   'Ask the AI about this map': '問 AI 這張地圖', 'Map base': '地圖底圖',
   'Good': '良好', 'Moderate': '普通', 'Sensitive': '敏感族群不健康', 'Unhealthy': '不健康',
   'Good (0–15)': '良好 (0–15)', 'Moderate (16–35)': '普通 (16–35)', 'Sensitive (36–54)': '敏感族群 (36–54)', 'Unhealthy (55+)': '不健康 (55+)',
   'Medium': '中', 'Very high': '極高', 'Unlikely': '不太可能', 'Possible': '可能', 'Likely': '很可能', 'Severe': '劇烈',
-  'Calm': '平靜', 'Breezy': '微風', 'Strong': '強風', 'Gale': '強烈陣風', 'None': '無', 
-  
-  
-  
-  
-  
-  
-  
-  
+  'Calm': '平靜', 'Breezy': '微風', 'Strong': '強風', 'Gale': '強烈陣風', 'None': '無',
+
+
+
+
   'You’re looking at': '你正在查看', '. Predictions and the team models cover Taiwan only, so these maps always show Taiwan.': '。預測與團隊模型僅涵蓋台灣，因此地圖一律顯示台灣。',
   'Taipei': '台北', 'Taichung': '台中', 'Nantou': '南投', 'Hualien': '花蓮', 'Chiayi': '嘉義', 'Kaohsiung': '高雄', 'Taitung': '台東', 'Tainan': '台南',
   'Ask Skyline': '問 Skyline',
-  'Do I need an umbrella?': '需要帶傘嗎？', 
-  'Ask': '送出', 'Ask a question': '提出問題', 
-  
+  'Do I need an umbrella?': '需要帶傘嗎？',
+  'Ask': '送出', 'Ask a question': '提出問題',
   'Everything in Skyline can be changed here, down to the colors. What you see now are the defaults.': 'Skyline 的一切都能在這裡調整，連顏色也可以。目前顯示的是預設值。',
   'Location': '位置', 'Change': '變更', 'Home screen': '首頁畫面', 'Pinned items under the temperature': '溫度下方的釘選項目',
   '(not shown)': '（不顯示）', 'Customize All stats →': '自訂所有數據 →', 'Data sources': '資料來源',
-  
-  
+
   'Team PM2.5 model': '團隊 PM2.5 模型', 'Team landslide model': '團隊山崩模型', 'CWA typhoon warnings': '中央氣象署颱風警報',
   'Theme & colors': '主題與顏色', 'Default': '預設', 'Custom': '自訂', 'Accent color': '強調色', 'Risk color scale': '風險色階', 'Color-blind safe': '色盲友善',
   'Background': '背景', 'Live weather': '即時天氣', 'Static': '靜態', 'Tile style': '磚塊樣式', 'Glass': '玻璃', 'Solid': '實色',
@@ -3106,13 +3088,10 @@ var ZH = {
 'Current weather': '目前天氣', 'Region values': '各地區數值', 'Map': '地圖', 'Main': '主選單',
   // Ask AI: Skyline (no setup) provider, Demo answers
   'Skyline (no setup)': 'Skyline（免設定）', 'Thinking…': '思考中…', 'Check settings': '檢查設定', 'Check again': '重新檢查', 'Checking…': '檢查中…',
-  
   'No key and nothing to set up. Your question and the Skyline data shown for your location go to the Skyline server, which asks a shared model for you.': '不需要金鑰，也不用設定。你的問題與目前位置顯示的 Skyline 資料會送到 Skyline 伺服器，由它代你詢問共用模型。',
   'Checking whether Skyline AI is available…': '正在確認 Skyline AI 是否可用…', 'Model:': '模型：', 'Shared budget left:': '剩餘共用額度：',
   'Ask AI can answer with Skyline’s shared model or your own. It gets the same Skyline data the screens show for your location.': '「問 AI」可以用 Skyline 的共用模型或你自己的模型回答，並會取得畫面上為你的位置顯示的同一份 Skyline 資料。',
-  
   'Skyline AI is busy: too many questions in a short time. Wait a moment and ask again.': 'Skyline AI 忙碌中：短時間內的提問太多。請稍候再問一次。',
-  
   'Skyline AI had a problem answering. Try again in a moment.': 'Skyline AI 回答時發生問題，請稍後再試。',
   'Couldn’t reach the Skyline server. Check your connection and try again.': '無法連上 Skyline 伺服器。請檢查網路連線後再試一次。',
   'The built-in Ask AI summary follows this too': '內建的「問 AI」摘要也會跟著切換'
@@ -3178,12 +3157,78 @@ ZHP.push(
   [/^(Good|Moderate|Sensitive|Unhealthy) · peaks (\d+) µg\/m³ around (.+)$/, function (m) { return zh(m[1]) + ' · ' + zh(m[3]) + '前後最高 ' + m[2] + ' µg/m³'; }],
   [/^(Good|Moderate|Sensitive|Unhealthy) · tomorrow ([\d.]+) µg\/m³ \(team model\)$/, function (m) { return zh(m[1]) + ' · 明天 ' + m[2] + ' µg/m³（團隊模型）'; }],
   [/^Tomorrow’s average, (.*) \(team model\)$/, function (m) { return '明日平均，' + zh(m[1]) + '（團隊模型）'; }],
-  [/^(?:Swell ([\d.]+) m · )?(?:from ([NSEW]{1,2}) · )?nearest sea point$/, function (m) { return (m[1] ? '湧浪 ' + m[1] + ' 公尺 · ' : '') + (m[2] ? '來自' + ZH_DIR[m[2]] + '方 · ' : '') + '最近的海面格點'; }],
+  [/^(?:Swell ([\d.]+) m · )?(?:from ([NSEW]{1,2}) · )?(?:nearest sea point|off (.+), ([\d.,]+ km) away)$/, function (m) { return (m[1] ? '湧浪 ' + m[1] + ' 公尺 · ' : '') + (m[2] ? '來自' + ZH_DIR[m[2]] + '方 · ' : '') + (m[3] ? zh(m[3]) + '外海，距離 ' + m[4] : '最近的海面格點'); }],
   [/^(.+) · ([\d.,]+) km (N|NE|E|SE|S|SW|W|NW)$/, function (m) { return m[1] + ' · ' + ZH_DIR[m[3]] + '方 ' + m[2] + ' 公里'; }],
   [/^Max wind (\d+) km\/h(.*)$/, function (m) { return '最大風速 ' + m[1] + ' km/h' + m[2]; }],
-  [/^Track of (.+)\. Region levels are estimated from each city’s distance to the track\. They are not official warnings\.$/, function (m) { return m[1] + ' 的路徑。各地等級依城市與路徑的距離估算，並非官方警報。'; }],
-  [/^PM2\.5 at seven cities from the Copernicus CAMS model, via Open-Meteo\. These are model estimates, not station readings\. The forecast ends about four days ahead, so later steps repeat the last value\.(?: Team model, Taichung, (\S+): ([\d.]+) µg\/m³ \((.*)\)\.)?$/,
-    function (m) { return '七個城市的 PM2.5，來自 Copernicus CAMS 模式（經 Open-Meteo）。這是模式估計值，不是測站觀測。預報約到四天後，之後的時間點沿用最後一筆數值。' + (m[1] ? ' 團隊模型，台中，' + m[1] + '：' + m[2] + ' µg/m³（' + zh(m[3]) + '）。' : ''); }]
+  [/^Track of (.+)\. Each region shows how far the storm centre is from it along the track\. These are distances, not official warnings\.$/, function (m) { return m[1] + ' 的路徑。各地區顯示颱風中心沿路徑與該地的距離。這是距離，並非官方警報。'; }],
+  [/^PM2\.5 at seven cities from the Copernicus CAMS model, via Open-Meteo\. These are model estimates, not station readings\. The forecast ends about four days ahead, so later steps repeat the last value\.(?: Team model, Taichung, (\S+): ([\d.]+) µg\/m³ \((.*)\)\.)?( The team PM2\.5 model isn’t connected on this server\.)?( The team PM2\.5 model couldn’t be reached\.)?$/,
+    function (m) { return '七個城市的 PM2.5，來自 Copernicus CAMS 模式（經 Open-Meteo）。這是模式估計值，不是測站觀測。預報約到四天後，之後的時間點沿用最後一筆數值。' + (m[1] ? ' 團隊模型，台中，' + m[1] + '：' + m[2] + ' µg/m³（' + zh(m[3]) + '）。' : '') + (m[4] ? ' 這台伺服器尚未連接團隊 PM2.5 模型。' : '') + (m[5] ? ' 無法連上團隊 PM2.5 模型。' : ''); }]
+);
+// 中文 for the live-app strings: states (loading, not connected, unavailable), the built-in Ask AI
+// summary, the seasonal outlook and the sky preview. Added the same way, so nothing above is overridden.
+var ZH_APP = {
+  'Loading live weather…': '正在載入即時天氣…', 'Open-Meteo · loading…': 'Open-Meteo · 載入中…', 'Live weather is turned off': '即時天氣已關閉', 'Open-Meteo is switched off': 'Open-Meteo 已關閉', 'Open Settings': '開啟設定',
+  'Live weather is unavailable': '目前無法取得即時天氣', 'You’re offline': '目前離線', 'Couldn’t reach Open-Meteo': '無法連上 Open-Meteo', 'Retry': '重試', 'Back to live': '回到即時天氣', 'Preview a sky': '預覽天空', 'Temperature not available': '沒有溫度資料',
+  'Every reading is live: weather, air quality, waves and the seasonal outlook come from Open-Meteo at your coordinates, PM2.5 near Taichung also uses the team model, and typhoons come from the CWA feed. A tile whose source isn’t connected or can’t be reached says so and shows no number.': '所有數據都是即時資料：天氣、空氣品質、浪高與季節展望來自 Open-Meteo（依你的座標），台中附近的 PM2.5 另外使用團隊模型，颱風來自中央氣象署資料。來源尚未連接或無法取得時，磚塊會直接說明，不顯示任何數字。',
+  'Not connected yet': '尚未連接', 'Loading…': '載入中…', 'Turned off': '已關閉', 'Unavailable': '無法取得', 'No sea nearby': '附近沒有海域',
+  'Open-Meteo is switched off in Settings.': 'Open-Meteo 已在設定中關閉。',
+  'Open-Meteo Marine has no sea point near this location.': 'Open-Meteo 海象在這個位置附近沒有海面格點。',
+  'The CWA typhoon feed isn’t connected on this server.': '這台伺服器尚未連接中央氣象署颱風資料。',
+  'No reading from the source right now.': '來源目前沒有提供數值。',
+  'You’re offline. Reconnect, then retry.': '目前離線。請恢復連線後重試。',
+  'Couldn’t load the typhoon feed.': '無法載入颱風資料。', 'Couldn’t reach Open-Meteo.': '無法連上 Open-Meteo。',
+  'The landslide model is on the server, but this version of the app can’t show its output yet.': '伺服器已連接山崩模型，但這個版本的 App 還無法顯示它的結果。',
+  'The team landslide model isn’t connected yet. No value is shown until it is.': '團隊的山崩模型尚未連接，連接之前不會顯示任何數值。',
+  'Seasonal outlook': '季節展望', 'Team PM2.5 model + Open-Meteo CAMS': '團隊 PM2.5 模型 + Open-Meteo CAMS',
+  'January': '1 月', 'February': '2 月', 'March': '3 月', 'April': '4 月', 'May': '5 月', 'June': '6 月', 'July': '7 月', 'August': '8 月', 'September': '9 月', 'October': '10 月', 'November': '11 月', 'December': '12 月',
+  'Keelung': '基隆', 'Tamsui': '淡水', 'Taoyuan': '桃園', 'Hsinchu': '新竹', 'Miaoli': '苗栗', 'Taichung Port': '台中港', 'Changhua': '彰化', 'Yunlin': '雲林', 'Donggang': '東港', 'Kenting': '墾丁', 'Chenggong': '成功', 'Su’ao': '蘇澳', 'Toucheng': '頭城', 'Fulong': '福隆',
+  'From Open-Meteo, ECMWF and CWA': '來自 Open-Meteo、ECMWF 與中央氣象署',
+  'Fine-particle pollution by region, about four days ahead.': '各地區細懸浮微粒污染，預測約四天。',
+  'Rain that fell in the 24 hours up to each time.': '各時間點之前 24 小時的累積雨量。',
+  'Storm energy (CAPE): where thunderstorms can form.': '對流能量（CAPE）：哪裡有條件形成雷雨。',
+  'Peak gusts by region.': '各地區最大陣風。',
+  'Storm position, forecast track and its distance from each region.': '颱風位置、預報路徑，以及與各地區的距離。',
+  'Wave height at the coast nearest each region.': '各地區最近海岸的浪高。',
+  'Next month’s temperature compared with normal, from the ECMWF seasonal forecast.': '下個月氣溫與常態的差距，來自 ECMWF 季節預報。',
+  '700+ km away': '距離 700 公里以上', '+1.5 °C or more': '+1.5 °C 以上', 'No coast': '不臨海', 'Past': '過去',
+  'Model data, not station readings': '模式資料，非測站觀測', 'Seasonal forecast': '季節預報', 'CWA typhoon feed': '中央氣象署颱風資料',
+  'Grounded in live data': '以即時資料為依據', 'Answering with:': '回答來源：',
+  'No AI model is connected. The built-in assistant only reads out the live data on screen and can’t answer other questions.': '尚未連接 AI 模型。內建助理只會讀出畫面上的即時資料，無法回答其他問題。',
+  'No questions yet': '還沒有提問',
+  'What’s it like outside right now?': '現在外面天氣如何？', 'Will it storm today?': '今天會有雷雨嗎？', 'How is the air (PM2.5)?': '空氣品質（PM2.5）如何？', 'How windy is it?': '風大嗎？', 'Any typhoon near Taiwan?': '台灣附近有颱風嗎？',
+  'Ask about the weather…': '詢問天氣…', 'Reading the live data…': '正在讀取即時資料…', 'Built-in summary (no AI model)': '內建摘要（無 AI 模型）', 'Stop': '停止',
+  'Built-in (no model)': '內建（無模型）',
+  'No AI model. Ask AI reads out the live data on screen (current conditions, rain, thunderstorms, wind, PM2.5, waves, typhoons, seasonal outlook) with its sources, and can’t answer anything else. Pick a provider to use a real model.': '沒有 AI 模型。「問 AI」會讀出畫面上的即時資料（目前天氣、降雨、雷雨、風、PM2.5、浪高、颱風、季節展望）並附上來源，其他問題無法回答。選擇供應商即可使用真正的模型。',
+  'Skyline (no setup) isn’t available on this server. The built-in summary or your own provider still work.': '這台伺服器沒有提供 Skyline（免設定）。仍可使用內建摘要或你自己的供應商。',
+  'The shared Skyline AI budget is used up for now. The built-in summary still works, or add your own key in Settings.': 'Skyline AI 的共用額度暫時用完了。仍可使用內建摘要，或在設定中加入你自己的金鑰。',
+  'Skyline AI isn’t available on this server. Use the built-in summary or your own provider in Settings.': '這台伺服器沒有提供 Skyline AI。請在設定中改用內建摘要或你自己的供應商。',
+  'Every value in Skyline comes from one of these. Turning one off hides or empties what depends on it; nothing is filled in with made-up numbers.': 'Skyline 的每個數值都來自以下來源。關閉其中一項會隱藏或清空相關內容，絕不會以虛構數字填補。',
+  'Live conditions, forecast, air quality, waves and the seasonal outlook at your coordinates': '依你的座標提供即時天氣、預報、空氣品質、浪高與季節展望',
+  'Windy maps': 'Windy 地圖', 'Live map embeds': '嵌入的即時地圖',
+  'Not connected on this server': '這台伺服器尚未連接', 'Couldn’t be reached': '無法連線', 'Connected': '已連接',
+  'Follows live weather at your location': '跟隨你所在位置的即時天氣',
+  'Sky preview': '天空預覽', 'Default: live weather': '預設：即時天氣',
+  'A preview control for demos and testing. It shows another sky on Home until you switch back or reload. Readings are never changed: they stay live.': '示範與測試用的預覽控制。首頁會顯示另一種天空，直到你切換回來或重新載入。數據不會改變，一律維持即時資料。'
+};
+Object.keys(ZH_APP).forEach(function (k) { if (!Object.prototype.hasOwnProperty.call(ZH, k)) ZH[k] = ZH_APP[k]; });
+ZHP.push(
+  [/^Open-Meteo · updated (.+) · couldn’t refresh$/, function (m) { return 'Open-Meteo · ' + zh(m[1]) + '更新 · 無法重新整理'; }],
+  [/^(\d+) min ago$/, function (m) { return m[1] + ' 分鐘前'; }],
+  [/^(\d+) h ago$/, function (m) { return m[1] + ' 小時前'; }],
+  [/^(\d+) days ago$/, function (m) { return m[1] + ' 天前'; }],
+  [/^(.+) · (\d+ (?:min|h|days) ago)$/, function (m) { return zh(m[1]) + ' · ' + zh(m[2]); }],
+  [/^Preview sky: (.*)$/, function (m) { return '預覽天空：' + zh(m[1]); }],
+  [/^(.+): not available$/, function (m) { return zh(m[1]) + '：沒有資料'; }],
+  [/^Live readings for (.*)\. Each tile names its source\.$/, function (m) { return zh(m[1]) + '的即時數據。每個磚塊都標示資料來源。'; }],
+  [/^(January|February|March|April|May|June|July|August|September|October|November|December) · (warmer than normal|cooler than normal|near normal)(?: · rain ([+−])(\d+) mm vs normal)?$/,
+    function (m) { return zh(m[1]) + ' · ' + { 'warmer than normal': '比常態溫暖', 'cooler than normal': '比常態涼', 'near normal': '接近常態' }[m[2]] + (m[3] ? ' · 雨量較常態 ' + m[3] + m[4] + ' 毫米' : ''); }],
+  [/^Next-day forecast for Taichung · (.*)$/, function (m) { return '台中隔日預報 · ' + zh(m[1]); }],
+  [/^Ask about the weather for (.*), or start with one of the suggestions below\.$/, function (m) { return '詢問' + zh(m[1]) + '的天氣，或從下方的建議問題開始。'; }],
+  [/^Answers use the live Skyline data for (.*): Open-Meteo weather, air quality and waves, plus .*$/, function (m) { return '回答使用' + zh(m[1]) + '的 Skyline 即時資料：Open-Meteo 的天氣、空氣品質與浪高，以及已連接時的團隊 PM2.5 模型與中央氣象署颱風資料。'; }],
+  [/^Wave height at the coast point nearest each city \((.*)\)\. Nantou has no coast\. Open-Meteo Marine wave models\.$/,
+    function (m) { return '各城市最近海岸點的浪高（' + m[1].split(', ').map(function (x) { var q = x.split(': '); return zh(q[0]) + '：' + zh(q[1]); }).join('、') + '）。南投不臨海。資料來自 Open-Meteo 海象波浪模式。'; }],
+  [/^Temperature anomaly for (\w+) (\d{4}) at seven cities, from the ECMWF SEAS5 seasonal forecast via Open-Meteo\. .*$/,
+    function (m) { return '七個城市 ' + m[2] + ' 年 ' + zh(m[1]) + '的氣溫距平，來自 ECMWF SEAS5 季節預報（經 Open-Meteo）。「常態」指模式本身的長期氣候平均。這是月展望，所以時間軸不會改變它。'; }]
 );
 function zh(t) {
   if (Object.prototype.hasOwnProperty.call(ZH, t)) return ZH[t];
