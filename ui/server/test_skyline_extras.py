@@ -175,13 +175,13 @@ def test_client_cannot_choose_model_key_or_system_prompt(client, up, monkeypatch
 
 def test_budget_exhaustion_is_429(client, up, monkeypatch):
     monkeypatch.setenv("OPENROUTER_API_KEY", FAKE_KEY)
-    monkeypatch.setenv("ASK_BUDGET_USD", "0.02")  # each mocked answer costs 0.0123
+    monkeypatch.setenv("ASK_BUDGET_USD", "0.03")  # each mocked answer costs 0.0123
     assert ask(client).status_code == 200
-    assert ask(client).status_code == 200  # 0.0077 left is below the 0.01 reserve only after this one
+    assert ask(client).status_code == 200  # leaves 0.0054, less than the 0.01 a request must reserve
     r = ask(client)
     assert r.status_code == 429 and "budget" in r.json()["error"]
     assert len(up.to("openrouter.ai")) == 2  # the third never reached OpenRouter
-    assert client.get("/api/ask/status").json() == {"available": False, "model": extras.DEFAULT_MODEL, "remaining_usd": 0.0}
+    assert client.get("/api/ask/status").json() == {"available": False, "model": extras.DEFAULT_MODEL, "remaining_usd": 0.0054}
 
 
 def test_spent_budget_in_file_blocks_after_restart(client, up, monkeypatch, tmp_path):
