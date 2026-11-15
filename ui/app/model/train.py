@@ -429,7 +429,11 @@ def train_city(city: dict, aq_raw: dict, wx_raw: dict, up: pd.DataFrame, end: st
     for target in ["pm25", "pm10"]:
         y = targets[target]
         # 1. Choose the model with cross-validation on training days.
-        oof = {name: cv_predict(make, X[fs], y, train_idx) for name, (make, fs) in CANDIDATES.items()}
+        #    The blend is the mean of that ridge and those trees fitted on the same rows, so its predictions
+        #    are taken as the mean of theirs instead of growing the same trees twice (check_blend_shortcut()
+        #    confirms this equals fitting Blend).
+        oof = {name: cv_predict(make, X[fs], y, train_idx) for name, (make, fs) in CANDIDATES.items() if name != "blend"}
+        oof["blend"] = (oof["ridge"] + oof["boosted"]) / 2
         cv_idx = oof["ridge"].index
         cv[target] = {name: mae(y[cv_idx], p) for name, p in oof.items()}
         cv[target]["baseline"] = mae(y[cv_idx], full.loc[cv_idx, target])
@@ -444,6 +448,9 @@ def train_city(city: dict, aq_raw: dict, wx_raw: dict, up: pd.DataFrame, end: st
         # 2. Refit on all training days, score once on the test year.
         preds = {"baseline": full.loc[test_mask, target].values}
         for name, (make, fs) in {**CANDIDATES, **EXTRA}.items():
+            if name == "blend":
+                preds[name] = np.mean([preds["ridge"], preds["boosted"]], axis=0)
+                continue
             m = make().fit(X[fs][train_mask], y[train_mask])
             preds[name] = m.predict(X[fs][test_mask])
         actual = y[test_mask].values
@@ -548,7 +555,21 @@ def train_city(city: dict, aq_raw: dict, wx_raw: dict, up: pd.DataFrame, end: st
         "n_days": int(len(full)),
         "end": end,
     }
-    return model, metrics, {"X": X, "targets": targets}
+    return model, metrics, {"X": X, "targets": targets, "train_idx": train_idx, "train_mask": train_mask, "test_mask": test_mask}
+
+
+def check_blend_shortcut(fitted: dict) -> float:
+    """train_city() takes the blend's predictions as the mean of the ridge's and the trees' instead of
+    fitting the team's Blend class again. This fits Blend the long way (cross-validation folds and the
+    test year, PM2.5) and returns the largest difference between the two; it should be exactly 0."""
+    X, y, idx = fitted["X"]["full"], fitted["targets"]["pm25"], fitted["train_idx"]
+    long_way = cv_predict(Blend, X, y, idx)
+    short = (cv_predict(ridge, X, y, idx) + cv_predict(hgb, X, y, idx)) / 2
+    worst = float(np.max(np.abs(long_way - short)))
+    tr, te = fitted["train_mask"], fitted["test_mask"]
+    long_way = Blend().fit(X[tr], y[tr]).predict(X[te])
+    short = np.mean([ridge().fit(X[tr], y[tr]).predict(X[te]), hgb().fit(X[tr], y[tr]).predict(X[te])], axis=0)
+    return max(worst, float(np.max(np.abs(long_way - short))))
 
 
 # ---------- summary ----------
@@ -738,6 +759,7 @@ def main() -> int:
         if fixture_pending:
             write_parity_fixture(fixture_pending, city, model, aq_raw, wx_raw, up_raw, fitted)
             fixture_pending = None
+            print(f"  blend shortcut vs fitting Blend (CV folds + test year): max difference {check_blend_shortcut(fitted):.3g}", flush=True)
         r, w = metrics["results"], metrics["results"]["warnings"]
         line = []
         for t in ["pm25", "pm10"]:
