@@ -103,9 +103,9 @@ def features(d: pd.DataFrame, tomorrow_weather: bool = True) -> pd.DataFrame:
         for c in WX_DAY:
             X["tmr_" + c] = d[c].shift(-1)
     tmr = d.index + pd.Timedelta(days=1)
-    X["doy_sin"] = np.sin(2 * np.pi * tmr.dayofyear / 365.25)
-    X["doy_cos"] = np.cos(2 * np.pi * tmr.dayofyear / 365.25)
-    X["tmr_weekend"] = (tmr.dayofweek >= 5).astype(int)
+    X["doy_sin"] = np.sin(2 * np.pi * tmr.day_of_year / 365.25)
+    X["doy_cos"] = np.cos(2 * np.pi * tmr.day_of_year / 365.25)
+    X["tmr_weekend"] = (tmr.day_of_week >= 5).astype(int)
     return X
 
 
