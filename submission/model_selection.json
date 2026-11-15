@@ -1,0 +1,6 @@
+{
+  "default_model": "unet13",
+  "phase": "completed",
+  "confidence": 0.024,
+  "checkpoint_sha256": "752989d5b2555dad4b26946ae34b3c31d6cfae97de873ad4d69aa4bf588daf8c"
+}

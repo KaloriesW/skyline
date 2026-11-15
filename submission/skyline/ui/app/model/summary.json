@@ -1,0 +1,2166 @@
+{
+ "model": "v2: cross-validation winner per city and target (v1, ridge, boosted or blend)",
+ "bad_day_threshold": 35.0,
+ "data": "PM2.5/PM10: CAMS global via Open-Meteo (model estimates). Weather: ERA5 via Open-Meteo archive.",
+ "baseline": "tomorrow = same as today",
+ "upwind": {
+  "north": [
+   25.0,
+   121.2
+  ],
+  "fujian": [
+   25.0,
+   119.0
+  ],
+  "southwest": [
+   23.8,
+   120.3
+  ],
+  "south": [
+   22.6,
+   120.3
+  ]
+ },
+ "cities": [
+  {
+   "id": "taipei",
+   "name": "Taipei City",
+   "name_zh": "臺北市",
+   "lat": 25.0375,
+   "lon": 121.5637,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 6.291,
+    "model_mae": 4.187,
+    "improvement_pct": 33.4,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.204,
+     "ridge": 5.31,
+     "boosted": 4.975,
+     "blend": 4.905,
+     "baseline": 7.092
+    },
+    "test_mae": {
+     "baseline": 6.291,
+     "v1": 4.711,
+     "ridge": 4.656,
+     "boosted": 4.147,
+     "blend": 4.187,
+     "blend_no_weather": 5.03
+    },
+    "best_on_test": "boosted"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 6.825,
+    "model_mae": 5.796,
+    "improvement_pct": 15.1,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 6.816,
+     "ridge": 7.099,
+     "boosted": 9.219,
+     "blend": 7.409,
+     "baseline": 7.467
+    },
+    "test_mae": {
+     "baseline": 6.825,
+     "v1": 5.796,
+     "ridge": 5.695,
+     "boosted": 5.596,
+     "blend": 5.25,
+     "blend_no_weather": 5.875
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 27.5,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 54,
+     "warned": 42,
+     "caught": 34,
+     "false_alarms": 8,
+     "missed": 20,
+     "precision": 0.81,
+     "recall": 0.63
+    },
+    "tuned": {
+     "threshold": 27.5,
+     "bad_days": 54,
+     "warned": 111,
+     "caught": 51,
+     "false_alarms": 60,
+     "missed": 3,
+     "precision": 0.459,
+     "recall": 0.944
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 54,
+     "warned": 54,
+     "caught": 31,
+     "false_alarms": 23,
+     "missed": 23,
+     "precision": 0.574,
+     "recall": 0.574
+    }
+   },
+   "notes": [
+    "pm25: cross-validation chose blend (test-year MAE 4.187); boosted did better on the test year (4.147). The choice was not changed.",
+    "pm10: cross-validation chose v1 (test-year MAE 5.796); blend did better on the test year (5.250). The choice was not changed."
+   ]
+  },
+  {
+   "id": "new_taipei",
+   "name": "New Taipei City",
+   "name_zh": "新北市",
+   "lat": 25.012,
+   "lon": 121.4657,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 6.291,
+    "model_mae": 4.301,
+    "improvement_pct": 31.6,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.264,
+     "ridge": 5.403,
+     "boosted": 5.207,
+     "blend": 5.051,
+     "baseline": 7.092
+    },
+    "test_mae": {
+     "baseline": 6.291,
+     "v1": 4.752,
+     "ridge": 4.755,
+     "boosted": 4.341,
+     "blend": 4.301,
+     "blend_no_weather": 4.954
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 6.825,
+    "model_mae": 5.744,
+    "improvement_pct": 15.8,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 6.742,
+     "ridge": 7.196,
+     "boosted": 9.16,
+     "blend": 7.517,
+     "baseline": 7.467
+    },
+    "test_mae": {
+     "baseline": 6.825,
+     "v1": 5.744,
+     "ridge": 5.712,
+     "boosted": 5.462,
+     "blend": 5.183,
+     "blend_no_weather": 5.838
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 27.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 54,
+     "warned": 46,
+     "caught": 35,
+     "false_alarms": 11,
+     "missed": 19,
+     "precision": 0.761,
+     "recall": 0.648
+    },
+    "tuned": {
+     "threshold": 27.0,
+     "bad_days": 54,
+     "warned": 116,
+     "caught": 51,
+     "false_alarms": 65,
+     "missed": 3,
+     "precision": 0.44,
+     "recall": 0.944
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 54,
+     "warned": 54,
+     "caught": 31,
+     "false_alarms": 23,
+     "missed": 23,
+     "precision": 0.574,
+     "recall": 0.574
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose v1 (test-year MAE 5.744); blend did better on the test year (5.183). The choice was not changed."
+   ]
+  },
+  {
+   "id": "taoyuan",
+   "name": "Taoyuan City",
+   "name_zh": "桃園市",
+   "lat": 24.9937,
+   "lon": 121.301,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "ridge"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 6.147,
+    "model_mae": 3.685,
+    "improvement_pct": 40.1,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 4.968,
+     "ridge": 4.754,
+     "boosted": 4.527,
+     "blend": 4.461,
+     "baseline": 7.127
+    },
+    "test_mae": {
+     "baseline": 6.147,
+     "v1": 4.054,
+     "ridge": 4.059,
+     "boosted": 3.709,
+     "blend": 3.685,
+     "blend_no_weather": 4.794
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "ridge",
+    "baseline_mae": 6.517,
+    "model_mae": 4.902,
+    "improvement_pct": 24.8,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 6.179,
+     "ridge": 6.14,
+     "boosted": 7.809,
+     "blend": 6.384,
+     "baseline": 7.383
+    },
+    "test_mae": {
+     "baseline": 6.517,
+     "v1": 4.789,
+     "ridge": 4.902,
+     "boosted": 4.675,
+     "blend": 4.492,
+     "blend_no_weather": 5.469
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 26.5,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 33,
+     "warned": 17,
+     "caught": 10,
+     "false_alarms": 7,
+     "missed": 23,
+     "precision": 0.588,
+     "recall": 0.303
+    },
+    "tuned": {
+     "threshold": 26.5,
+     "bad_days": 33,
+     "warned": 78,
+     "caught": 29,
+     "false_alarms": 49,
+     "missed": 4,
+     "precision": 0.372,
+     "recall": 0.879
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 33,
+     "warned": 33,
+     "caught": 11,
+     "false_alarms": 22,
+     "missed": 22,
+     "precision": 0.333,
+     "recall": 0.333
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose ridge (test-year MAE 4.902); blend did better on the test year (4.492). The choice was not changed."
+   ]
+  },
+  {
+   "id": "taichung",
+   "name": "Taichung City",
+   "name_zh": "臺中市",
+   "lat": 24.1477,
+   "lon": 120.6736,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 5.906,
+    "model_mae": 4.379,
+    "improvement_pct": 25.9,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.107,
+     "ridge": 4.802,
+     "boosted": 5.072,
+     "blend": 4.749,
+     "baseline": 6.481
+    },
+    "test_mae": {
+     "baseline": 5.906,
+     "v1": 4.45,
+     "ridge": 4.323,
+     "boosted": 4.785,
+     "blend": 4.379,
+     "blend_no_weather": 5.117
+    },
+    "best_on_test": "ridge"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 6.042,
+    "model_mae": 4.864,
+    "improvement_pct": 19.5,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.183,
+     "ridge": 5.457,
+     "boosted": 7.768,
+     "blend": 6.074,
+     "baseline": 6.66
+    },
+    "test_mae": {
+     "baseline": 6.042,
+     "v1": 4.864,
+     "ridge": 4.737,
+     "boosted": 5.326,
+     "blend": 4.69,
+     "blend_no_weather": 5.278
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 28.5,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 143,
+     "warned": 117,
+     "caught": 98,
+     "false_alarms": 19,
+     "missed": 45,
+     "precision": 0.838,
+     "recall": 0.685
+    },
+    "tuned": {
+     "threshold": 28.5,
+     "bad_days": 143,
+     "warned": 230,
+     "caught": 139,
+     "false_alarms": 91,
+     "missed": 4,
+     "precision": 0.604,
+     "recall": 0.972
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 143,
+     "warned": 143,
+     "caught": 109,
+     "false_alarms": 34,
+     "missed": 34,
+     "precision": 0.762,
+     "recall": 0.762
+    }
+   },
+   "notes": [
+    "pm25: cross-validation chose blend (test-year MAE 4.379); ridge did better on the test year (4.323). The choice was not changed.",
+    "pm10: cross-validation chose v1 (test-year MAE 4.864); blend did better on the test year (4.690). The choice was not changed."
+   ]
+  },
+  {
+   "id": "tainan",
+   "name": "Tainan City",
+   "name_zh": "臺南市",
+   "lat": 22.9908,
+   "lon": 120.185,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "v1",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "v1",
+    "baseline_mae": 4.003,
+    "model_mae": 3.232,
+    "improvement_pct": 19.3,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 3.818,
+     "ridge": 3.894,
+     "boosted": 4.122,
+     "blend": 3.871,
+     "baseline": 4.532
+    },
+    "test_mae": {
+     "baseline": 4.003,
+     "v1": 3.232,
+     "ridge": 3.121,
+     "boosted": 3.082,
+     "blend": 2.933,
+     "blend_no_weather": 3.167
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 4.46,
+    "model_mae": 3.901,
+    "improvement_pct": 12.5,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.774,
+     "ridge": 6.144,
+     "boosted": 9.272,
+     "blend": 7.266,
+     "baseline": 4.93
+    },
+    "test_mae": {
+     "baseline": 4.46,
+     "v1": 3.901,
+     "ridge": 3.717,
+     "boosted": 4.08,
+     "blend": 3.537,
+     "blend_no_weather": 3.757
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 27.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 9,
+     "warned": 1,
+     "caught": 0,
+     "false_alarms": 1,
+     "missed": 9,
+     "precision": 0.0,
+     "recall": 0.0
+    },
+    "tuned": {
+     "threshold": 27.0,
+     "bad_days": 9,
+     "warned": 23,
+     "caught": 7,
+     "false_alarms": 16,
+     "missed": 2,
+     "precision": 0.304,
+     "recall": 0.778
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 9,
+     "warned": 9,
+     "caught": 3,
+     "false_alarms": 6,
+     "missed": 6,
+     "precision": 0.333,
+     "recall": 0.333
+    }
+   },
+   "notes": [
+    "pm25: cross-validation chose v1 (test-year MAE 3.232); blend did better on the test year (2.933). The choice was not changed.",
+    "pm10: cross-validation chose v1 (test-year MAE 3.901); blend did better on the test year (3.537). The choice was not changed."
+   ]
+  },
+  {
+   "id": "kaohsiung",
+   "name": "Kaohsiung City",
+   "name_zh": "高雄市",
+   "lat": 22.6203,
+   "lon": 120.312,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "ridge"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 5.552,
+    "model_mae": 3.966,
+    "improvement_pct": 28.6,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 4.336,
+     "ridge": 4.277,
+     "boosted": 4.393,
+     "blend": 4.138,
+     "baseline": 6.154
+    },
+    "test_mae": {
+     "baseline": 5.552,
+     "v1": 4.38,
+     "ridge": 4.365,
+     "boosted": 3.878,
+     "blend": 3.966,
+     "blend_no_weather": 4.938
+    },
+    "best_on_test": "boosted"
+   },
+   "pm10": {
+    "chosen": "ridge",
+    "baseline_mae": 5.762,
+    "model_mae": 4.73,
+    "improvement_pct": 17.9,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 6.408,
+     "ridge": 6.234,
+     "boosted": 9.053,
+     "blend": 7.071,
+     "baseline": 6.339
+    },
+    "test_mae": {
+     "baseline": 5.762,
+     "v1": 4.76,
+     "ridge": 4.73,
+     "boosted": 4.568,
+     "blend": 4.212,
+     "blend_no_weather": 5.068
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 30.5,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 90,
+     "warned": 72,
+     "caught": 58,
+     "false_alarms": 14,
+     "missed": 32,
+     "precision": 0.806,
+     "recall": 0.644
+    },
+    "tuned": {
+     "threshold": 30.5,
+     "bad_days": 90,
+     "warned": 139,
+     "caught": 80,
+     "false_alarms": 59,
+     "missed": 10,
+     "precision": 0.576,
+     "recall": 0.889
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 90,
+     "warned": 91,
+     "caught": 59,
+     "false_alarms": 32,
+     "missed": 31,
+     "precision": 0.648,
+     "recall": 0.656
+    }
+   },
+   "notes": [
+    "pm25: cross-validation chose blend (test-year MAE 3.966); boosted did better on the test year (3.878). The choice was not changed.",
+    "pm10: cross-validation chose ridge (test-year MAE 4.730); blend did better on the test year (4.212). The choice was not changed."
+   ]
+  },
+  {
+   "id": "keelung",
+   "name": "Keelung City",
+   "name_zh": "基隆市",
+   "lat": 25.1317,
+   "lon": 121.7447,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "boosted",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "boosted",
+    "baseline_mae": 6.291,
+    "model_mae": 4.09,
+    "improvement_pct": 35.0,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.254,
+     "ridge": 5.369,
+     "boosted": 4.771,
+     "blend": 4.794,
+     "baseline": 7.092
+    },
+    "test_mae": {
+     "baseline": 6.291,
+     "v1": 4.541,
+     "ridge": 4.494,
+     "boosted": 4.09,
+     "blend": 3.984,
+     "blend_no_weather": 4.981
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 6.825,
+    "model_mae": 5.469,
+    "improvement_pct": 19.9,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 6.854,
+     "ridge": 6.9,
+     "boosted": 8.85,
+     "blend": 7.097,
+     "baseline": 7.467
+    },
+    "test_mae": {
+     "baseline": 6.825,
+     "v1": 5.469,
+     "ridge": 5.309,
+     "boosted": 5.415,
+     "blend": 4.851,
+     "blend_no_weather": 5.853
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 27.5,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 54,
+     "warned": 52,
+     "caught": 41,
+     "false_alarms": 11,
+     "missed": 13,
+     "precision": 0.788,
+     "recall": 0.759
+    },
+    "tuned": {
+     "threshold": 27.5,
+     "bad_days": 54,
+     "warned": 109,
+     "caught": 51,
+     "false_alarms": 58,
+     "missed": 3,
+     "precision": 0.468,
+     "recall": 0.944
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 54,
+     "warned": 54,
+     "caught": 31,
+     "false_alarms": 23,
+     "missed": 23,
+     "precision": 0.574,
+     "recall": 0.574
+    }
+   },
+   "notes": [
+    "pm25: cross-validation chose boosted (test-year MAE 4.090); blend did better on the test year (3.984). The choice was not changed.",
+    "pm10: cross-validation chose v1 (test-year MAE 5.469); blend did better on the test year (4.851). The choice was not changed."
+   ]
+  },
+  {
+   "id": "hsinchu_city",
+   "name": "Hsinchu City",
+   "name_zh": "新竹市",
+   "lat": 24.8066,
+   "lon": 120.9686,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 4.937,
+    "model_mae": 3.369,
+    "improvement_pct": 31.8,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.511,
+     "ridge": 5.454,
+     "boosted": 5.33,
+     "blend": 5.011,
+     "baseline": 7.1
+    },
+    "test_mae": {
+     "baseline": 4.937,
+     "v1": 3.812,
+     "ridge": 3.702,
+     "boosted": 3.637,
+     "blend": 3.369,
+     "blend_no_weather": 4.008
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 5.855,
+    "model_mae": 5.032,
+    "improvement_pct": 14.0,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 7.475,
+     "ridge": 7.753,
+     "boosted": 10.719,
+     "blend": 8.496,
+     "baseline": 7.667
+    },
+    "test_mae": {
+     "baseline": 5.855,
+     "v1": 5.032,
+     "ridge": 5.0,
+     "boosted": 5.22,
+     "blend": 4.72,
+     "blend_no_weather": 5.162
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 26.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 11,
+     "warned": 8,
+     "caught": 6,
+     "false_alarms": 2,
+     "missed": 5,
+     "precision": 0.75,
+     "recall": 0.545
+    },
+    "tuned": {
+     "threshold": 26.0,
+     "bad_days": 11,
+     "warned": 57,
+     "caught": 10,
+     "false_alarms": 47,
+     "missed": 1,
+     "precision": 0.175,
+     "recall": 0.909
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 11,
+     "warned": 11,
+     "caught": 2,
+     "false_alarms": 9,
+     "missed": 9,
+     "precision": 0.182,
+     "recall": 0.182
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose v1 (test-year MAE 5.032); blend did better on the test year (4.720). The choice was not changed."
+   ]
+  },
+  {
+   "id": "chiayi_city",
+   "name": "Chiayi City",
+   "name_zh": "嘉義市",
+   "lat": 23.4812,
+   "lon": 120.4536,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 5.469,
+    "model_mae": 3.521,
+    "improvement_pct": 35.6,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.414,
+     "ridge": 5.31,
+     "boosted": 5.601,
+     "blend": 5.281,
+     "baseline": 7.026
+    },
+    "test_mae": {
+     "baseline": 5.469,
+     "v1": 3.964,
+     "ridge": 3.752,
+     "boosted": 3.77,
+     "blend": 3.521,
+     "blend_no_weather": 4.143
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 5.675,
+    "model_mae": 4.662,
+    "improvement_pct": 17.9,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 7.592,
+     "ridge": 7.643,
+     "boosted": 11.209,
+     "blend": 8.948,
+     "baseline": 7.3
+    },
+    "test_mae": {
+     "baseline": 5.675,
+     "v1": 4.662,
+     "ridge": 4.406,
+     "boosted": 4.518,
+     "blend": 3.904,
+     "blend_no_weather": 4.522
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 26.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 50,
+     "warned": 46,
+     "caught": 32,
+     "false_alarms": 14,
+     "missed": 18,
+     "precision": 0.696,
+     "recall": 0.64
+    },
+    "tuned": {
+     "threshold": 26.0,
+     "bad_days": 50,
+     "warned": 125,
+     "caught": 49,
+     "false_alarms": 76,
+     "missed": 1,
+     "precision": 0.392,
+     "recall": 0.98
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 50,
+     "warned": 50,
+     "caught": 27,
+     "false_alarms": 23,
+     "missed": 23,
+     "precision": 0.54,
+     "recall": 0.54
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose v1 (test-year MAE 4.662); blend did better on the test year (3.904). The choice was not changed."
+   ]
+  },
+  {
+   "id": "hsinchu_county",
+   "name": "Hsinchu County",
+   "name_zh": "新竹縣",
+   "lat": 24.827,
+   "lon": 121.0129,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "ridge"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 6.147,
+    "model_mae": 3.647,
+    "improvement_pct": 40.7,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.126,
+     "ridge": 4.851,
+     "boosted": 4.488,
+     "blend": 4.424,
+     "baseline": 7.127
+    },
+    "test_mae": {
+     "baseline": 6.147,
+     "v1": 4.081,
+     "ridge": 4.162,
+     "boosted": 3.677,
+     "blend": 3.647,
+     "blend_no_weather": 4.818
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "ridge",
+    "baseline_mae": 6.517,
+    "model_mae": 5.017,
+    "improvement_pct": 23.0,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 6.29,
+     "ridge": 6.068,
+     "boosted": 8.2,
+     "blend": 6.341,
+     "baseline": 7.383
+    },
+    "test_mae": {
+     "baseline": 6.517,
+     "v1": 4.821,
+     "ridge": 5.017,
+     "boosted": 4.695,
+     "blend": 4.47,
+     "blend_no_weather": 5.454
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 29.5,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 33,
+     "warned": 15,
+     "caught": 10,
+     "false_alarms": 5,
+     "missed": 23,
+     "precision": 0.667,
+     "recall": 0.303
+    },
+    "tuned": {
+     "threshold": 29.5,
+     "bad_days": 33,
+     "warned": 49,
+     "caught": 26,
+     "false_alarms": 23,
+     "missed": 7,
+     "precision": 0.531,
+     "recall": 0.788
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 33,
+     "warned": 33,
+     "caught": 11,
+     "false_alarms": 22,
+     "missed": 22,
+     "precision": 0.333,
+     "recall": 0.333
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose ridge (test-year MAE 5.017); blend did better on the test year (4.470). The choice was not changed."
+   ]
+  },
+  {
+   "id": "miaoli",
+   "name": "Miaoli County",
+   "name_zh": "苗栗縣",
+   "lat": 24.5649,
+   "lon": 120.8207,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "boosted",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "boosted",
+    "baseline_mae": 5.344,
+    "model_mae": 3.211,
+    "improvement_pct": 39.9,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 4.714,
+     "ridge": 4.849,
+     "boosted": 3.863,
+     "blend": 4.113,
+     "baseline": 6.155
+    },
+    "test_mae": {
+     "baseline": 5.344,
+     "v1": 3.69,
+     "ridge": 3.732,
+     "boosted": 3.211,
+     "blend": 3.235,
+     "blend_no_weather": 4.052
+    },
+    "best_on_test": "boosted"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 5.556,
+    "model_mae": 4.254,
+    "improvement_pct": 23.4,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 6.31,
+     "ridge": 6.83,
+     "boosted": 7.774,
+     "blend": 6.605,
+     "baseline": 6.366
+    },
+    "test_mae": {
+     "baseline": 5.556,
+     "v1": 4.254,
+     "ridge": 4.374,
+     "boosted": 4.123,
+     "blend": 3.854,
+     "blend_no_weather": 4.569
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 29.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 25,
+     "warned": 23,
+     "caught": 16,
+     "false_alarms": 7,
+     "missed": 9,
+     "precision": 0.696,
+     "recall": 0.64
+    },
+    "tuned": {
+     "threshold": 29.0,
+     "bad_days": 25,
+     "warned": 48,
+     "caught": 19,
+     "false_alarms": 29,
+     "missed": 6,
+     "precision": 0.396,
+     "recall": 0.76
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 25,
+     "warned": 25,
+     "caught": 9,
+     "false_alarms": 16,
+     "missed": 16,
+     "precision": 0.36,
+     "recall": 0.36
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose v1 (test-year MAE 4.254); blend did better on the test year (3.854). The choice was not changed."
+   ]
+  },
+  {
+   "id": "changhua",
+   "name": "Changhua County",
+   "name_zh": "彰化縣",
+   "lat": 24.0756,
+   "lon": 120.5445,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "boosted",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "boosted",
+    "baseline_mae": 5.292,
+    "model_mae": 4.05,
+    "improvement_pct": 23.5,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 6.221,
+     "ridge": 6.551,
+     "boosted": 5.549,
+     "blend": 5.704,
+     "baseline": 7.054
+    },
+    "test_mae": {
+     "baseline": 5.292,
+     "v1": 4.032,
+     "ridge": 3.936,
+     "boosted": 4.05,
+     "blend": 3.79,
+     "blend_no_weather": 4.271
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 5.817,
+    "model_mae": 4.747,
+    "improvement_pct": 18.4,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 8.736,
+     "ridge": 9.322,
+     "boosted": 10.695,
+     "blend": 9.502,
+     "baseline": 7.458
+    },
+    "test_mae": {
+     "baseline": 5.817,
+     "v1": 4.747,
+     "ridge": 4.618,
+     "boosted": 5.145,
+     "blend": 4.485,
+     "blend_no_weather": 4.977
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 30.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 27,
+     "warned": 35,
+     "caught": 19,
+     "false_alarms": 16,
+     "missed": 8,
+     "precision": 0.543,
+     "recall": 0.704
+    },
+    "tuned": {
+     "threshold": 30.0,
+     "bad_days": 27,
+     "warned": 65,
+     "caught": 26,
+     "false_alarms": 39,
+     "missed": 1,
+     "precision": 0.4,
+     "recall": 0.963
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 27,
+     "warned": 27,
+     "caught": 10,
+     "false_alarms": 17,
+     "missed": 17,
+     "precision": 0.37,
+     "recall": 0.37
+    }
+   },
+   "notes": [
+    "pm25: cross-validation chose boosted (test-year MAE 4.050); blend did better on the test year (3.790). The choice was not changed.",
+    "pm10: cross-validation chose v1 (test-year MAE 4.747); blend did better on the test year (4.485). The choice was not changed."
+   ]
+  },
+  {
+   "id": "nantou",
+   "name": "Nantou County",
+   "name_zh": "南投縣",
+   "lat": 23.9027,
+   "lon": 120.6905,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 5.906,
+    "model_mae": 4.386,
+    "improvement_pct": 25.7,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.133,
+     "ridge": 4.854,
+     "boosted": 4.935,
+     "blend": 4.688,
+     "baseline": 6.481
+    },
+    "test_mae": {
+     "baseline": 5.906,
+     "v1": 4.518,
+     "ridge": 4.451,
+     "boosted": 4.666,
+     "blend": 4.386,
+     "blend_no_weather": 5.066
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 6.042,
+    "model_mae": 4.719,
+    "improvement_pct": 21.9,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.415,
+     "ridge": 5.766,
+     "boosted": 8.024,
+     "blend": 6.435,
+     "baseline": 6.66
+    },
+    "test_mae": {
+     "baseline": 6.042,
+     "v1": 4.719,
+     "ridge": 4.654,
+     "boosted": 4.973,
+     "blend": 4.466,
+     "blend_no_weather": 5.149
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 29.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 143,
+     "warned": 107,
+     "caught": 94,
+     "false_alarms": 13,
+     "missed": 49,
+     "precision": 0.879,
+     "recall": 0.657
+    },
+    "tuned": {
+     "threshold": 29.0,
+     "bad_days": 143,
+     "warned": 221,
+     "caught": 140,
+     "false_alarms": 81,
+     "missed": 3,
+     "precision": 0.633,
+     "recall": 0.979
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 143,
+     "warned": 143,
+     "caught": 109,
+     "false_alarms": 34,
+     "missed": 34,
+     "precision": 0.762,
+     "recall": 0.762
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose v1 (test-year MAE 4.719); blend did better on the test year (4.466). The choice was not changed."
+   ]
+  },
+  {
+   "id": "yunlin",
+   "name": "Yunlin County",
+   "name_zh": "雲林縣",
+   "lat": 23.6992,
+   "lon": 120.5263,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 5.469,
+    "model_mae": 3.51,
+    "improvement_pct": 35.8,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.418,
+     "ridge": 5.372,
+     "boosted": 5.337,
+     "blend": 5.149,
+     "baseline": 7.026
+    },
+    "test_mae": {
+     "baseline": 5.469,
+     "v1": 3.861,
+     "ridge": 3.747,
+     "boosted": 3.768,
+     "blend": 3.51,
+     "blend_no_weather": 4.129
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 5.675,
+    "model_mae": 4.575,
+    "improvement_pct": 19.4,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 7.541,
+     "ridge": 7.783,
+     "boosted": 10.962,
+     "blend": 8.958,
+     "baseline": 7.3
+    },
+    "test_mae": {
+     "baseline": 5.675,
+     "v1": 4.575,
+     "ridge": 4.454,
+     "boosted": 4.517,
+     "blend": 4.004,
+     "blend_no_weather": 4.472
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 26.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 50,
+     "warned": 39,
+     "caught": 31,
+     "false_alarms": 8,
+     "missed": 19,
+     "precision": 0.795,
+     "recall": 0.62
+    },
+    "tuned": {
+     "threshold": 26.0,
+     "bad_days": 50,
+     "warned": 124,
+     "caught": 49,
+     "false_alarms": 75,
+     "missed": 1,
+     "precision": 0.395,
+     "recall": 0.98
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 50,
+     "warned": 50,
+     "caught": 27,
+     "false_alarms": 23,
+     "missed": 23,
+     "precision": 0.54,
+     "recall": 0.54
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose v1 (test-year MAE 4.575); blend did better on the test year (4.004). The choice was not changed."
+   ]
+  },
+  {
+   "id": "chiayi_county",
+   "name": "Chiayi County",
+   "name_zh": "嘉義縣",
+   "lat": 23.4587,
+   "lon": 120.293,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 5.469,
+    "model_mae": 3.422,
+    "improvement_pct": 37.4,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.34,
+     "ridge": 5.296,
+     "boosted": 5.456,
+     "blend": 5.216,
+     "baseline": 7.026
+    },
+    "test_mae": {
+     "baseline": 5.469,
+     "v1": 3.742,
+     "ridge": 3.704,
+     "boosted": 3.699,
+     "blend": 3.422,
+     "blend_no_weather": 4.172
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 5.675,
+    "model_mae": 4.396,
+    "improvement_pct": 22.6,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 7.272,
+     "ridge": 7.48,
+     "boosted": 11.167,
+     "blend": 8.875,
+     "baseline": 7.3
+    },
+    "test_mae": {
+     "baseline": 5.675,
+     "v1": 4.396,
+     "ridge": 4.387,
+     "boosted": 4.442,
+     "blend": 3.778,
+     "blend_no_weather": 4.511
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 26.5,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 50,
+     "warned": 43,
+     "caught": 32,
+     "false_alarms": 11,
+     "missed": 18,
+     "precision": 0.744,
+     "recall": 0.64
+    },
+    "tuned": {
+     "threshold": 26.5,
+     "bad_days": 50,
+     "warned": 121,
+     "caught": 49,
+     "false_alarms": 72,
+     "missed": 1,
+     "precision": 0.405,
+     "recall": 0.98
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 50,
+     "warned": 50,
+     "caught": 27,
+     "false_alarms": 23,
+     "missed": 23,
+     "precision": 0.54,
+     "recall": 0.54
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose v1 (test-year MAE 4.396); blend did better on the test year (3.778). The choice was not changed."
+   ]
+  },
+  {
+   "id": "pingtung",
+   "name": "Pingtung County",
+   "name_zh": "屏東縣",
+   "lat": 22.6832,
+   "lon": 120.488,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "ridge"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 5.552,
+    "model_mae": 4.451,
+    "improvement_pct": 19.8,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 4.549,
+     "ridge": 4.535,
+     "boosted": 4.968,
+     "blend": 4.508,
+     "baseline": 6.154
+    },
+    "test_mae": {
+     "baseline": 5.552,
+     "v1": 4.768,
+     "ridge": 4.731,
+     "boosted": 4.557,
+     "blend": 4.451,
+     "blend_no_weather": 4.934
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "ridge",
+    "baseline_mae": 5.762,
+    "model_mae": 5.186,
+    "improvement_pct": 10.0,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 6.228,
+     "ridge": 6.165,
+     "boosted": 9.574,
+     "blend": 7.237,
+     "baseline": 6.339
+    },
+    "test_mae": {
+     "baseline": 5.762,
+     "v1": 5.235,
+     "ridge": 5.186,
+     "boosted": 5.237,
+     "blend": 4.776,
+     "blend_no_weather": 5.242
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 30.5,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 90,
+     "warned": 71,
+     "caught": 51,
+     "false_alarms": 20,
+     "missed": 39,
+     "precision": 0.718,
+     "recall": 0.567
+    },
+    "tuned": {
+     "threshold": 30.5,
+     "bad_days": 90,
+     "warned": 140,
+     "caught": 76,
+     "false_alarms": 64,
+     "missed": 14,
+     "precision": 0.543,
+     "recall": 0.844
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 90,
+     "warned": 91,
+     "caught": 59,
+     "false_alarms": 32,
+     "missed": 31,
+     "precision": 0.648,
+     "recall": 0.656
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose ridge (test-year MAE 5.186); blend did better on the test year (4.776). The choice was not changed."
+   ]
+  },
+  {
+   "id": "yilan",
+   "name": "Yilan County",
+   "name_zh": "宜蘭縣",
+   "lat": 24.7307,
+   "lon": 121.7631,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "ridge"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 5.494,
+    "model_mae": 3.965,
+    "improvement_pct": 27.8,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 4.222,
+     "ridge": 4.227,
+     "boosted": 4.055,
+     "blend": 3.963,
+     "baseline": 5.393
+    },
+    "test_mae": {
+     "baseline": 5.494,
+     "v1": 4.11,
+     "ridge": 4.195,
+     "boosted": 4.04,
+     "blend": 3.965,
+     "blend_no_weather": 4.581
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "ridge",
+    "baseline_mae": 6.024,
+    "model_mae": 4.952,
+    "improvement_pct": 17.8,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.269,
+     "ridge": 5.241,
+     "boosted": 6.303,
+     "blend": 5.375,
+     "baseline": 5.823
+    },
+    "test_mae": {
+     "baseline": 6.024,
+     "v1": 4.888,
+     "ridge": 4.952,
+     "boosted": 4.963,
+     "blend": 4.712,
+     "blend_no_weather": 5.157
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 25.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 15,
+     "warned": 0,
+     "caught": 0,
+     "false_alarms": 0,
+     "missed": 15,
+     "precision": null,
+     "recall": 0.0
+    },
+    "tuned": {
+     "threshold": 25.0,
+     "bad_days": 15,
+     "warned": 45,
+     "caught": 9,
+     "false_alarms": 36,
+     "missed": 6,
+     "precision": 0.2,
+     "recall": 0.6
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 15,
+     "warned": 15,
+     "caught": 7,
+     "false_alarms": 8,
+     "missed": 8,
+     "precision": 0.467,
+     "recall": 0.467
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose ridge (test-year MAE 4.952); blend did better on the test year (4.712). The choice was not changed."
+   ]
+  },
+  {
+   "id": "hualien",
+   "name": "Hualien County",
+   "name_zh": "花蓮縣",
+   "lat": 23.9914,
+   "lon": 121.6199,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "blend"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 3.75,
+    "model_mae": 2.735,
+    "improvement_pct": 27.1,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 2.873,
+     "ridge": 2.904,
+     "boosted": 2.9,
+     "blend": 2.821,
+     "baseline": 3.457
+    },
+    "test_mae": {
+     "baseline": 3.75,
+     "v1": 2.748,
+     "ridge": 2.787,
+     "boosted": 2.846,
+     "blend": 2.735,
+     "blend_no_weather": 2.866
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "blend",
+    "baseline_mae": 4.153,
+    "model_mae": 3.199,
+    "improvement_pct": 23.0,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 4.019,
+     "ridge": 4.033,
+     "boosted": 4.132,
+     "blend": 3.877,
+     "baseline": 4.017
+    },
+    "test_mae": {
+     "baseline": 4.153,
+     "v1": 3.244,
+     "ridge": 3.309,
+     "boosted": 3.455,
+     "blend": 3.199,
+     "blend_no_weather": 3.279
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 35.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 5,
+     "warned": 0,
+     "caught": 0,
+     "false_alarms": 0,
+     "missed": 5,
+     "precision": null,
+     "recall": 0.0
+    },
+    "tuned": {
+     "threshold": 35.0,
+     "bad_days": 5,
+     "warned": 0,
+     "caught": 0,
+     "false_alarms": 0,
+     "missed": 5,
+     "precision": null,
+     "recall": 0.0
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 5,
+     "warned": 5,
+     "caught": 4,
+     "false_alarms": 1,
+     "missed": 1,
+     "precision": 0.8,
+     "recall": 0.8
+    }
+   },
+   "notes": []
+  },
+  {
+   "id": "taitung",
+   "name": "Taitung County",
+   "name_zh": "臺東縣",
+   "lat": 22.7554,
+   "lon": 121.1503,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "boosted",
+    "pm10": "ridge"
+   },
+   "pm25": {
+    "chosen": "boosted",
+    "baseline_mae": 2.83,
+    "model_mae": 2.253,
+    "improvement_pct": 20.4,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 2.288,
+     "ridge": 2.277,
+     "boosted": 2.081,
+     "blend": 2.106,
+     "baseline": 2.54
+    },
+    "test_mae": {
+     "baseline": 2.83,
+     "v1": 2.261,
+     "ridge": 2.233,
+     "boosted": 2.253,
+     "blend": 2.165,
+     "blend_no_weather": 2.302
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "ridge",
+    "baseline_mae": 3.498,
+    "model_mae": 2.932,
+    "improvement_pct": 16.2,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 3.695,
+     "ridge": 3.67,
+     "boosted": 4.215,
+     "blend": 3.781,
+     "baseline": 3.294
+    },
+    "test_mae": {
+     "baseline": 3.498,
+     "v1": 2.926,
+     "ridge": 2.932,
+     "boosted": 3.013,
+     "blend": 2.768,
+     "blend_no_weather": 2.98
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 35.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 0,
+     "warned": 0,
+     "caught": 0,
+     "false_alarms": 0,
+     "missed": 0,
+     "precision": null,
+     "recall": null
+    },
+    "tuned": {
+     "threshold": 35.0,
+     "bad_days": 0,
+     "warned": 0,
+     "caught": 0,
+     "false_alarms": 0,
+     "missed": 0,
+     "precision": null,
+     "recall": null
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 0,
+     "warned": 0,
+     "caught": 0,
+     "false_alarms": 0,
+     "missed": 0,
+     "precision": null,
+     "recall": null
+    }
+   },
+   "notes": [
+    "pm25: cross-validation chose boosted (test-year MAE 2.253); blend did better on the test year (2.165). The choice was not changed.",
+    "pm10: cross-validation chose ridge (test-year MAE 2.932); blend did better on the test year (2.768). The choice was not changed."
+   ]
+  },
+  {
+   "id": "penghu",
+   "name": "Penghu County",
+   "name_zh": "澎湖縣",
+   "lat": 23.57,
+   "lon": 119.5664,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 3.596,
+    "model_mae": 2.625,
+    "improvement_pct": 27.0,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 3.528,
+     "ridge": 3.538,
+     "boosted": 3.768,
+     "blend": 3.513,
+     "baseline": 4.472
+    },
+    "test_mae": {
+     "baseline": 3.596,
+     "v1": 2.654,
+     "ridge": 2.644,
+     "boosted": 2.815,
+     "blend": 2.625,
+     "blend_no_weather": 2.842
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 4.742,
+    "model_mae": 3.796,
+    "improvement_pct": 19.9,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.709,
+     "ridge": 5.926,
+     "boosted": 8.135,
+     "blend": 6.49,
+     "baseline": 5.46
+    },
+    "test_mae": {
+     "baseline": 4.742,
+     "v1": 3.796,
+     "ridge": 3.781,
+     "boosted": 4.411,
+     "blend": 3.826,
+     "blend_no_weather": 4.057
+    },
+    "best_on_test": "ridge"
+   },
+   "warn_threshold": 24.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 0,
+     "warned": 0,
+     "caught": 0,
+     "false_alarms": 0,
+     "missed": 0,
+     "precision": null,
+     "recall": null
+    },
+    "tuned": {
+     "threshold": 24.0,
+     "bad_days": 0,
+     "warned": 5,
+     "caught": 0,
+     "false_alarms": 5,
+     "missed": 0,
+     "precision": 0.0,
+     "recall": null
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 0,
+     "warned": 0,
+     "caught": 0,
+     "false_alarms": 0,
+     "missed": 0,
+     "precision": null,
+     "recall": null
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose v1 (test-year MAE 3.796); ridge did better on the test year (3.781). The choice was not changed."
+   ]
+  },
+  {
+   "id": "kinmen",
+   "name": "Kinmen County",
+   "name_zh": "金門縣",
+   "lat": 24.4369,
+   "lon": 118.3186,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 6.316,
+    "model_mae": 4.235,
+    "improvement_pct": 32.9,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 6.015,
+     "ridge": 6.086,
+     "boosted": 5.487,
+     "blend": 5.325,
+     "baseline": 7.383
+    },
+    "test_mae": {
+     "baseline": 6.316,
+     "v1": 5.001,
+     "ridge": 4.892,
+     "boosted": 4.424,
+     "blend": 4.235,
+     "blend_no_weather": 5.088
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 7.037,
+    "model_mae": 6.269,
+    "improvement_pct": 10.9,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 9.172,
+     "ridge": 9.233,
+     "boosted": 12.335,
+     "blend": 9.935,
+     "baseline": 7.703
+    },
+    "test_mae": {
+     "baseline": 7.037,
+     "v1": 6.269,
+     "ridge": 6.156,
+     "boosted": 6.314,
+     "blend": 5.636,
+     "blend_no_weather": 6.15
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 27.5,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 26,
+     "warned": 32,
+     "caught": 18,
+     "false_alarms": 14,
+     "missed": 8,
+     "precision": 0.562,
+     "recall": 0.692
+    },
+    "tuned": {
+     "threshold": 27.5,
+     "bad_days": 26,
+     "warned": 76,
+     "caught": 21,
+     "false_alarms": 55,
+     "missed": 5,
+     "precision": 0.276,
+     "recall": 0.808
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 26,
+     "warned": 26,
+     "caught": 7,
+     "false_alarms": 19,
+     "missed": 19,
+     "precision": 0.269,
+     "recall": 0.269
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose v1 (test-year MAE 6.269); blend did better on the test year (5.636). The choice was not changed."
+   ]
+  },
+  {
+   "id": "lienchiang",
+   "name": "Lienchiang County",
+   "name_zh": "連江縣",
+   "lat": 26.1577,
+   "lon": 119.9518,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "v1",
+    "pm10": "ridge"
+   },
+   "pm25": {
+    "chosen": "v1",
+    "baseline_mae": 4.886,
+    "model_mae": 3.994,
+    "improvement_pct": 18.3,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 3.974,
+     "ridge": 4.032,
+     "boosted": 4.683,
+     "blend": 4.123,
+     "baseline": 5.377
+    },
+    "test_mae": {
+     "baseline": 4.886,
+     "v1": 3.994,
+     "ridge": 3.97,
+     "boosted": 4.345,
+     "blend": 4.016,
+     "blend_no_weather": 4.234
+    },
+    "best_on_test": "ridge"
+   },
+   "pm10": {
+    "chosen": "ridge",
+    "baseline_mae": 6.504,
+    "model_mae": 5.684,
+    "improvement_pct": 12.6,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 6.082,
+     "ridge": 5.956,
+     "boosted": 10.02,
+     "blend": 7.534,
+     "baseline": 6.495
+    },
+    "test_mae": {
+     "baseline": 6.504,
+     "v1": 5.694,
+     "ridge": 5.684,
+     "boosted": 6.454,
+     "blend": 5.805,
+     "blend_no_weather": 6.067
+    },
+    "best_on_test": "ridge"
+   },
+   "warn_threshold": 25.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 4,
+     "warned": 2,
+     "caught": 1,
+     "false_alarms": 1,
+     "missed": 3,
+     "precision": 0.5,
+     "recall": 0.25
+    },
+    "tuned": {
+     "threshold": 25.0,
+     "bad_days": 4,
+     "warned": 18,
+     "caught": 1,
+     "false_alarms": 17,
+     "missed": 3,
+     "precision": 0.056,
+     "recall": 0.25
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 4,
+     "warned": 4,
+     "caught": 0,
+     "false_alarms": 4,
+     "missed": 4,
+     "precision": 0.0,
+     "recall": 0.0
+    }
+   },
+   "notes": [
+    "pm25: cross-validation chose v1 (test-year MAE 3.994); ridge did better on the test year (3.970). The choice was not changed."
+   ]
+  }
+ ],
+ "missing": []
+}

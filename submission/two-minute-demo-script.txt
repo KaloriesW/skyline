@@ -1,0 +1,71 @@
+SKYLINE / TERRAIN WATCH — TWO-MINUTE SUBMISSION DEMO
+
+Target: 1:50–1:58, including short click pauses. Do not exceed 2:00.
+Read only NARRATION. ACTION describes the screen, not words to read aloud.
+This is a saved-scan demonstration, not a claim that inference happens instantly.
+
+00:00–00:15 | THE PROBLEM
+ACTION: Show the Skyline home workspace, then open the saved Taroko demo.
+NARRATION:
+After heavy rain in Taiwan, where should a reviewer look first? Skyline Terrain Watch turns free satellite imagery into a map of suspected landslides, with the evidence needed to inspect them.
+
+00:15–00:32 | THE MODEL
+ACTION: Show the orange outlines. Briefly show the U-Net model name in Settings.
+NARRATION:
+Our trained U-Net uses eleven Sentinel-2 bands, elevation and slope. It segments candidate areas, then adds vegetation change, nearby roads and weather. These outlines come from the model, not hand-drawn shapes.
+
+00:32–00:50 | BEFORE AND AFTER
+ACTION: Open Before / after. Move the comparison slider, then close comparison.
+NARRATION:
+This saved Taroko scan covers six by six kilometres using November fifth imagery. It found seventy-six candidates. The before-and-after view helps a reviewer compare vegetation and exposed ground. Clouds and missing data remain unassessed.
+
+00:50–01:09 | PRIORITIZE AND LOCATE
+ACTION: In Review filters, select roads within 200 m; then minimum footprint 1 ha.
+Show the resulting five candidates, open one, and point to its coordinates/export.
+NARRATION:
+Twenty-two candidates are within two hundred metres of a mapped road. Requiring at least one hectare leaves five to review. Each has coordinates and exportable geometry. Nearby does not mean the road is blocked.
+
+01:09–01:26 | QWEN AND MONITORING
+ACTION: Show a preloaded, real Qwen response about the saved scan. Return home and
+show the monitoring controls, left OFF. Do not start a new download during filming.
+NARRATION:
+Qwen explains scans and answers follow-up questions using weather, air-quality and model results. A user can also preview an area and enable hourly checks for newly published satellite images. New captures are days apart, and the server must stay running.
+
+01:26–01:45 | MEASURED RESULTS
+ACTION: Show README Results or the evaluation evidence. Keep the scope visible.
+NARRATION:
+Our retained model reached fifty-four-point-three percent pixel IoU and seventy-point-four percent Dice on twenty-four inventory-labelled patches. That small holdout was repeatedly compared during development. Live-image accuracy still needs independent labels, and these are suspected regions, not confirmed landslides.
+
+01:45–01:57 | WHY IT MATTERS
+ACTION: Return to the segmented map; finish on one candidate and its evidence.
+NARRATION:
+We built this to help reviewers prioritize inspection with dated, inspectable evidence. Our next step is independent review with local experts. Terrain Watch supports human decisions; it does not predict when a slope will fail.
+
+RECORDING CHECKLIST
+
+1. Run the app and open these tabs before recording:
+   Home: http://127.0.0.1:8765/skyline/
+   Saved scan: http://127.0.0.1:8765/?demo=taroko
+   Results: open README.md or one-page-writeup.pdf locally.
+2. Reset all scan filters. The starting count is 76. Close extra panels.
+3. Ask Qwen beforehand: “Which model made this scan, and are these confirmed landslides?”
+   Keep the genuine answer visible in a separate tab. Do not invent an answer or
+   imply a prerecorded response was generated instantly. If Qwen is unavailable,
+   show the structured scan report and describe the optional assistant verbally.
+4. Rehearse once with a timer. The narration is 243 words: shorten pauses or
+   speak around 135–145 words/minute; cut the optional Qwen view if you run long.
+5. On Mac, press Shift-Command-5. Select the browser window or selected portion.
+   Under Options, choose your microphone if narrating and enable mouse clicks.
+   Record the app only; keep unrelated tabs, notifications and personal data out.
+6. Stop with Command-Control-Esc. Review the entire recording: legible text,
+   audible voice, correct counts, visible dates and duration UNDER two minutes.
+7. Trim dead time; export a broadly compatible video. Upload as an unlisted
+   YouTube video or a Drive file viewable by anyone with the link. Check the link
+   while signed out. The video is optional but recommended by the organizers.
+
+Sources:
+Official submission rules: https://highschoolhackathon.org/briefs
+Mac recording instructions: https://support.apple.com/en-us/102618
+
+A recording has NOT been created by this script. Use your team's voice and
+rehearse the actual screen flow. Do not submit this text as a video link.

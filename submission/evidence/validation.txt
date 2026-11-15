@@ -1,0 +1,29 @@
+RELEASE VALIDATION — 15 November 2026, Asia/Taipei
+
+Fresh Python 3.14.4 virtual environment; macOS 26.5.1 Apple Silicon.
+Dependencies installed from requirements.txt, without system-site-packages.
+pip check: no broken requirements.
+Standalone source folder: outputs/final-submission/skyline-terrain.
+81 map/integration pytest tests passed; 3 subtests passed.
+9 JavaScript tests passed (location and review filters).
+JS syntax checks passed: workspace, monitor controls, Skyline app.
+check_setup.py --inference: passed; real U-Net reproduced a 293-pixel
+mask on the bundled historical satellite patch in 2.828 seconds.
+This is a setup regression check, not a new accuracy benchmark.
+
+Separate server on localhost:8877 started with the clean environment.
+/api/health: healthy; 22 city models; retained U-Net selected.
+Qwen deliberately configured to an unavailable model: status accurately
+reported unavailable; saved demos and manual controls remained usable.
+Monitoring remained off.
+Browser: Taroko loaded 76 candidates; road filter 22; adding 1 ha left 5.
+Before/after dates 2026-10-01 and 2026-11-05, slider and candidate selection
+worked. Area 69 displayed coordinates 24.144352, 121.624215.
+Back-to-home and the saved-demo link worked. No new live scan was started.
+
+One-page PDF: rendered and visually checked; single page.
+Script: 243 spoken words; timed plan under two minutes. Recording not created.
+GitHub remote: not created/pushed; prepared source folder only.
+
+Not tested: Windows/Linux fresh installation, public hosting, field accuracy.
+Earlier live tests and Qwen conversations are documented separately.

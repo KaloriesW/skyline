@@ -1,0 +1,22 @@
+.venv/
+.runtime/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.log
+.env
+.DS_Store
+server.json
+monitor.json
+assistant/
+assistant_chats/
+road_cache/
+weather_cache/
+geocode_cache/
+# The verified 93.48 MiB U-Net is intentionally bundled below GitHub's 100 MiB limit.
+models/*.pt
+!models/unet13.pt
+results/*
+!results/e3d6306f37f52a9b5d8de505bfc477ba/
+!results/0d9f63a0dce2247f788c4147e32d97fa/
+*.zip

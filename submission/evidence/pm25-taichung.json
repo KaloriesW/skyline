@@ -1,0 +1,156 @@
+{
+  "runtime_prediction": {
+    "city": {
+      "id": "taichung",
+      "name": "Taichung City",
+      "name_zh": "\u81fa\u4e2d\u5e02",
+      "lat": 24.1477,
+      "lon": 120.6736,
+      "distance_km": 0.0
+    },
+    "date": "2026-11-16",
+    "pm25": 25.7,
+    "pm10": 27.9,
+    "model": {
+      "kind": "blend",
+      "test_mae": 4.38,
+      "baseline_mae": 5.91
+    }
+  },
+  "historical_evaluation": {
+    "trained_on": "2022-08-11 .. 2025-11-06",
+    "tested_on": "2025-11-08 .. 2026-11-07",
+    "n_train": 1002,
+    "n_test": 365,
+    "chosen": {
+      "pm25": "blend",
+      "pm10": "v1"
+    },
+    "results": {
+      "pm25": {
+        "baseline": {
+          "mae": 5.906038812785387,
+          "rmse": 7.513122509708624
+        },
+        "v1": {
+          "mae": 4.4500432333504145,
+          "rmse": 5.827730600307947
+        },
+        "ridge": {
+          "mae": 4.322550463814999,
+          "rmse": 5.69103320160346
+        },
+        "boosted": {
+          "mae": 4.7850233980833075,
+          "rmse": 6.106527826873318
+        },
+        "blend": {
+          "mae": 4.378500377429823,
+          "rmse": 5.6803950417205105
+        },
+        "blend_no_weather": {
+          "mae": 5.117031583127954,
+          "rmse": 6.57723147212077
+        },
+        "cv_mae": {
+          "v1": 5.107024953075825,
+          "ridge": 4.801841927962748,
+          "boosted": 5.072225397516136,
+          "blend": 4.748856773344921,
+          "baseline": 6.481066849816851
+        }
+      },
+      "warnings": {
+        "baseline": {
+          "threshold": 35.0,
+          "bad_days": 143,
+          "warned": 143,
+          "caught": 109,
+          "precision": 0.7622377622377622,
+          "recall": 0.7622377622377622
+        },
+        "v1": {
+          "threshold": 35.0,
+          "bad_days": 143,
+          "warned": 111,
+          "caught": 96,
+          "precision": 0.8648648648648649,
+          "recall": 0.6713286713286714
+        },
+        "ridge": {
+          "threshold": 35.0,
+          "bad_days": 143,
+          "warned": 118,
+          "caught": 101,
+          "precision": 0.8559322033898306,
+          "recall": 0.7062937062937062
+        },
+        "boosted": {
+          "threshold": 35.0,
+          "bad_days": 143,
+          "warned": 112,
+          "caught": 90,
+          "precision": 0.8035714285714286,
+          "recall": 0.6293706293706294
+        },
+        "blend": {
+          "threshold": 35.0,
+          "bad_days": 143,
+          "warned": 117,
+          "caught": 98,
+          "precision": 0.8376068376068376,
+          "recall": 0.6853146853146853
+        },
+        "blend_no_weather": {
+          "threshold": 35.0,
+          "bad_days": 143,
+          "warned": 95,
+          "caught": 82,
+          "precision": 0.8631578947368421,
+          "recall": 0.5734265734265734
+        },
+        "tuned": {
+          "threshold": 28.5,
+          "bad_days": 143,
+          "warned": 230,
+          "caught": 139,
+          "precision": 0.6043478260869565,
+          "recall": 0.972027972027972
+        }
+      },
+      "pm10": {
+        "baseline": {
+          "mae": 6.041826484018264,
+          "rmse": 7.7374563756045545
+        },
+        "v1": {
+          "mae": 4.863796747701888,
+          "rmse": 6.263128816135994
+        },
+        "ridge": {
+          "mae": 4.7368801982540365,
+          "rmse": 6.166658074866984
+        },
+        "boosted": {
+          "mae": 5.326153816089637,
+          "rmse": 6.648209075285048
+        },
+        "blend": {
+          "mae": 4.689938323980767,
+          "rmse": 5.958538237538786
+        },
+        "blend_no_weather": {
+          "mae": 5.278097127737209,
+          "rmse": 6.711919565390038
+        },
+        "cv_mae": {
+          "v1": 5.183499175885395,
+          "ridge": 5.456643261673774,
+          "boosted": 7.76770992746604,
+          "blend": 6.073587264340985,
+          "baseline": 6.659661172161172
+        }
+      }
+    }
+  }
+}

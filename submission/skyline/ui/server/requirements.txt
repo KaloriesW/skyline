@@ -1,0 +1,5 @@
+# The team app already has fastapi, uvicorn and httpx. Only `mcp` is new, and only the /mcp endpoint needs it.
+fastapi
+httpx
+uvicorn
+mcp>=2.3,<3
