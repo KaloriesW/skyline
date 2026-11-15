@@ -1643,8 +1643,9 @@ var TILES = {
     },
     render: function () {
       var m = modelMetrics(), ch = m.chosen.pm25, mm = m.results.pm25[ch].mae, bm = m.results.pm25.baseline.mae, pm = pmData();
-      return '<div class="big">−' + Math.round((1 - mm / bm) * 100) + '%<small>' + tx('error', '誤差') + '</small></div>' +
-        '<div class="cmp"><div class="row">' + (pm && pm.city ? cityName(pm.city) : 'Skyline') + ' · ' + num(mm, 1) + ' µg/m³<span class="track"><i style="width:' + (mm / bm) * 100 + '%;background:var(--gold)"></i></span></div>' +
+      var gain = Math.round((1 - mm / bm) * 100);
+      return '<div class="big">' + (gain >= 0 ? '−' + gain : '+' + (-gain)) + '%<small>' + tx('error', '誤差') + '</small></div>' +
+        '<div class="cmp"><div class="row">' + (pm && pm.city ? cityName(pm.city) : 'Skyline') + ' · ' + num(mm, 1) + ' µg/m³<span class="track"><i style="width:' + Math.min(100, (mm / bm) * 100) + '%;background:var(--gold)"></i></span></div>' +
         '<div class="row">' + tx('Same as today · ', '和今天一樣 · ') + num(bm, 1) + '<span class="track"><i style="width:100%;background:rgba(255,255,255,.45)"></i></span></div></div>';
     }
   },
@@ -2247,12 +2248,47 @@ function openModel() {
   var m = modelMetrics(), p = pmData();
   if (!m) { if (p) toast('The model report for this city isn’t available right now.'); return; }
   var city = cityName((p && p.city) || m.city || { name: 'Taichung City', name_zh: '臺中市' });
-  var ch = m.chosen.pm25, R = m.results, W = R.warnings, isZh = S.lang === 'zh';
-  var NAMES = { baseline: tx('Tomorrow = today (baseline)', '明天 = 今天（基準）'), ridge: tx('Linear regression (Ridge)', '線性迴歸（Ridge）'), boosted: tx('Gradient-boosted trees', '梯度提升樹'), boosted_no_weather: tx('Boosted trees without weather forecast', '不含天氣預報的提升樹') };
+  var ch = m.chosen.pm25, ch10 = m.chosen.pm10, R = m.results, W = R.warnings, WT = W.tuned, isZh = S.lang === 'zh';
+  // Two metrics shapes: the first model (ridge / boosted) and v2 (v1 / ridge / boosted / blend with upwind inputs, plus a tuned warning)
+  var v2 = !!(R.pm25.v1 || R.pm25.blend || WT);
+  var NAMES = v2 ? {
+    baseline: tx('Tomorrow = today (baseline)', '明天 = 今天（基準）'),
+    v1: tx('First model: Ridge, 25 inputs', '第一版模型：Ridge，25 項輸入'),
+    ridge: tx('Ridge + upwind inputs', 'Ridge + 上風處輸入'),
+    boosted: tx('Boosted trees + upwind inputs', '提升樹 + 上風處輸入'),
+    blend: tx('Ridge + trees blend + upwind inputs', 'Ridge 與提升樹混合 + 上風處輸入'),
+    blend_no_weather: tx('Blend without weather forecast', '不含天氣預報的混合模型')
+  } : {
+    baseline: tx('Tomorrow = today (baseline)', '明天 = 今天（基準）'),
+    ridge: tx('Linear regression (Ridge)', '線性迴歸（Ridge）'),
+    boosted: tx('Gradient-boosted trees', '梯度提升樹'),
+    boosted_no_weather: tx('Boosted trees without weather forecast', '不含天氣預報的提升樹')
+  };
+  var nameOf = function (k) { return NAMES[k] || esc(k); };
+  var F = m.features && !Array.isArray(m.features) ? m.features : {};
+  var usesUp = function (t) { return (F[t] || []).indexOf('up_north') >= 0; };
   var better = Math.round((1 - R.pm25[ch].mae / R.pm25.baseline.mae) * 100);
+  var WK = WT || W[ch] || W.baseline;   // the warning rule Skyline actually uses
   var rows = Object.keys(NAMES).filter(function (k) { return R.pm25[k] && W[k]; }).map(function (k) {
-    return '<tr class="' + (k === ch ? 'best' : '') + '"><td>' + NAMES[k] + (k === ch ? ' ✓' : '') + '</td><td>' + num(R.pm25[k].mae, 2) + '</td><td>' + num(R.pm10[k].mae, 2) + '</td><td>' + W[k].caught + '/' + W[k].bad_days + '</td><td>' + (W[k].warned - W[k].caught) + '</td></tr>';
-  }).join('');
+    return '<tr class="' + (k === ch ? 'best' : '') + '"><td>' + NAMES[k] + '</td><td>' + num(R.pm25[k].mae, 2) + (k === ch ? ' ✓' : '') + '</td><td>' + (R.pm10 && R.pm10[k] ? num(R.pm10[k].mae, 2) + (k === ch10 ? ' ✓' : '') : '–') + '</td><td>' + W[k].caught + '/' + W[k].bad_days + '</td><td>' + (W[k].warned - W[k].caught) + '</td></tr>';
+  }).join('') + (WT ? '<tr class="best"><td>' + tx('Skyline warning (forecast above ' + num(WT.threshold, 1) + ')', 'Skyline 警示（預測高於 ' + num(WT.threshold, 1) + '）') + '</td><td></td><td></td><td>' + WT.caught + '/' + WT.bad_days + ' ✓</td><td>' + (WT.warned - WT.caught) + '</td></tr>' : '');
+  var nw = R.pm25.blend_no_weather || R.pm25.boosted_no_weather, wb = R.pm25.blend_no_weather ? R.pm25.blend : R.pm25.boosted;
+  var noWx = nw && wb && nw.mae > wb.mae * 1.03 ? tx(' Removing tomorrow’s weather forecast raises the error from ' + num(wb.mae, 2) + ' to ' + num(nw.mae, 2) + ' µg/m³, so rain and wind are a big part of what the model learns.', '把明天的天氣預報拿掉，誤差會從 ' + num(wb.mae, 2) + ' 升到 ' + num(nw.mae, 2) + ' µg/m³，可見雨和風是模型學到的重要因素。') : '';
+  var nFail = (m.failures || []).length, under = (m.failures || []).filter(function (f) { return f.actual > f.model; }).length, over = nFail - under;
+  var failParts = [], failPartsZh = [];
+  if (under) { failParts.push(under + (under === 1 ? ' is a sudden spike' : ' are sudden spikes') + ' the model under-predicted'); failPartsZh.push(under + ' 天是模型低估的突發污染高峰'); }
+  if (over) { failParts.push(over + (over === 1 ? ' is a day' : ' are days') + ' that cleared up faster than it expected'); failPartsZh.push(over + ' 天是空氣比預期更快變好'); }
+  var failWhy = tx(
+    'The ' + nFail + ' biggest misses on the test year. ' + (failParts.length ? 'Of these, ' + failParts.join(' and ') + '. ' : '') + (usesUp('pm25')
+      ? 'The model only sees daily averages here and at four upwind points, so a sudden stagnant day or a short burst of polluted air can still surprise it.'
+      : 'It only knows this city’s own weather and today’s levels, so polluted air blown in from elsewhere, or a sudden stagnant day, can push PM2.5 far above what today suggests.'),
+    '測試年中誤差最大的 ' + nFail + ' 天。' + (failPartsZh.length ? '其中 ' + failPartsZh.join('，') + '。' : '') + (usesUp('pm25')
+      ? '模型只看得到這裡和四個上風處的日平均值，所以突然的滯留天氣或短暫的污染團仍可能讓它措手不及。'
+      : '模型只知道這個城市自己的天氣和今天的濃度，所以外地吹來的污染或突然的滯留天氣，都可能讓 PM2.5 遠高於今天的水準。'));
+  var upBoth = usesUp('pm25') && usesUp('pm10');
+  var upText = !usesUp('pm25') && !usesUp('pm10') ? '' : tx(
+    ' The ' + (upBoth ? 'PM2.5 and PM10 models also get' : (usesUp('pm25') ? 'PM2.5' : 'PM10') + ' model also gets') + ' 3- and 7-day PM2.5 averages, the day-to-day change, today’s PM2.5 at four points that pollution often blows in from (Taoyuan/Hsinchu, the Fujian coast, the Changhua/Yunlin coast and Kaohsiung), and how hard tomorrow’s north wind will push the northern air south.',
+    (upBoth ? 'PM2.5 與 PM10 模型' : (usesUp('pm25') ? 'PM2.5' : 'PM10') + ' 模型') + '另外還會用到 PM2.5 的 3 日與 7 日平均、與前一天的變化、四個污染常吹來的上風處（桃園／新竹、福建沿海、彰化／雲林沿海、高雄）今天的 PM2.5，以及明天的北風會把北部空氣往南推多少。');
   var months = (m.monthly && m.monthly.pm25) || [], mmax = Math.max.apply(null, [1].concat(months.map(function (x) { return Math.max(x.model, x.baseline); })));
   var monthBars = months.map(function (x) {
     return '<div class="mrow"><span class="mm">' + esc(x.month) + '</span><span class="mb"><span class="cmp"><span class="track"><i style="width:' + x.model / mmax * 100 + '%;background:var(--gold)"></i></span></span><span class="cmp"><span class="track"><i style="width:' + x.baseline / mmax * 100 + '%;background:rgba(255,255,255,.45)"></i></span></span></span>' +
@@ -2277,24 +2313,27 @@ function openModel() {
     '<div class="kpis">' +
       '<div class="kpi"><b>' + num(R.pm25[ch].mae, 1) + '</b><span>' + tx('µg/m³ average error, Skyline', 'µg/m³ 平均誤差，Skyline') + '</span></div>' +
       '<div class="kpi"><b>' + num(R.pm25.baseline.mae, 1) + '</b><span>' + tx('µg/m³ average error, “same as today”', 'µg/m³ 平均誤差，「和今天一樣」') + '</span></div>' +
-      '<div class="kpi"><b style="color:var(--gold)">' + better + '%</b><span>' + tx('less error than the baseline', '誤差比基準少') + '</span></div>' +
-      '<div class="kpi"><b>' + W[ch].caught + '/' + W[ch].bad_days + '</b><span>' + tx('days over 35 µg/m³ warned (' + (W[ch].warned - W[ch].caught) + ' false alarms)', '超過 35 µg/m³ 的日子有事先警示（誤報 ' + (W[ch].warned - W[ch].caught) + ' 次）') + '</span></div>' +
+      '<div class="kpi"><b style="color:var(--gold)">' + Math.abs(better) + '%</b><span>' + (better >= 0 ? tx('less error than the baseline', '誤差比基準少') : tx('more error than the baseline', '誤差比基準多')) + '</span></div>' +
+      '<div class="kpi"><b>' + WK.caught + '/' + WK.bad_days + '</b><span>' + tx('days over 35 µg/m³ warned (' + (WK.warned - WK.caught) + ' false alarms)', '超過 35 µg/m³ 的日子有事先警示（誤報 ' + (WK.warned - WK.caught) + ' 次）') + '</span></div>' +
     '</div>' +
     (m.series && m.series.pm25 ? '<div class="bigchart">' + lineChart(m.series.pm25, ['actual', 'model', 'baseline'], ['#9fd8ff', '#FFC24B', '#ffffff'], 40) + '</div><div class="ticks-row">' + ticks + '</div>' +
       '<div class="legend"><span><i style="background:#9fd8ff"></i>' + tx('Actual daily PM2.5', '每日實際 PM2.5') + '</span><span><i style="background:#FFC24B"></i>' + tx('Skyline prediction', 'Skyline 預測') + '</span><span><i style="background:rgba(255,255,255,.6)"></i>' + tx('Same as today', '和今天一樣') + '</span><span><i style="background:rgba(255,120,90,.8)"></i>35 µg/m³</span></div>' : '') +
     '<h3>' + tx('All models compared', '各模型比較') + '</h3>' +
     '<p class="fine">' + tx('PM2.5 and PM10 columns are mean absolute error in µg/m³ (lower is better).', 'PM2.5 與 PM10 欄是平均絕對誤差（µg/m³），越低越好。') + '</p>' +
     '<div class="table-scroll"><table class="metrics"><tr><th>' + tx('Model', '模型') + '</th><th>PM2.5</th><th>PM10</th><th>' + tx('Bad days warned', '警示到的壞空氣日') + '</th><th>' + tx('False alarms', '誤報') + '</th></tr>' + rows + '</table></div>' +
-    '<p class="fine">' + tx('The model is picked on a validation slice of the training data, not on the test year. Removing tomorrow’s weather forecast from the inputs makes the error worse, so rain and wind are a big part of what the model learns.', '模型是用訓練資料中的驗證區段挑選的，不是用測試年。把明天的天氣預報從輸入拿掉，誤差會變大，可見雨和風是模型學到的重要因素。') + '</p>' +
+    '<p class="fine">' + (v2
+      ? tx('✓ marks what Skyline uses for ' + esc(city) + '. Every choice was made by cross-validation inside the training years' + (m.cv_on ? ' (' + esc(m.cv_on) + ')' : '') + ', not on the test year. That picked “' + nameOf(ch) + '” for PM2.5 and “' + nameOf(ch10) + '” for PM10.',
+           '✓ 代表 Skyline 在' + esc(city) + '實際使用的模型。所有選擇都是在訓練年份內以交叉驗證決定' + (m.cv_on ? '（' + esc(m.cv_on) + '）' : '') + '，沒有用到測試年。結果 PM2.5 選了「' + nameOf(ch) + '」，PM10 選了「' + nameOf(ch10) + '」。') +
+        (WT && WT.threshold < 35 ? tx(' The warning threshold is set lower than 35 on purpose: for a school, a missed bad-air day is worse than a false alarm, so Skyline warns when its forecast is above ' + num(WT.threshold, 1) + ' µg/m³.', '警示門檻刻意訂得比 35 低：對學校來說，漏報壞空氣日比誤報更糟，所以 Skyline 在預測高於 ' + num(WT.threshold, 1) + ' µg/m³ 時就會警示。') : '')
+      : tx('The model is picked on a validation slice of the training data, not on the test year.', '模型是用訓練資料中的驗證區段挑選的，不是用測試年。')) + noWx + '</p>' +
     (monthBars ? '<h3>' + tx('Error by month (Skyline vs baseline)', '各月誤差（Skyline 與基準）') + '</h3><div class="mrows">' + monthBars + '</div>' : '') +
-    (fails ? '<h3>' + tx('Where it fails', '哪裡會失準') + '</h3><p>' + tx('The five biggest misses on the test year. Most are sudden pollution spikes that the model under-predicted. It only knows this city’s own weather and today’s levels, so polluted air blown in from elsewhere, or a sudden stagnant day, can push PM2.5 far above what today suggests.',
-      '測試年中誤差最大的五天。多半是模型低估的突發污染高峰。模型只知道這個城市自己的天氣和今天的濃度，所以外地吹來的污染或突然的滯留天氣，都可能讓 PM2.5 遠高於今天的水準。') + '</p><div class="fails">' + fails + '</div>' : '') +
+    (fails ? '<h3>' + tx('Where it fails', '哪裡會失準') + '</h3><p>' + failWhy + '</p><div class="fails">' + fails + '</div>' : '') +
     '<h3>' + tx('How it works', '運作方式') + '</h3>' +
     '<p>' + tx('<b>Inputs:</b> today’s and yesterday’s PM2.5 and PM10 (daily average, peak, evening level), today’s weather, and the weather forecast for tomorrow (rain, wind speed and direction, humidity, temperature, pressure, mixing-layer height), plus season and weekend.',
-      '<b>輸入：</b>今天與昨天的 PM2.5 和 PM10（日平均、最高值、傍晚濃度）、今天的天氣、明天的天氣預報（雨量、風速與風向、濕度、氣溫、氣壓、混合層高度），以及季節與是否週末。') + '</p>' +
-    '<p>' + tx('<b>Training:</b> ' + m.n_train + ' days (' + esc(m.trained_on) + '). Tested once on the next ' + m.n_test + ' days. One model is trained per city: 22 in all.', '<b>訓練：</b>' + m.n_train + ' 天（' + esc(m.trained_on) + '），並在之後的 ' + m.n_test + ' 天測試一次。每個縣市各訓練一個模型，共 22 個。') + '</p>' +
-    '<p>' + tx('<b>Honest caveats:</b> the PM2.5/PM10 history comes from the Copernicus CAMS model via Open-Meteo, not from ground stations, so the absolute numbers need checking against Ministry of Environment (MOENV) station data. In training, the weather that actually happened stood in for the “forecast”, so live accuracy will be a little worse than the test score.',
-      '<b>老實說的限制：</b>PM2.5／PM10 的歷史資料來自 Copernicus CAMS 模式（經 Open-Meteo），不是地面測站，所以絕對數值還需要和環境部測站資料比對。訓練時是用實際發生的天氣當作「預報」，因此實際上線的準確度會比測試分數略差。') + '</p>',
+      '<b>輸入：</b>今天與昨天的 PM2.5 和 PM10（日平均、最高值、傍晚濃度）、今天的天氣、明天的天氣預報（雨量、風速與風向、濕度、氣溫、氣壓、混合層高度），以及季節與是否週末。') + upText + '</p>' +
+    '<p>' + tx('<b>Training:</b> ' + m.n_train + ' days (' + esc(m.trained_on) + '). Tested once on the next ' + m.n_test + ' days. One model is trained per city, and the live model is then refit on every day.', '<b>訓練：</b>' + m.n_train + ' 天（' + esc(m.trained_on) + '），並在之後的 ' + m.n_test + ' 天測試一次。每個縣市各訓練一個模型，上線用的模型會再用全部天數重新訓練。') + '</p>' +
+    '<p>' + tx('<b>Honest caveats:</b> the PM2.5/PM10 history comes from the Copernicus CAMS model via Open-Meteo, not from ground stations, so the absolute numbers need checking against Ministry of Environment (MOENV) station data. CAMS puts ' + W.baseline.bad_days + ' of ' + m.n_test + ' test days above 35 µg/m³ here. In training, the weather that actually happened stood in for the “forecast”, so live accuracy will be a little worse than the test score.',
+      '<b>老實說的限制：</b>PM2.5／PM10 的歷史資料來自 Copernicus CAMS 模式（經 Open-Meteo），不是地面測站，所以絕對數值還需要和環境部測站資料比對。CAMS 在這裡把 ' + m.n_test + ' 個測試日中的 ' + W.baseline.bad_days + ' 天估為超過 35 µg/m³。訓練時是用實際發生的天氣當作「預報」，因此實際上線的準確度會比測試分數略差。') + '</p>',
     'Model details');
 }
 
