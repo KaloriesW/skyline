@@ -3487,6 +3487,57 @@ var ZHP = [
   [/^Live Windy map \((.*) layer\)\. Windy’s embed can’t open in the past, so the map stays at now\. At (.*) the slider only .*$/, function (m) { return '即時 Windy 地圖（' + m[1] + ' 圖層）。Windy 嵌入地圖無法從過去的時間開啟，所以地圖停在現在。在 ' + m[2] + ' 時，時間軸只會改變右側的各地區數值。'; }],
   [/^Live Windy map \((.*) layer\)\. Drag and zoom it\. Move the slider into the forecast .*$/, function (m) { return '即時 Windy 地圖（' + m[1] + ' 圖層）。可以拖曳與縮放。把時間軸移到預測時段，Windy 會從該時間重新開啟；右側的各地區數值會跟著時間軸變化。'; }]
 ];
+// 中文 for the live-data strings (kept apart so they never override an entry above)
+var ZH_LIVE = {
+  'Live weather': '即時天氣', 'Open-Meteo · live': 'Open-Meteo · 即時', 'Sample data · loading live conditions…': '示範資料 · 正在載入即時天氣…',
+  'Clear': '晴', 'Mainly clear': '大致晴朗', 'Partly cloudy': '晴時多雲', 'Overcast': '陰', 'Fog': '霧', 'Freezing fog': '凍霧',
+  'Light drizzle': '毛毛雨', 'Drizzle': '細雨', 'Heavy drizzle': '較大細雨', 'Freezing drizzle': '凍毛毛雨', 'Light rain': '小雨', 'Rain': '雨', 'Heavy rain': '大雨',
+  'Freezing rain': '凍雨', 'Light snow': '小雪', 'Snow': '雪', 'Heavy snow': '大雪', 'Snow grains': '米雪', 'Light showers': '短暫小陣雨', 'Showers': '陣雨',
+  'Violent showers': '強烈陣雨', 'Snow showers': '陣雪', 'Thunderstorm': '雷雨', 'Thunderstorm with hail': '雷雨夾冰雹', 'Unknown': '不明',
+  'Low': '低', 'Moderate': '普通', 'High': '高', 'Severe': '嚴重', 'Very high': '很高', 'Extreme': '極高', 'None': '無', 'Today': '今天',
+  'No thunderstorms in the 3-day forecast': '未來 3 天預報沒有雷雨',
+  'Falling over the next 3 hours': '未來 3 小時下降', 'Rising over the next 3 hours': '未來 3 小時上升', 'Steady over the next 3 hours': '未來 3 小時持平',
+  'nearest sea point': '最近的海面格點',
+  'No active typhoon': '目前沒有颱風', 'No tropical cyclone is being tracked near Taiwan right now.': '目前台灣附近沒有追蹤中的熱帶氣旋。',
+  'No active typhoon near Taiwan right now.': '目前台灣附近沒有活動中的颱風。',
+  'Model forecast': '模式預報', 'Forecast track': '預報路徑',
+  'Rain that fell in the 24 hours up to each time, at seven cities. Open-Meteo forecast models.': '七個城市在各時間點之前 24 小時的累積雨量。資料來自 Open-Meteo 預報模式。',
+  'Storm energy (CAPE) at seven cities. High CAPE means storms can form, not that one will. Open-Meteo forecast models.': '七個城市的對流可用位能（CAPE）。CAPE 高代表有條件形成雷雨，不代表一定發生。資料來自 Open-Meteo 預報模式。',
+  'Peak gusts at seven cities. Open-Meteo forecast models.': '七個城市的最大陣風。資料來自 Open-Meteo 預報模式。',
+  'Readings marked “live” come from Open-Meteo at your coordinates, the team PM2.5 model or the typhoon feed. Anything marked “Sample” is a placeholder, not a measurement.': '標示「即時」的數據來自 Open-Meteo（依你的座標）、團隊 PM2.5 模型或颱風資料。標示「示範」的是佔位數值，不是實際觀測。',
+  'Live conditions, forecast, air quality and waves at your coordinates. Off shows sample values.': '依你的座標提供即時天氣、預報、空氣品質與浪高。關閉後顯示示範數值。',
+  'Team model (Taichung) + Open-Meteo CAMS': '團隊模型（台中）+ Open-Meteo CAMS', 'Team model + Open-Meteo CAMS': '團隊模型 + Open-Meteo CAMS',
+  'Open-Meteo · CAPE + weather codes': 'Open-Meteo · CAPE 與天氣代碼', 'Open-Meteo Marine': 'Open-Meteo 海象', 'Climate projections': '氣候推估'
+};
+Object.keys(ZH_LIVE).forEach(function (k) { if (!Object.prototype.hasOwnProperty.call(ZH, k)) ZH[k] = ZH_LIVE[k]; });
+var ZH_DIR = { N: '北', NE: '東北', E: '東', SE: '東南', S: '南', SW: '西南', W: '西', NW: '西北' };
+ZHP.push(
+  [/^Open-Meteo · live · updated (\d\d:\d\d)$/, function (m) { return 'Open-Meteo · 即時 · ' + m[1] + ' 更新'; }],
+  [/^Sample data · nearest source: (.*)$/, function (m) { return '示範資料 · 最近的來源：' + zh(m[1]); }],
+  [/^Demo sky: (.*)$/, function (m) { return '示範天空：' + zh(m[1]); }],
+  [/^Sample · (.*)$/, function (m) { return '示範 · ' + zh(m[1]); }],
+  [/^(.+) · live$/, function (m) { return zh(m[1]) + ' · 即時'; }],
+  [/^(.+) · feels like (\S+)$/, function (m) { return zh(m[1]) + ' · 體感 ' + m[2]; }],
+  [/^(\d{1,2}) (AM|PM)$/, function (m) { return (m[2] === 'AM' ? '上午 ' : '下午 ') + m[1] + ' 點'; }],
+  [/^CAPE up to ([\d,]+) J\/kg in 24 h(?: · peak around (.+))?$/, function (m) { return '24 小時內 CAPE 最高 ' + m[1] + ' J/kg' + (m[2] ? ' · 高峰約在' + zh(m[2]) : ''); }],
+  [/^(\d+) days?$/, function (m) { return m[1] + ' 天'; }],
+  [/^Thunderstorms forecast: (.*)$/, function (m) { return '預報有雷雨：' + m[1].split(', ').map(zh).join('、'); }],
+  [/^Gusts (\d+) km\/h · from ([NSEW]{1,2})$/, function (m) { return '陣風 ' + m[1] + ' km/h · ' + ZH_DIR[m[2]] + '風'; }],
+  [/^Chance of rain today: (\d+)%$/, function (m) { return '今日降雨機率：' + m[1] + '%'; }],
+  [/^Low (\d+)% · Mid (\d+)% · High (\d+)%$/, function (m) { return '低雲 ' + m[1] + '% · 中雲 ' + m[2] + '% · 高雲 ' + m[3] + '%'; }],
+  [/^Lowest in the next 24 h: (.*)$/, function (m) { return '未來 24 小時最低：' + m[1]; }],
+  [/^(Low|Moderate|High|Very high|Extreme) at today’s peak$/, function (m) { return '今日最高時：' + ZH_LIVE[m[1]]; }],
+  [/^(Good|Moderate|Sensitive|Unhealthy) · peaks (\d+) µg\/m³ around (.+)$/, function (m) { return zh(m[1]) + ' · ' + zh(m[3]) + '前後最高 ' + m[2] + ' µg/m³'; }],
+  [/^(Good|Moderate|Sensitive|Unhealthy) · tomorrow ([\d.]+) µg\/m³ \(team model\)$/, function (m) { return zh(m[1]) + ' · 明天 ' + m[2] + ' µg/m³（團隊模型）'; }],
+  [/^(Good|Moderate|Sensitive|Unhealthy)$/, function (m) { return m[1]; }],
+  [/^Tomorrow’s average, (.*) \(team model\)$/, function (m) { return '明日平均，' + zh(m[1]) + '（團隊模型）'; }],
+  [/^(?:Swell ([\d.]+) m · )?(?:from ([NSEW]{1,2}) · )?nearest sea point$/, function (m) { return (m[1] ? '湧浪 ' + m[1] + ' 公尺 · ' : '') + (m[2] ? '來自' + ZH_DIR[m[2]] + '方 · ' : '') + '最近的海面格點'; }],
+  [/^(.+) · ([\d.,]+) km (N|NE|E|SE|S|SW|W|NW)$/, function (m) { return m[1] + ' · ' + ZH_DIR[m[3]] + '方 ' + m[2] + ' 公里'; }],
+  [/^Max wind (\d+) km\/h(.*)$/, function (m) { return '最大風速 ' + m[1] + ' km/h' + m[2]; }],
+  [/^Track of (.+)\. Region levels are estimated from each city’s distance to the track\. They are not official warnings\.$/, function (m) { return m[1] + ' 的路徑。各地等級依城市與路徑的距離估算，並非官方警報。'; }],
+  [/^PM2\.5 at seven cities from the Copernicus CAMS model, via Open-Meteo\. These are model estimates, not station readings\. The forecast ends about four days ahead, so later steps repeat the last value\.(?: Team model, Taichung, (\S+): ([\d.]+) µg\/m³ \((.*)\)\.)?$/,
+    function (m) { return '七個城市的 PM2.5，來自 Copernicus CAMS 模式（經 Open-Meteo）。這是模式估計值，不是測站觀測。預報約到四天後，之後的時間點沿用最後一筆數值。' + (m[1] ? ' 團隊模型，台中，' + m[1] + '：' + m[2] + ' µg/m³（' + zh(m[3]) + '）。' : ''); }]
+);
 function zh(t) {
   if (Object.prototype.hasOwnProperty.call(ZH, t)) return ZH[t];
   for (var i = 0; i < ZHP.length; i++) { var m = t.match(ZHP[i][0]); if (m) return ZHP[i][1](m); }
