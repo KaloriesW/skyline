@@ -1288,44 +1288,59 @@ function liveCond(wx) {
   if (c.is_day === 0) return 'clear-night';
   return code === 2 ? 'partly-cloudy' : 'clear-day';
 }
-// The background in use: a demo pick wins, otherwise live weather, otherwise the sample default
+// The background in use: a preview pick (Settings) wins, then live weather. null while the weather
+// is not known yet, so no particular sky is implied.
 function wxKey() {
   if (S.weather !== 'live' && Object.prototype.hasOwnProperty.call(WEATHER, S.weather)) return S.weather;
   var wx = liveWx();
-  return wx ? liveCond(wx) : 'partly-cloudy';
+  return wx ? liveCond(wx) : null;
 }
+// Plain backdrop for "weather not known": no sun, clouds, rain or night
+var SKY_UNKNOWN = { label: '', top: '#163A7A', mid: '#1F4C94', bottom: '#2A5AA8', mtn: '#9FB4DA' };
+function skyNow() { var k = wxKey(); return k ? WEATHER[k] : SKY_UNKNOWN; }
+function previewOn() { return S.weather !== 'live' && Object.prototype.hasOwnProperty.call(WEATHER, S.weather); }
 function liveHeadline(wx) {
   var c = wx.current;
   return wmoText(c.weather_code) + (isNum(c.apparent_temperature) ? ' · feels like ' + fmtT(c.apparent_temperature) : '');
 }
-// Temperature (°C), label and headline to show now. Live values when loaded, sample otherwise.
-function wxNow(L) {
-  var wx = liveWx(), b = WEATHER[wxKey()];
-  if (wx) return { live: true, temp: wx.current.temperature_2m, label: wmoText(wx.current.weather_code), headline: liveHeadline(wx), time: String(wx.current.time || '').substr(11, 5) };
-  return { live: false, temp: b.temp + tempOffset(L), label: b.label, headline: b.headline, time: '' };
+// What the hero shows now. Live (or last good) values, else only the state: loading | error | off.
+function wxNow() {
+  var wx = liveWx(), st = wxState();
+  if (wx) return { live: true, stale: st === 'stale', t: FEEDS['wx@' + ptKey(S.loc)].t, temp: wx.current.temperature_2m, label: wmoText(wx.current.weather_code), headline: liveHeadline(wx), time: String(wx.current.time || '').substr(11, 5) };
+  return { live: false, state: st === 'gone' ? 'error' : st };
 }
-// WEATHER.live (hidden from the demo list) lets WEATHER[S.weather] keep working when S.weather is 'live'.
-// Callers add tempOffset() to .temp, so it is taken out here.
-Object.defineProperty(WEATHER, 'live', { enumerable: false, get: function () {
-  var wx = liveWx();
-  if (!wx) return WEATHER['partly-cloudy'];
-  var o = Object.assign({}, WEATHER[liveCond(wx)]);
-  o.label = wmoText(wx.current.weather_code); o.temp = wx.current.temperature_2m - tempOffset(S.loc); o.headline = liveHeadline(wx);
-  return o;
-} });
 
 // ----- Home tiles -----
-// Overwrites sample tile values with live ones where a feed is loaded, and labels the rest "Sample".
+// Why something has no value. st: loading | off | gone | none | nodata | error. kind: 'om' (Open-Meteo), 'ty' (typhoon feed), 'landslide'.
+function naOf(st, kind) {
+  if (kind === 'landslide') return { st: 'gone', h: 'Not connected yet', msg: feat('landslide') === true
+    ? 'The landslide model is on the server, but this version of the app can’t show its output yet.'
+    : 'The team landslide model isn’t connected yet. No value is shown until it is.' };
+  if (st === 'loading') return { st: st, h: '—', msg: 'Loading…' };
+  if (st === 'off') return { st: st, h: 'Turned off', msg: 'Open-Meteo is switched off in Settings.' };
+  if (st === 'none') return { st: st, h: 'No sea nearby', msg: 'Open-Meteo Marine has no sea point near this location.' };
+  if (st === 'gone' && kind === 'ty') return { st: st, h: 'Not connected yet', msg: 'The CWA typhoon feed isn’t connected on this server.' };
+  if (st === 'ok' || st === 'stale') return { st: 'nodata', h: '—', msg: 'No reading from the source right now.' };
+  return { st: 'error', h: 'Unavailable', retry: true, msg: offline() ? 'You’re offline. Reconnect, then retry.' : kind === 'ty' ? 'Couldn’t load the typhoon feed.' : 'Couldn’t reach Open-Meteo.' };
+}
+function tileNA(t) {
+  if (t.id === 'landslide') return naOf('gone', 'landslide');
+  if (t.id === 'typhoon') return naOf(tyState(), 'ty');
+  return naOf(t.id === 'pm25' ? omState('air') : t.id === 'waves' ? seaState() : t.id === 'climate' ? omState('season') : wxState(), 'om');
+}
+// Fills tiles from the loaded feeds. A tile no feed can fill gets t.na (a state, never a number).
 function liveTiles(all, L) {
-  var wx = liveWx(), air = liveAir(), sea = liveSea(), pm = S.sources.pm25 ? feedData('pm') : null, by = {};
+  var wx = liveWx(), air = liveAir(), sea = liveSea(), season = liveSeason(), pm = pmData(), by = {}, k = ptKey(L);
   all.forEach(function (t) { by[t.id] = t; });
-  function set(id, o) { var t = by[id]; if (!t) return; for (var k in o) t[k] = o[k]; t.live = true; }
+  function set(id, o) { var t = by[id]; if (!t) return; for (var key in o) t[key] = o[key]; t.live = true; }
   try {
     if (wx) {
-      var c = wx.current, h = wx.hourly, dy = wx.daily, n = h.time.length, i, hours = [];
-      for (i = 0; i < Math.min(10, n); i++) hours.push({ t: i ? hourLabel(h.time[i]) : 'Now', temp: fmtT(i ? h.temperature_2m[i] : c.temperature_2m), c: WEEK_COL[wmoKind(h.weather_code[i])], rain: Math.round(h.precipitation_probability[i] || 0) + '%' });
-      set('hourly', { hours: hours, src: OM_LIVE });
-      set('week', { src: OM_LIVE });
+      var c = wx.current, h = wx.hourly, dy = wx.daily, n = h.time.length, i, hours = [], tag = liveTag('wx@' + k), OM = 'Open-Meteo' + tag;
+      // "Now" is only true of fresh data: an old first hour is labelled with its clock time instead
+      var old = Date.now() - FEEDS['wx@' + k].t > 45 * 60000;
+      for (i = 0; i < Math.min(10, n); i++) hours.push({ t: i || old ? hourLabel(h.time[i]) : 'Now', temp: fmtT(i ? h.temperature_2m[i] : c.temperature_2m), c: WEEK_COL[wmoKind(h.weather_code[i])], rain: Math.round(h.precipitation_probability[i] || 0) + '%' });
+      set('hourly', { hours: hours, src: OM });
+      set('week', { src: OM });
       // Same scoring as the MCP tool get_thunderstorm_risk
       var top = 0, topI = 0, capeMax = 0;
       for (i = 0; i < n; i++) {
@@ -1335,42 +1350,54 @@ function liveTiles(all, L) {
         if (cape > capeMax) capeMax = cape;
       }
       var lvl = top >= 5 ? 3 : top >= 3 ? 2 : top >= 2 ? 1 : 0;
-      set('thunder', { value: ['Low', 'Moderate', 'High', 'Severe'][lvl], sub: 'CAPE up to ' + Math.round(capeMax).toLocaleString('en-US') + ' J/kg in 24 h' + (lvl ? ' · peak around ' + hourLabel(h.time[topI]) : ''), meter: [8, 38, 70, 92][lvl] + '%', src: 'Open-Meteo · CAPE + weather codes · live' });
+      set('thunder', { value: ['Low', 'Moderate', 'High', 'Severe'][lvl], sub: 'CAPE up to ' + Math.round(capeMax).toLocaleString('en-US') + ' J/kg in 24 h' + (lvl ? ' · peak around ' + hourLabel(h.time[topI]) : ''), meter: [8, 38, 70, 92][lvl] + '%', src: 'Open-Meteo · CAPE + weather codes' + tag });
       var sd = [];
       for (i = 0; i < Math.min(3, dy.time.length); i++) if (dy.weather_code[i] >= 95) sd.push(i ? weekdayOf(dy.time[i]) : 'Today');
-      set('storms', { value: sd.length ? sd.length + (sd.length > 1 ? ' days' : ' day') : 'None', sub: sd.length ? 'Thunderstorms forecast: ' + sd.join(', ') : 'No thunderstorms in the 3-day forecast', src: OM_LIVE });
-      if (isNum(c.wind_speed_10m)) set('wind', { value: Math.round(c.wind_speed_10m) + ' km/h', sub: 'Gusts ' + Math.round(c.wind_gusts_10m || 0) + ' km/h · from ' + compass(c.wind_direction_10m || 0), src: OM_LIVE });
-      if (isNum(dy.precipitation_sum[0])) set('rain', { value: (dy.precipitation_sum[0] < 10 ? dy.precipitation_sum[0].toFixed(1) : Math.round(dy.precipitation_sum[0])) + ' mm', sub: 'Chance of rain today: ' + Math.round(dy.precipitation_probability_max[0] || 0) + '%', src: OM_LIVE });
-      if (isNum(c.cloud_cover)) set('clouds', { value: Math.round(c.cloud_cover) + '%', sub: 'Low ' + Math.round(h.cloud_cover_low[0] || 0) + '% · Mid ' + Math.round(h.cloud_cover_mid[0] || 0) + '% · High ' + Math.round(h.cloud_cover_high[0] || 0) + '%', src: OM_LIVE });
-      if (isNum(c.relative_humidity_2m)) set('humidity', { value: Math.round(c.relative_humidity_2m) + '%', sub: isNum(c.dew_point_2m) ? 'Dew point ' + fmtT(c.dew_point_2m) : '', src: OM_LIVE });
+      set('storms', { value: sd.length ? sd.length + (sd.length > 1 ? ' days' : ' day') : 'None', sub: sd.length ? 'Thunderstorms forecast: ' + sd.join(', ') : 'No thunderstorms in the 3-day forecast', src: OM });
+      if (isNum(c.wind_speed_10m)) set('wind', { value: Math.round(c.wind_speed_10m) + ' km/h', sub: 'Gusts ' + Math.round(c.wind_gusts_10m || 0) + ' km/h · from ' + compass(c.wind_direction_10m || 0), src: OM });
+      if (isNum(dy.precipitation_sum[0])) set('rain', { value: (dy.precipitation_sum[0] < 10 ? dy.precipitation_sum[0].toFixed(1) : Math.round(dy.precipitation_sum[0])) + ' mm', sub: 'Chance of rain today: ' + Math.round(dy.precipitation_probability_max[0] || 0) + '%', src: OM });
+      if (isNum(c.cloud_cover)) set('clouds', { value: Math.round(c.cloud_cover) + '%', sub: 'Low ' + Math.round(h.cloud_cover_low[0] || 0) + '% · Mid ' + Math.round(h.cloud_cover_mid[0] || 0) + '% · High ' + Math.round(h.cloud_cover_high[0] || 0) + '%', src: OM });
+      if (isNum(c.relative_humidity_2m)) set('humidity', { value: Math.round(c.relative_humidity_2m) + '%', sub: isNum(c.dew_point_2m) ? 'Dew point ' + fmtT(c.dew_point_2m) : '', src: OM });
       if (isNum(c.pressure_msl)) {
         var dp = n > 3 && isNum(h.pressure_msl[3]) && isNum(h.pressure_msl[0]) ? h.pressure_msl[3] - h.pressure_msl[0] : 0;
-        set('pressure', { value: Math.round(c.pressure_msl) + ' hPa', sub: dp <= -1 ? 'Falling over the next 3 hours' : dp >= 1 ? 'Rising over the next 3 hours' : 'Steady over the next 3 hours', src: OM_LIVE });
+        set('pressure', { value: Math.round(c.pressure_msl) + ' hPa', sub: dp <= -1 ? 'Falling over the next 3 hours' : dp >= 1 ? 'Rising over the next 3 hours' : 'Steady over the next 3 hours', src: OM });
       }
       if (isNum(c.visibility)) {
         var vmin = c.visibility;
         h.visibility.forEach(function (v) { if (isNum(v) && v < vmin) vmin = v; });
-        set('visibility', { value: fmtVis(c.visibility), sub: 'Lowest in the next 24 h: ' + fmtVis(vmin), src: OM_LIVE });
+        set('visibility', { value: fmtVis(c.visibility), sub: 'Lowest in the next 24 h: ' + fmtVis(vmin), src: OM });
       }
       var uv = dy.uv_index_max[0];
-      if (isNum(uv)) set('uv', { value: String(Math.round(uv)), sub: (uv < 3 ? 'Low' : uv < 6 ? 'Moderate' : uv < 8 ? 'High' : uv < 11 ? 'Very high' : 'Extreme') + ' at today’s peak', src: OM_LIVE });
+      if (isNum(uv)) set('uv', { value: String(Math.round(uv)), sub: (uv < 3 ? 'Low' : uv < 6 ? 'Moderate' : uv < 8 ? 'High' : uv < 11 ? 'Very high' : 'Extreme') + ' at today’s peak', src: OM });
     }
     var nearTc = !!pm && km(L.lat, L.lon, 24.15, 120.67) <= 30; // the team model forecasts Taichung only
     if (air) {
-      var p = air.current.pm2_5, hp = (air.hourly && air.hourly.pm2_5) || [], pk = -1;
+      var p = air.current.pm2_5, hp = (air.hourly && air.hourly.pm2_5) || [], pk = -1, atag = liveTag('air@' + k);
       hp.forEach(function (v, j) { if (isNum(v) && (pk < 0 || v > hp[pk])) pk = j; });
       var cat = DATASETS[0].labels[pmLevel(p)];
       set('pm25', { value: (p < 10 ? p.toFixed(1) : Math.round(p)) + ' µg/m³',
         sub: nearTc ? cat + ' · tomorrow ' + pm.pm25 + ' µg/m³ (team model)' : cat + (pk >= 0 ? ' · peaks ' + Math.round(hp[pk]) + ' µg/m³ around ' + hourLabel(air.hourly.time[pk]) : ''),
-        meter: Math.min(96, Math.round(p / 75 * 100)) + '%', src: nearTc ? 'Team model + Open-Meteo CAMS · live' : 'Open-Meteo CAMS · live' });
+        meter: Math.min(96, Math.round(p / 75 * 100)) + '%', src: (nearTc ? 'Team model + Open-Meteo CAMS' : 'Open-Meteo CAMS') + atag });
     } else if (nearTc) {
-      set('pm25', { value: pm.pm25 + ' µg/m³', sub: 'Tomorrow’s average, ' + esc(pm.category || '') + ' (team model)', meter: Math.min(96, Math.round(pm.pm25 / 75 * 100)) + '%', src: 'Team PM2.5 model · live' });
+      set('pm25', { value: pm.pm25 + ' µg/m³', sub: 'Tomorrow’s average, ' + esc(pm.category || '') + ' (team model)', meter: Math.min(96, Math.round(pm.pm25 / 75 * 100)) + '%', src: 'Team PM2.5 model' + liveTag('pm') });
     }
-    if (sea) set('waves', { value: sea.current.wave_height.toFixed(1) + ' m', sub: (isNum(sea.current.swell_wave_height) ? 'Swell ' + sea.current.swell_wave_height.toFixed(1) + ' m · ' : '') + (isNum(sea.current.wave_direction) ? 'from ' + compass(sea.current.wave_direction) + ' · ' : '') + 'nearest sea point', src: 'Open-Meteo Marine · live' });
+    if (sea) set('waves', { value: sea.cur.wave_height.toFixed(1) + ' m', src: 'Open-Meteo Marine' + liveTag(sea.feed),
+      sub: (isNum(sea.cur.swell_wave_height) ? 'Swell ' + sea.cur.swell_wave_height.toFixed(1) + ' m · ' : '') + (isNum(sea.cur.wave_direction) ? 'from ' + compass(sea.cur.wave_direction) + ' · ' : '') +
+        (sea.coast ? 'off ' + sea.coast[0] + ', ' + fmtKm(sea.coast[3]) + ' away' : 'nearest sea point') });
+    var si = season ? seasonPick(season.monthly) : -1;
+    if (si >= 0) {
+      var an = season.monthly.temperature_2m_anomaly[si], pa = (season.monthly.precipitation_anomaly || [])[si];
+      set('climate', { value: fmtAnom(an), src: 'ECMWF SEAS5 · Open-Meteo' + liveTag('season@' + k),
+        sub: monthName(season.monthly.time[si]) + ' · ' + (an >= 0.5 ? 'warmer than normal' : an <= -0.5 ? 'cooler than normal' : 'near normal') +
+          (isNum(pa) ? ' · rain ' + (pa >= 0 ? '+' : '−') + Math.abs(Math.round(pa)) + ' mm vs normal' : '') });
+    }
     var tv = tyView();
-    if (tv.state !== 'sample') set('typhoon', { src: tv.src });
-  } catch (e) { /* malformed feed: whatever was not set stays sample */ }
-  all.forEach(function (t) { if (!t.live && t.id !== 'map') t.src = 'Sample · ' + t.src.replace(/^Nearest: /, ''); });
+    if (tv.state === 'active' || tv.state === 'none') set('typhoon', { src: tv.src });
+  } catch (e) { /* malformed feed: whatever was not set gets a state below */ }
+  all.forEach(function (t) {
+    if (t.live || t.id === 'map') return;
+    t.na = tileNA(t); t.value = '—'; t.sub = t.na.h === '—' ? t.na.msg : t.na.h;
+  });
 }
 
 // ----- Typhoon feed -----
