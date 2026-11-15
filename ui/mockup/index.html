@@ -156,8 +156,9 @@ main{min-height:100vh}
 .wbar{position:relative;height:6px;border-radius:3px;background:rgba(255,255,255,.14)}
 .wbar span{position:absolute;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,#7DD3FC,#FFC24B,#FB923C)}
 .tile-map{position:relative;flex:1;min-height:200px;margin:0 -22px -20px;overflow:hidden}
-.tile-map svg{position:absolute;inset:0;width:100%;height:100%}
-.tile-map .open{position:absolute;right:14px;bottom:14px}
+.tile-map svg,.tile-map iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.grid.editing .tile-map iframe{pointer-events:none}
+.tile-map .open{position:absolute;left:12px;top:12px;min-height:36px;padding:0 14px;font-size:13px}
 .edit-ctl{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:8px}
 .edit-ctl button{min-width:40px;min-height:40px;padding:0 10px;border-radius:12px;border:0;background:#fff;color:#0B1B3F;font-weight:600;font-size:13px}
 .edit-ctl button.hide{background:#FF6B5A;color:#fff}
@@ -195,6 +196,14 @@ main{min-height:100vh}
 .pm-body{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
 .pm-map{flex:3 1 520px;min-width:0;padding:22px;border-radius:28px;background:var(--panel);display:flex;flex-direction:column;gap:18px}
 .map-box{position:relative;overflow:hidden;border-radius:20px;background:#05172E;height:clamp(420px,62vh,660px)}
+.pm-live,.leaflet-host,.windy-frame{position:absolute;inset:0;width:100%;height:100%;border:0}
+.map-bar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
+.map-note{margin:-6px 0 0;font-size:13px;color:var(--muted);line-height:1.45}
+.map-loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:14px}
+.data-pane{filter:blur(14px);opacity:.78}
+.leaflet-container{background:#05172E;font-family:var(--body)}
+.leaflet-tooltip.map-label{background:rgba(5,23,46,.82);color:#fff;border:0;border-radius:8px;box-shadow:none;font-weight:600;font-size:12px;padding:3px 7px}
+.leaflet-tooltip.map-label::before{display:none}
 .map-box svg{position:absolute;inset:0;width:100%;height:100%;display:block}
 .map-top{position:absolute;left:14px;top:14px;right:14px;z-index:1;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
 .mode{padding:7px 12px;border-radius:999px;font-size:13px;font-weight:700}
@@ -1703,7 +1712,7 @@ function tileBody(t) {
   }
   if (t.kind === 'map') {
     var wind = DATASETS.filter(function (d) { return d.id === 'wind'; })[0];
-    return '<div class="tile-map">' + mapSVG(wind, NOW, 'windy', { slice: true, thumb: true, you: true, label: 'Windy wind map of Taiwan' }) +
+    return '<div class="tile-map">' + windyFrame('Live Windy wind map', windyURL(WINDY_LAYER.wind, inTW(S.loc.lat, S.loc.lon) ? 8 : 6)) +
       '<a class="btn accent open" href="#predictions/wind">Open map</a></div>';
   }
   if (t.kind === 'typhoon') {
@@ -1715,6 +1724,121 @@ function tileBody(t) {
       '<div><div class="val" style="font-size:26px">TD-27 · 860 km SE</div><p class="sub">Sample storm. Moving NW at 18 km/h. A sea warning is possible in about 48h.</p></div></div>';
   }
   return '';
+}
+
+/* ============================================================
+   Live maps
+   - Windy: the official Windy embed (embed.windy.com), with the layer that matches
+     the dataset. Pan, zoom and its own timeline all work inside the frame.
+   - Satellite: Leaflet on Esri World Imagery, with our data drawn on top as a
+     soft colored overlay, region labels, the typhoon track and the user's pin.
+   ============================================================ */
+var LEAFLET_JS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+var LEAFLET_CSS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
+var ESRI_IMAGERY = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+var ESRI_LABELS = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
+// One satellite still of Taiwan for the card previews (plain lat/lon projection, so overlay math is linear)
+var TW_BOX = [119.2, 21.7, 122.4, 25.5];
+var TW_IMG = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox=' + TW_BOX.join(',') + '&bboxSR=4326&imageSR=4326&size=384,456&format=jpg&f=image';
+var PLACE_LL = { Taipei: [25.04, 121.56], Taichung: [24.15, 120.67], Nantou: [23.96, 120.97], Hualien: [23.98, 121.60], Chiayi: [23.48, 120.45], Kaohsiung: [22.63, 120.30], Taitung: [22.76, 121.14] };
+var TYPHOON_TRACK = [[19.2, 125.4], [20.4, 124.3], [21.6, 123.3], [22.8, 122.5], [24.0, 121.9], [25.3, 121.5]];
+// Windy embed overlay + model per dataset
+var WINDY_LAYER = { pm25: ['pm2p5', 'cams'], landslide: ['rain', 'ecmwf'], rain: ['rain', 'ecmwf'], thunder: ['thunder', 'ecmwf'], wind: ['wind', 'ecmwf'], typhoon: ['wind', 'ecmwf'], waves: ['waves', 'ecmwfWaves'], climate: ['temp', 'ecmwf'] };
+
+var leafletReady = null, live = null;
+function loadLeaflet() {
+  if (window.L) return Promise.resolve(window.L);
+  if (leafletReady) return leafletReady;
+  leafletReady = new Promise(function (resolve, reject) {
+    var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = LEAFLET_CSS; document.head.appendChild(css);
+    var js = document.createElement('script'); js.src = LEAFLET_JS;
+    js.onload = function () { resolve(window.L); };
+    js.onerror = function () { leafletReady = null; reject(new Error('Leaflet failed to load')); };
+    document.head.appendChild(js);
+  });
+  return leafletReady;
+}
+function windyURL(layer, zoom) {
+  var L = S.loc, tw = inTW(L.lat, L.lon);
+  var c = tw ? [L.lat, L.lon] : [23.75, 120.95];
+  var p = { lat: c[0].toFixed(3), lon: c[1].toFixed(3), detailLat: c[0].toFixed(3), detailLon: c[1].toFixed(3), zoom: String(zoom || 7),
+    level: 'surface', overlay: layer[0], product: layer[1], menu: '', message: 'true', marker: tw ? 'true' : '', calendar: 'now',
+    pressure: '', type: 'map', location: 'coordinates', detail: '', metricWind: 'km/h', metricTemp: S.units === 'F' ? '°F' : '°C', radarRange: '-1' };
+  return 'https://embed.windy.com/embed2.html?' + new URLSearchParams(p).toString();
+}
+function windyFrame(title, src) {
+  return '<iframe class="windy-frame" title="' + esc(title) + '" src="' + esc(src) + '" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>';
+}
+function destroyLive() { if (live && live.map) live.map.remove(); live = null; }
+
+function renderLive(d, t, base) {
+  var host = $('#pm-live'); if (!host) return;
+  if (base === 'windy') {
+    var src = windyURL(WINDY_LAYER[d.id] || ['wind', 'ecmwf'], 7);
+    if (!live || live.mode !== 'windy') { destroyLive(); host.innerHTML = windyFrame('Windy map: ' + d.title, src); live = { mode: 'windy', src: src }; }
+    else if (live.src !== src) { host.querySelector('iframe').src = src; live.src = src; }
+    return;
+  }
+  if (live && live.mode === 'sat') { if (live.map) drawSat(d, t); return; }
+  destroyLive();
+  host.innerHTML = '<div class="leaflet-host" id="pm-leaflet"></div><div class="map-loading">Loading satellite map…</div>';
+  var token = live = { mode: 'sat' };
+  loadLeaflet().then(function (L) {
+    if (live !== token || !$('#pm-leaflet')) return;
+    buildSat(L, token);
+    drawSat(d, S.predT);
+  }).catch(function () { var ml = host.querySelector('.map-loading'); if (ml) ml.textContent = 'Couldn’t load the map (offline?).'; });
+}
+function buildSat(L, token) {
+  var map = L.map('pm-leaflet', { zoomControl: false, minZoom: 5, maxZoom: 17 }).setView([23.75, 120.95], 7);
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
+  L.tileLayer(ESRI_IMAGERY, { maxZoom: 18, attribution: 'Imagery © Esri, Maxar, Earthstar Geographics' }).addTo(map);
+  map.createPane('data'); map.getPane('data').style.zIndex = 420; map.getPane('data').classList.add('data-pane');
+  map.createPane('labels'); map.getPane('labels').style.zIndex = 640; map.getPane('labels').style.pointerEvents = 'none';
+  L.tileLayer(ESRI_LABELS, { maxZoom: 18, pane: 'labels', opacity: 0.85 }).addTo(map);
+  token.L = L; token.map = map;
+  token.data = L.layerGroup().addTo(map);
+  token.marks = L.layerGroup().addTo(map);
+  var ml = document.querySelector('#pm-live .map-loading'); if (ml) ml.remove();
+  setTimeout(function () { map.invalidateSize(); }, 0);
+}
+function drawSat(d, t) {
+  var L = live.L, P = pal();
+  live.data.clearLayers(); live.marks.clearLayers();
+  MAP_PLACES.forEach(function (p, i) {
+    var l = lvlAt(d, i, t), ll = PLACE_LL[p.name];
+    L.circle(ll, { pane: 'data', radius: 24000 + l * 9000, stroke: false, fillColor: P[l], fillOpacity: 0.8, interactive: false }).addTo(live.data);
+    L.circleMarker(ll, { radius: 4, color: '#05172E', weight: 1, fillColor: '#fff', fillOpacity: 1 })
+      .bindTooltip(p.name + ' · ' + d.labels[l], { permanent: true, direction: 'right', offset: [6, 0], className: 'map-label' }).addTo(live.marks);
+  });
+  if (d.id === 'typhoon') {
+    L.polyline(TYPHOON_TRACK, { color: '#FFC24B', weight: 3, dashArray: '8 8' }).addTo(live.marks);
+    var k = t / 11 * (TYPHOON_TRACK.length - 1), i0 = Math.min(TYPHOON_TRACK.length - 2, Math.floor(k)), f = k - i0;
+    var a = TYPHOON_TRACK[i0], b = TYPHOON_TRACK[i0 + 1], pos = [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
+    L.circle(pos, { radius: 70000 + t * 4000, color: '#fff', weight: 2, fillColor: '#EF4444', fillOpacity: 0.25 }).addTo(live.marks);
+    L.circleMarker(pos, { radius: 5, color: '#fff', weight: 0, fillColor: '#fff', fillOpacity: 1 }).bindTooltip('TD-27 (sample) · ' + TIMES[t]).addTo(live.marks);
+  }
+  if (inTW(S.loc.lat, S.loc.lon)) {
+    L.circleMarker([S.loc.lat, S.loc.lon], { radius: 7, color: '#fff', weight: 2, fillColor: S.accent, fillOpacity: 1 })
+      .bindTooltip('You: ' + S.loc.name).addTo(live.marks);
+  }
+}
+
+// Card previews: a real satellite still of Taiwan with the data drawn on top.
+function thumbHTML(d, base) {
+  var P = pal(), W = 384, H = 456;
+  var px = function (ll) { return [((ll[1] - TW_BOX[0]) / (TW_BOX[2] - TW_BOX[0]) * W).toFixed(1), ((TW_BOX[3] - ll[0]) / (TW_BOX[3] - TW_BOX[1]) * H).toFixed(1)]; };
+  var spots = MAP_PLACES.map(function (p, i) {
+    var l = d.base[i], q = px(PLACE_LL[p.name]);
+    return '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="' + (20 + l * 9) + '" fill="' + P[l] + '" fill-opacity="' + (base === 'sat' ? 0.7 : 0.8) + '" filter="url(#sk-b16)"/>';
+  }).join('');
+  var windy = base === 'windy'
+    ? '<rect width="' + W + '" height="' + H + '" fill="url(#sk-windy)" fill-opacity="0.72"/>' +
+      '<g fill="none" stroke="#fff" stroke-opacity="0.5" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="10 14">' +
+      [60, 140, 220, 300, 380].map(function (y) { return '<path class="sk-flow" d="M-10,' + y + ' C90,' + (y - 24) + ' 180,' + (y + 24) + ' 280,' + (y - 6) + ' S370,' + (y - 20) + ' 400,' + y + '"/>'; }).join('') + '</g>'
+    : '';
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid slice" role="img" aria-label="' + esc(d.title) + ' preview on ' + (base === 'sat' ? 'satellite' : 'Windy') + ' map">' +
+    '<rect width="' + W + '" height="' + H + '" fill="#05172E"/><image href="' + TW_IMG + '" width="' + W + '" height="' + H + '" preserveAspectRatio="none"/>' + windy + spots + '</svg>';
 }
 
 function predView(sub) {
@@ -1730,7 +1854,7 @@ function predView(sub) {
           activeSets().filter(function (x) { return x.group === g[0]; }).map(function (x) {
             var base = baseFor(x), own = x.group === 'By Skyline';
             return '<a class="pcard' + (own ? ' own' : '') + '" href="#predictions/' + x.id + '"><div class="thumb">' +
-              mapSVG(x, NOW, base, { thumb: true, slice: true, label: x.title + ' preview' }) +
+              thumbHTML(x, base) +
               '<span class="base-tag">' + (base === 'sat' ? 'Satellite' : 'Windy') + '</span>' + (own ? '<span class="own-tag">Skyline</span>' : '') + '</div>' +
               '<div class="pc-body"><h3>' + x.title + '</h3><p>' + x.desc + '</p><span class="src">' + x.src + '</span></div></a>';
           }).join('') + '</div></section>';
@@ -1741,9 +1865,10 @@ function predView(sub) {
     '<div><div class="eyebrow">' + d.group + '</div><h1>' + d.title + '</h1></div><div class="grow"></div>' +
     '<span class="chip ' + (own ? 'own' : 'solid') + '">' + d.src + '</span></header>' + banner +
     '<div class="pm-body"><section class="pm-map" aria-label="Map">' +
-      '<div class="map-box"><div class="map-top"><span class="mode" id="pm-mode"></span>' +
+      '<div class="map-bar"><span class="mode" id="pm-mode"></span>' +
         '<div class="seg" role="group" aria-label="Map base"><button type="button" data-action="set-base" data-base="sat" id="base-sat">Satellite</button><button type="button" data-action="set-base" data-base="windy" id="base-windy">Windy</button></div></div>' +
-        '<div id="pm-svg"></div></div>' +
+        '<div class="map-box"><div id="pm-live" class="pm-live"></div></div>' +
+        '<p class="map-note" id="pm-note"></p>' +
       '<div class="slider"><label for="pred-time"><span>Past ← Now → Prediction</span><span class="now" id="pm-time"></span></label>' +
         '<input id="pred-time" class="time" type="range" min="0" max="11" step="1" value="' + S.predT + '" data-input="predT" aria-valuetext="' + TIMES[S.predT] + '">' +
         '<div class="ticks" aria-hidden="true">' + TIMES.map(function (l, i) { return '<span' + (i === NOW ? ' class="is-now"' : '') + '>' + l + '</span>'; }).join('') + '</div></div>' +
@@ -1754,10 +1879,13 @@ function predView(sub) {
 }
 function updatePred() {
   var sub = route().sub, d = activeSets().filter(function (x) { return x.id === sub; })[0];
-  if (!d || !$('#pm-svg')) return;
+  if (!d || !$('#pm-live')) return;
   var t = S.predT, base = baseFor(d), P = pal();
   var mode = t < NOW ? ['Observed (past)', '#5B6F99', '#fff'] : t === NOW ? ['Now', '#fff', '#0B1B3F'] : ['Prediction', 'var(--accent)', 'var(--accent-ink)'];
-  $('#pm-svg').innerHTML = mapSVG(d, t, base, { labels: true, you: true, label: 'Map of Taiwan showing ' + d.title + ' at ' + TIMES[t] + ' on a ' + (base === 'sat' ? 'satellite' : 'Windy') + ' base' });
+  renderLive(d, t, base);
+  $('#pm-note').textContent = base === 'windy'
+    ? 'Live Windy map (' + (WINDY_LAYER[d.id] || ['wind'])[0] + ' layer). Drag and zoom it; Windy’s own timeline at the bottom plays the forecast. The slider sets the region values on the right.'
+    : 'Satellite imagery from Esri. Drag and zoom it; the colored overlay and labels follow the slider.';
   var m = $('#pm-mode'); m.textContent = mode[0]; m.style.background = mode[1]; m.style.color = mode[2];
   $('#pm-time').textContent = TIMES[t];
   $('#pm-k').textContent = mode[0] + ' · ' + TIMES[t];
@@ -2193,6 +2321,7 @@ function render() {
   var r = route(), key = r.page + '/' + r.sub;
   document.body.dataset.page = r.page;
   var app = $('#app');
+  destroyLive();
   app.innerHTML = r.page === 'home' ? homeView() : r.page === 'predictions' ? predView(r.sub) : r.page === 'ask' ? askView() : settingsView();
   document.querySelectorAll('[data-nav]').forEach(function (a) {
     if (a.dataset.nav === r.page) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
