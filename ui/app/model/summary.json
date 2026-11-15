@@ -1385,10 +1385,106 @@
    "notes": [
     "pm10: cross-validation chose v1 (test-year MAE 4.575); blend did better on the test year (4.004). The choice was not changed."
    ]
+  },
+  {
+   "id": "chiayi_county",
+   "name": "Chiayi County",
+   "name_zh": "嘉義縣",
+   "lat": 23.4587,
+   "lon": 120.293,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "v1"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 5.469,
+    "model_mae": 3.422,
+    "improvement_pct": 37.4,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 5.34,
+     "ridge": 5.296,
+     "boosted": 5.456,
+     "blend": 5.216,
+     "baseline": 7.026
+    },
+    "test_mae": {
+     "baseline": 5.469,
+     "v1": 3.742,
+     "ridge": 3.704,
+     "boosted": 3.699,
+     "blend": 3.422,
+     "blend_no_weather": 4.172
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "v1",
+    "baseline_mae": 5.675,
+    "model_mae": 4.396,
+    "improvement_pct": 22.6,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 7.272,
+     "ridge": 7.48,
+     "boosted": 11.167,
+     "blend": 8.875,
+     "baseline": 7.3
+    },
+    "test_mae": {
+     "baseline": 5.675,
+     "v1": 4.396,
+     "ridge": 4.387,
+     "boosted": 4.442,
+     "blend": 3.778,
+     "blend_no_weather": 4.511
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 26.5,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 50,
+     "warned": 43,
+     "caught": 32,
+     "false_alarms": 11,
+     "missed": 18,
+     "precision": 0.744,
+     "recall": 0.64
+    },
+    "tuned": {
+     "threshold": 26.5,
+     "bad_days": 50,
+     "warned": 121,
+     "caught": 49,
+     "false_alarms": 72,
+     "missed": 1,
+     "precision": 0.405,
+     "recall": 0.98
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 50,
+     "warned": 50,
+     "caught": 27,
+     "false_alarms": 23,
+     "missed": 23,
+     "precision": 0.54,
+     "recall": 0.54
+    }
+   },
+   "notes": [
+    "pm10: cross-validation chose v1 (test-year MAE 4.396); blend did better on the test year (3.778). The choice was not changed."
+   ]
   }
  ],
  "missing": [
-  "chiayi_county",
   "pingtung",
   "yilan",
   "hualien",
