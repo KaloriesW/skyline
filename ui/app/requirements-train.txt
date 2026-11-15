@@ -1,0 +1,5 @@
+# Only for ui/app/model/train.py (training). The server needs none of this: see requirements.txt.
+numpy>=1.26
+pandas>=2.2
+scikit-learn>=1.5
+httpx>=0.27
