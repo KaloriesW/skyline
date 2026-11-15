@@ -4,7 +4,6 @@
 /* ============================================================
    Data
    ============================================================ */
-var ISL = 'M200,30 L235,45 L245,75 L238,120 L232,170 L228,230 L215,290 L200,340 L180,400 L160,460 L148,470 L140,440 L118,395 L100,350 L90,300 L95,250 L110,200 L130,150 L155,100 L175,60 Z';
 var PALS = { 'default': ['#4ADE80', '#FACC15', '#FB923C', '#EF4444'], cb: ['#2C7BB6', '#ABD9E9', '#FDAE61', '#D7191C'] };
 var TIMES = ['−72h', '−48h', '−24h', '−12h', 'Now', '+6h', '+12h', '+24h', '+48h', '+72h', '+5d', '+7d'];
 var NOW = 4;
@@ -1151,21 +1150,53 @@ function tyView() {
   return { state: 'active', src: src, ty: ty, sub: bits.join(' · '),
     title: ty.name + ' · ' + fmtKm(km(L.lat, L.lon, c.ll[0], c.ll[1])) + ' ' + compass(bearing(L.lat, L.lon, c.ll[0], c.ll[1])) };
 }
+// Taiwan's main island, [lon, lat] clockwise from the north tip, and the Central Mountain Range down its spine
+var TW_COAST = [[121.54, 25.30], [121.62, 25.28], [121.69, 25.22], [121.75, 25.14], [121.83, 25.14], [121.92, 25.12], [122.00, 25.00], [121.93, 24.86], [121.88, 24.72], [121.85, 24.60],
+  [121.80, 24.42], [121.74, 24.25], [121.65, 24.05], [121.62, 23.90], [121.55, 23.70], [121.50, 23.52], [121.43, 23.30], [121.40, 23.10], [121.28, 22.95], [121.17, 22.77], [121.08, 22.68],
+  [121.00, 22.58], [120.92, 22.40], [120.88, 22.20], [120.86, 22.00], [120.85, 21.91], [120.78, 21.96], [120.72, 22.07], [120.66, 22.22], [120.62, 22.34], [120.55, 22.42], [120.46, 22.47],
+  [120.38, 22.52], [120.28, 22.60], [120.25, 22.72], [120.20, 22.82], [120.17, 22.95], [120.12, 23.08], [120.10, 23.25], [120.13, 23.38], [120.13, 23.52], [120.12, 23.65], [120.17, 23.78],
+  [120.26, 23.88], [120.35, 24.00], [120.43, 24.12], [120.50, 24.22], [120.55, 24.32], [120.62, 24.42], [120.72, 24.52], [120.82, 24.65], [120.90, 24.78], [121.00, 24.88], [121.10, 25.02],
+  [121.20, 25.10], [121.32, 25.14], [121.42, 25.19], [121.50, 25.26]];
+var TW_RIDGE = [[121.30, 24.55], [121.20, 24.35], [121.05, 24.10], [120.98, 23.80], [120.95, 23.47], [120.92, 23.10], [120.90, 22.75], [120.88, 22.42]];
+function smoothClosed(p) {   // a smooth curve through every point, closed
+  var n = p.length, d = 'M' + p[0][0].toFixed(1) + ',' + p[0][1].toFixed(1), i, a, b, c, e;
+  for (i = 0; i < n; i++) {
+    a = p[(i - 1 + n) % n]; b = p[i]; c = p[(i + 1) % n]; e = p[(i + 2) % n];
+    d += 'C' + (b[0] + (c[0] - a[0]) / 6).toFixed(1) + ',' + (b[1] + (c[1] - a[1]) / 6).toFixed(1) + ' ' + (c[0] - (e[0] - b[0]) / 6).toFixed(1) + ',' + (c[1] - (e[1] - b[1]) / 6).toFixed(1) + ' ' + c[0].toFixed(1) + ',' + c[1].toFixed(1);
+  }
+  return d + 'Z';
+}
 function tyTileHTML(tv) {
-  var X = function (ll) { return 40 + 0.42 * (205 + (ll[1] - 121.5654) * 69); }, Y = function (ll) { return 10 + 0.42 * (55 + (25.033 - ll[0]) * 137.5); };
-  var art = '', fit = '';
+  // A 200 x 240 frame: 58 px per degree of latitude, longitude scaled by cos(24°), Taiwan on the left so a storm has room to approach from the east
+  var KY = 58, KX = KY * 0.913, P = function (lon, lat) { return [20 + (lon - 119.95) * KX, 14 + (25.45 - lat) * KY]; };
+  var art = '', fit = '', k = 1, u = function (v) { return (v / k).toFixed(1); };
   if (tv.state === 'active') {
     // Zoom out just enough to keep the island and the whole track in frame
-    var c = tv.ty.cur.ll, x0 = 40, x1 = 170, y0 = 10, y1 = 220;
-    tv.ty.pts.forEach(function (p) { x0 = Math.min(x0, X(p.ll)); x1 = Math.max(x1, X(p.ll)); y0 = Math.min(y0, Y(p.ll)); y1 = Math.max(y1, Y(p.ll)); });
-    x0 -= 30; x1 += 30; y0 -= 30; y1 += 30;
-    var k = Math.min(1, 300 / (x1 - x0), 240 / (y1 - y0)), u = function (v) { return (v / k).toFixed(1); };
-    fit = ' transform="translate(' + ((300 - (x1 - x0) * k) / 2 - x0 * k).toFixed(1) + ',' + ((240 - (y1 - y0) * k) / 2 - y0 * k).toFixed(1) + ') scale(' + k.toFixed(3) + ')"';
-    art = '<polyline points="' + tv.ty.pts.map(function (p) { return X(p.ll).toFixed(1) + ',' + Y(p.ll).toFixed(1); }).join(' ') + '" fill="none" stroke="#FFC24B" stroke-width="' + u(5) + '" stroke-dasharray="' + u(12) + ' ' + u(10) + '"/>' +
-      '<circle cx="' + X(c).toFixed(1) + '" cy="' + Y(c).toFixed(1) + '" r="' + u(26) + '" fill="#EF4444" fill-opacity="0.3" stroke="#fff" stroke-width="' + u(3) + '"/><circle cx="' + X(c).toFixed(1) + '" cy="' + Y(c).toFixed(1) + '" r="' + u(7) + '" fill="#fff"/>';
+    var c = tv.ty.cur.ll, x0 = 0, x1 = 200, y0 = 0, y1 = 240, qs = tv.ty.pts.map(function (p) { return P(p.ll[1], p.ll[0]); });
+    qs.forEach(function (q) { x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); y0 = Math.min(y0, q[1]); y1 = Math.max(y1, q[1]); });
+    x0 -= 16; x1 += 16; y0 -= 16; y1 += 16;
+    k = Math.min(1, 200 / (x1 - x0), 240 / (y1 - y0));
+    fit = ' transform="translate(' + ((200 - (x1 - x0) * k) / 2 - x0 * k).toFixed(1) + ',' + ((240 - (y1 - y0) * k) / 2 - y0 * k).toFixed(1) + ') scale(' + k.toFixed(3) + ')"';
+    var q0 = P(c[1], c[0]);
+    art = '<polyline points="' + qs.map(function (q) { return q[0].toFixed(1) + ',' + q[1].toFixed(1); }).join(' ') + '" fill="none" stroke="#FFC24B" stroke-width="' + u(3) + '" stroke-linecap="round" stroke-dasharray="' + u(7) + ' ' + u(6) + '"/>' +
+      '<circle cx="' + q0[0].toFixed(1) + '" cy="' + q0[1].toFixed(1) + '" r="' + u(16) + '" fill="#EF4444" fill-opacity="0.3" stroke="#fff" stroke-width="' + u(1.6) + '"/><circle cx="' + q0[0].toFixed(1) + '" cy="' + q0[1].toFixed(1) + '" r="' + u(4.5) + '" fill="#fff"/>';
   }
-  return '<div class="ty"><svg width="108" height="86" viewBox="0 0 300 240" aria-hidden="true">' +
-      '<g' + fit + '><g transform="translate(40,10) scale(0.42)"><path d="' + ISL + '" fill="#3F7A63"/></g>' + art + '</g></svg>' +
+  var coast = smoothClosed(TW_COAST.map(function (p) { return P(p[0], p[1]); })), ridge = TW_RIDGE.map(function (p) { return P(p[0], p[1]); });
+  var grid = '', g;
+  for (g = 120; g <= 122; g++) grid += '<line x1="' + P(g, 0)[0].toFixed(1) + '" x2="' + P(g, 0)[0].toFixed(1) + '" y1="-400" y2="640"/>';
+  for (g = 22; g <= 25; g++) grid += '<line y1="' + P(0, g)[1].toFixed(1) + '" y2="' + P(0, g)[1].toFixed(1) + '" x1="-400" x2="640"/>';
+  var city = function (lon, lat, r) { var q = P(lon, lat); return '<circle cx="' + q[0].toFixed(1) + '" cy="' + q[1].toFixed(1) + '" r="' + u(r) + '" fill="#fff" fill-opacity=".9"/>'; };
+  var here = '', L = S.loc;
+  if (L && inTW(L.lat, L.lon)) { var h = P(L.lon, L.lat); here = '<circle cx="' + h[0].toFixed(1) + '" cy="' + h[1].toFixed(1) + '" r="' + u(11) + '" fill="' + S.accent + '" fill-opacity=".3"/><circle cx="' + h[0].toFixed(1) + '" cy="' + h[1].toFixed(1) + '" r="' + u(4.2) + '" fill="' + S.accent + '" stroke="#fff" stroke-width="' + u(1.6) + '"/>'; }
+  return '<div class="ty"><svg width="87" height="104" viewBox="0 0 200 240" aria-hidden="true">' +
+      '<defs><radialGradient id="twSea" cx=".3" cy=".35" r=".95"><stop offset="0" stop-color="#1d4c7c"/><stop offset="1" stop-color="#0a1d3a"/></radialGradient>' +
+      '<linearGradient id="twLand" x1="0" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="#86dcb2"/><stop offset=".55" stop-color="#3fa186"/><stop offset="1" stop-color="#2a7a6a"/></linearGradient></defs>' +
+      '<rect width="200" height="240" fill="url(#twSea)"/>' +
+      '<g' + fit + '><g stroke="#fff" stroke-opacity=".09" stroke-width="' + u(1) + '" stroke-dasharray="' + u(3) + ' ' + u(5) + '">' + grid + '</g>' +
+      '<path d="' + coast + '" fill="none" stroke="#7fe3ff" stroke-opacity=".25" stroke-width="' + u(9) + '" stroke-linejoin="round"/>' +
+      '<path d="' + coast + '" fill="url(#twLand)" stroke="#fff" stroke-opacity=".7" stroke-width="' + u(1.4) + '" stroke-linejoin="round"/>' +
+      '<polyline points="' + ridge.map(function (q) { return q[0].toFixed(1) + ',' + q[1].toFixed(1); }).join(' ') + '" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="' + u(5) + '" stroke-linecap="round" stroke-linejoin="round"/>' +
+      city(121.565, 25.033, 2.4) + city(120.674, 24.148, 2.4) + city(120.30, 22.627, 2.4) + here + art + '</g></svg>' +
     (tv.state === 'active'
       ? '<div><div class="ty-t">' + esc(tv.title) + '</div><p class="note">' + esc(tv.sub) + '</p></div></div>'
       : '<div><div class="ty-t">No active typhoon</div><p class="note">No tropical cyclone is being tracked near Taiwan right now.</p></div></div>');
@@ -1554,7 +1585,7 @@ var TILES = {
       return '<div class="days">' + idx.map(function (q, n) {
         var mn = d.temperature_2m_min[q], mx = d.temperature_2m_max[q], pp = d.precipitation_probability_max[q];
         var dot = n === 0 ? '<b style="left:' + clamp(pos(c.cur.temperature_2m), 0, 100) + '%"></b>' : '';
-        return '<div class="day"><span>' + (n === 0 ? 'Today' : weekdayOf(d.time[q])) + '</span>' +
+        return '<div class="day" data-date="' + d.time[q] + '"><span>' + (n === 0 ? 'Today' : weekdayOf(d.time[q])) + '</span>' +
           '<span class="ic">' + Icons.art(Icons.wmo(d.weather_code[q], true).art, 24) + (pp >= 20 ? '<small>' + pp + '%</small>' : '') + '</span>' +
           '<span class="lo">' + num(tU(mn)) + '°</span>' +
           '<span class="bar"><i style="left:' + pos(mn) + '%;width:' + (pos(mx) - pos(mn)) + '%;background:linear-gradient(90deg,' + tcol(mn) + ',' + tcol(mx) + ')"></i>' + dot + '</span>' +
@@ -2128,6 +2159,8 @@ document.addEventListener('click', function (e) {
   if (e.target.closest('button,a,iframe')) return;
   var t = e.target.closest('.tile.clickable');
   if (!t) return;
+  var row = e.target.closest('.day[data-date]');
+  if (row && t.dataset.id === 'daily') { openDetail(t, row.dataset.date); return; }
   if (TILES[t.dataset.id].open) TILES[t.dataset.id].open(); else openDetail(t);
 });
 var dragEl = null, lastMove = 0;
@@ -2180,13 +2213,14 @@ function openSheet(html, label) {
   clearTimeout(sheetTimer);
   if (bd.hidden) sheetFocus = document.activeElement;
   sh.innerHTML = html; sh.scrollTop = 0; sh.setAttribute('aria-label', label || 'Details');
-  bd.hidden = false;
+  closePop(); closeMapPanel();
+  bd.hidden = false; document.body.classList.add('sheet-open');
   requestAnimationFrame(function () { bd.classList.add('open'); sh.focus({ preventScroll: true }); });
 }
 function closeSheet() {
   var bd = $('#sheetBackdrop');
   if (bd.hidden) return false;
-  bd.classList.remove('open');
+  bd.classList.remove('open'); document.body.classList.remove('sheet-open');
   sheetTimer = setTimeout(function () { bd.hidden = true; }, reduced() ? 0 : 320);
   if (sheetFocus && sheetFocus.focus && document.contains(sheetFocus)) sheetFocus.focus({ preventScroll: true });
   return true;
@@ -2502,12 +2536,12 @@ function renderPop() {
     (dates && dates.length ? popDays(dates, POP.date) : '') + (d.modes ? popModes(d.modes, POP.mode) : '') + '<div class="pop-main">' + d.render(c, POP) + '</div>';
   placePop();
 }
-function openDetail(el) {
+function openDetail(el, date) {
   var id = el.dataset.id, c = wctx(), d = DETAIL[id] || null;
   if (d && d.panel) { openMapPanel(typeof d.panel === 'string' ? d.panel : null); return; }
   if (!d) { POP = { id: id, el: el, def: null }; d = genericDetail(id); }
   var dates = c ? popDates(d, c) : null, today = c ? c.w.daily.time[c.di] : '';
-  POP = { id: id, el: el, def: d, mode: d.modes ? d.modes[0][0] : null, date: dates && dates.length ? (dates.indexOf(today) >= 0 ? today : dates[0]) : today };
+  POP = { id: id, el: el, def: d, mode: d.modes ? d.modes[0][0] : null, date: dates && dates.length ? (date && dates.indexOf(date) >= 0 ? date : dates.indexOf(today) >= 0 ? today : dates[0]) : today, row: date || null };
   var pop = $('#pop'), bd = $('#popBackdrop');
   pop.hidden = false; bd.hidden = false;
   renderPop();
@@ -2520,9 +2554,16 @@ function closePop() {
   setTimeout(function () { if (!POP) pop.hidden = true; }, reduced() ? 0 : 220);
   return true;
 }
+function popAnchor() {
+  var t = POP && POP.el;
+  if (!t) return null;
+  if (!document.contains(t)) { t = document.querySelector('#grid [data-id="' + POP.id + '"]'); if (t) POP.el = t; }
+  if (t && POP.row) { var r = t.querySelector('.day[data-date="' + POP.date + '"]'); if (r) return r; }
+  return t;
+}
 function placePop() {
-  var pop = $('#pop'), el = POP && POP.el;
-  if (!el || !document.contains(el)) return closePop();
+  var pop = $('#pop'), el = popAnchor();
+  if (!el) return closePop();
   var vw = window.innerWidth, vh = window.innerHeight, r = el.getBoundingClientRect();
   if (vw < 760) { pop.classList.add('as-sheet'); pop.style.left = pop.style.top = pop.style.width = ''; return; }
   pop.classList.remove('as-sheet');
@@ -2573,7 +2614,7 @@ function mapPanelHTML() {
 }
 function openMapPanel(layer) {
   if (layer) MAP_LAYER = layer;
-  closePop();
+  closePop(); closeSheet();
   var p = $('#mapPanel');
   p.innerHTML = mapPanelHTML(); p.hidden = false;
   document.body.classList.add('map-open');
