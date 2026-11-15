@@ -1676,10 +1676,104 @@
    "notes": [
     "pm10: cross-validation chose ridge (test-year MAE 4.952); blend did better on the test year (4.712). The choice was not changed."
    ]
+  },
+  {
+   "id": "hualien",
+   "name": "Hualien County",
+   "name_zh": "花蓮縣",
+   "lat": 23.9914,
+   "lon": 121.6199,
+   "n_train": 1002,
+   "n_test": 365,
+   "tested_on": "2025-11-08 .. 2026-11-07",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "blend"
+   },
+   "pm25": {
+    "chosen": "blend",
+    "baseline_mae": 3.75,
+    "model_mae": 2.735,
+    "improvement_pct": 27.1,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 2.873,
+     "ridge": 2.904,
+     "boosted": 2.9,
+     "blend": 2.821,
+     "baseline": 3.457
+    },
+    "test_mae": {
+     "baseline": 3.75,
+     "v1": 2.748,
+     "ridge": 2.787,
+     "boosted": 2.846,
+     "blend": 2.735,
+     "blend_no_weather": 2.866
+    },
+    "best_on_test": "blend"
+   },
+   "pm10": {
+    "chosen": "blend",
+    "baseline_mae": 4.153,
+    "model_mae": 3.199,
+    "improvement_pct": 23.0,
+    "beats_baseline": true,
+    "cv_mae": {
+     "v1": 4.019,
+     "ridge": 4.033,
+     "boosted": 4.132,
+     "blend": 3.877,
+     "baseline": 4.017
+    },
+    "test_mae": {
+     "baseline": 4.153,
+     "v1": 3.244,
+     "ridge": 3.309,
+     "boosted": 3.455,
+     "blend": 3.199,
+     "blend_no_weather": 3.279
+    },
+    "best_on_test": "blend"
+   },
+   "warn_threshold": 35.0,
+   "warnings": {
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 5,
+     "warned": 0,
+     "caught": 0,
+     "false_alarms": 0,
+     "missed": 5,
+     "precision": null,
+     "recall": 0.0
+    },
+    "tuned": {
+     "threshold": 35.0,
+     "bad_days": 5,
+     "warned": 0,
+     "caught": 0,
+     "false_alarms": 0,
+     "missed": 5,
+     "precision": null,
+     "recall": 0.0
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 5,
+     "warned": 5,
+     "caught": 4,
+     "false_alarms": 1,
+     "missed": 1,
+     "precision": 0.8,
+     "recall": 0.8
+    }
+   },
+   "notes": []
   }
  ],
  "missing": [
-  "hualien",
   "taitung",
   "penghu",
   "kinmen",
