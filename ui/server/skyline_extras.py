@@ -253,12 +253,26 @@ state = State()
 router = APIRouter()
 
 
+def _ip_key(ip: str) -> str:
+    """One rate-limit identity per IPv4 address or per IPv6 /64 (a home or VPS gets a whole /64)."""
+    import ipaddress
+    try:
+        addr = ipaddress.ip_address(ip)
+    except ValueError:
+        return ip
+    if addr.version == 6:
+        if addr.ipv4_mapped:
+            return str(addr.ipv4_mapped)
+        return str(ipaddress.ip_network(f"{addr}/64", strict=False))
+    return str(addr)
+
+
 def _client_ip(request: Request) -> str:
     """The caller's address. Behind the Cloudflare tunnel every socket is local, so use Cloudflare's header."""
     if _env("ASK_TRUST_PROXY_HEADERS", "1") not in ("0", "false", "no"):
         ip = request.headers.get("cf-connecting-ip") or (request.headers.get("x-forwarded-for") or "").split(",")[0]
         if ip.strip():
-            return ip.strip()[:64]
+            return _ip_key(ip.strip()[:64])
     return request.client.host if request.client else "unknown"
 
 
@@ -299,6 +313,10 @@ def _validate(body: Any) -> Tuple[Optional[List[Dict[str, str]]], str, Optional[
         context = ""
     if not isinstance(context, str):
         return None, "", "`context` must be a string."
+    try:
+        context.encode("utf-8")
+    except UnicodeEncodeError:
+        return None, "", "`context` isn't valid Unicode."
     if not isinstance(messages, list) or not messages:
         return None, "", "`messages` must be a non-empty list."
     max_messages = _env_int("ASK_MAX_MESSAGES", 12)
@@ -310,6 +328,10 @@ def _validate(body: Any) -> Tuple[Optional[List[Dict[str, str]]], str, Optional[
             return None, "", "Each message needs a role of `user` or `assistant` and text `content`."
         if not m["content"].strip():
             return None, "", "Messages can't be empty."
+        try:
+            m["content"].encode("utf-8")
+        except UnicodeEncodeError:
+            return None, "", "Message text isn't valid Unicode."
         clean.append({"role": m["role"], "content": m["content"]})
     if clean[-1]["role"] != "user":
         return None, "", "The last message must be from the user."
@@ -371,7 +393,7 @@ async def ask(request: Request):
             ),
             stream=True,
         )
-    except httpx.HTTPError as e:
+    except Exception as e:  # anything here must give the slot and the hold back, not only httpx errors
         state.active -= 1
         state.budget.settle(reserved, None, sent=False)
         log.warning("OpenRouter unreachable: %s", e.__class__.__name__)

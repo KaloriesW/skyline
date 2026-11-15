@@ -180,6 +180,8 @@ async def find_location(query: str) -> list[dict[str, Any]]:
     ("TPE", "RCTP"), or any other place name (worldwide geocoder). Returns up to 8 candidates; inside Taiwan
     each one includes its district, city and postal code.
     """
+    if len(query) > 200:
+        return [{"error": "Query too long (200 characters at most)."}]
     q = query.strip()
     coords = _parse_coords(q)
     if coords:
@@ -395,7 +397,9 @@ def mount_http(app: Any, path: str = "/mcp") -> None:
 
     sub = mcp.streamable_http_app(streamable_http_path=path, stateless_http=True, json_response=True, transport_security=security)
     # Add the endpoint as a plain route on the host app (a Mount would redirect /mcp to /mcp/).
-    app.router.routes.extend(sub.routes)
+    # POST only: a GET would open a never-ending event stream for anyone who asks.
+    from starlette.routing import Route
+    app.router.routes.extend(Route(r.path, endpoint=r.endpoint, methods=["POST"]) for r in sub.routes)
 
     # The session manager must be running while the app serves; a sub-app's own lifespan is not run
     # by the host, so chain it onto the host app's lifespan.

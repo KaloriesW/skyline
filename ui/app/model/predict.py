@@ -92,6 +92,16 @@ def category(a: int):
             return name, color
 
 
+def _advice(a: int, warned: bool) -> dict:
+    """School advice that honours the tuned warning: a forecast above the city's warning threshold is never a plain 'go'."""
+    adv = school_advice(a)
+    if warned and adv["level"] == "go":
+        return {"level": "limit", "title": "Be ready to move PE indoors",
+                "detail": "The forecast is close to the unhealthy level (35 µg/m³), and near-misses like this often end up over it. "
+                          "Sensitive students should take it easy; check the air again in the morning."}
+    return adv
+
+
 def school_advice(a: int) -> dict:
     if a <= 50:
         return {"level": "go", "title": "Outdoor PE as normal",
@@ -489,7 +499,7 @@ def predict(model: Dict[str, Any], aq_hourly: Dict[str, list], wx_hourly: Dict[s
         "category": name,
         "color": color,
         "bad_day": p25 > model["warn_threshold"],
-        "advice": school_advice(a),
+        "advice": _advice(a, p25 > model["warn_threshold"]),
         "today": {
             "pm25": round(now["pm25"], 1),
             "pm10": round(now["pm10"], 1),
