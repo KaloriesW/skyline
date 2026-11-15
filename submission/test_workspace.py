@@ -76,3 +76,23 @@ def test_workspace_missing_air_is_not_zero_and_validates_input(monkeypatch):
     assert 'city_model_training' not in seen['context']
     assert client.post('/api/assistant/workspace/chat',json=payload|{'scan_id':'../etc'}).status_code==422
     assert client.post('/api/assistant/workspace/chat',json=payload|{'enabled':True}).status_code==422
+
+
+def test_monitor_followup_uses_actual_workflow_without_qwen_or_mutation(monkeypatch):
+    client,seen=assistant_fixture(monkeypatch)
+    payload={'message':'What do I need to do to enable it?','lat':24.1,'lon':121.6,
+             'history':[{'role':'user','content':'Is monitoring running?'},
+                        {'role':'assistant','content':'Monitoring is off.'}]}
+    r=client.post('/api/assistant/workspace/chat',json=payload)
+    assert r.status_code==200
+    assert r.json()['model']=='Monitoring controls'
+    assert 'newly published Sentinel-2 scenes' in r.json()['answer']
+    assert 'Preview boundary' in r.json()['answer']
+    assert 'I have not enabled monitoring' in r.json()['answer']
+    assert not seen  # No language-model generation for this factual control answer.
+
+
+def test_monitoring_state_is_grounded_and_unrelated_followups_remain_open():
+    assert 'currently on' in wa.monitoring_answer('Is monitoring running?',[],{'enabled':True})
+    assert 'currently off' in wa.monitoring_answer('Is monitoring running?',[],{'enabled':False})
+    assert wa.monitoring_answer('How do I enable it?',[{'role':'user','content':'What is a weather layer?'}],{'enabled':False}) is None

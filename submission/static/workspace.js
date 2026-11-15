@@ -8,17 +8,17 @@ window.WorkspaceQwen={mount:function(adapter){
   const find=s=>panel.querySelector(s);
   function close(){panel.hidden=true;lastFocus?.focus();}
   function sync(){const c=adapter.context(),key=JSON.stringify([c.lat,c.lon,c.scan_id]);if(key!==scope){scope=key;messages=[];find('[data-wq-log]').replaceChildren();}find('[data-wq-context]').textContent=(c.location_name||'Selected location')+' · '+(c.scan_id?'saved scan included':'no scan selected')+' · live data refreshed when asking';return c;}
-  function bubble(role,text){const el=document.createElement('article'),label=document.createElement('strong'),p=document.createElement('p');el.className='wq-'+role;label.textContent=role==='user'?'You':'Qwen';p.textContent=text;el.append(label,p);find('[data-wq-log]').append(el);el.scrollIntoView({block:'nearest'});}
+  function bubble(role,text,source){const el=document.createElement('article'),label=document.createElement('strong'),p=document.createElement('p');el.className='wq-'+role;label.textContent=role==='user'?'You':(['Measured scan evidence','Monitoring controls'].includes(source)?source:'Qwen');p.textContent=text;el.append(label,p);find('[data-wq-log]').append(el);el.scrollIntoView({block:'nearest'});}
   function open(question){lastFocus=document.activeElement;panel.hidden=false;sync();if(question)find('textarea').value=question;find('textarea').focus();}
   find('[data-wq-close]').onclick=close;
   panel.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
   panel.querySelectorAll('.wq-suggestions button').forEach(b=>b.onclick=()=>{find('textarea').value=b.textContent;find('textarea').focus();});
   find('form').onsubmit=async e=>{
     e.preventDefault();if(busy)return;const question=find('textarea').value.trim();if(!question)return;
-    const context=sync(),requestScope=scope;busy=true;find('button[type=submit]').disabled=true;find('textarea').disabled=true;find('[data-wq-status]').textContent='Reading current data and asking local Qwen…';
+    const context=sync(),requestScope=scope;busy=true;find('button[type=submit]').disabled=true;find('textarea').disabled=true;find('[data-wq-status]').textContent='Reading current data…';
     try{const response=await fetch('/api/assistant/workspace/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...context,message:question,history:messages.slice(-8)})}),r=await response.json();if(!response.ok)throw Error(typeof r.detail==='string'?r.detail:'Unable to answer this question. Please retry.');
       if(requestScope!==scope)return;
-      messages.push({role:'user',content:question},{role:'assistant',content:r.answer});bubble('user',question);bubble('assistant',r.answer);find('textarea').value='';find('[data-wq-status]').textContent='Answered locally · '+r.model+' · '+new Date(r.context_time).toLocaleTimeString()+' · '+r.sources.join(', ');
+      messages.push({role:'user',content:question},{role:'assistant',content:r.answer});bubble('user',question);bubble('assistant',r.answer,r.model);find('textarea').value='';find('[data-wq-status]').textContent='Answered locally · '+r.model+' · '+new Date(r.context_time).toLocaleTimeString()+' · '+r.sources.join(', ');
     }catch(error){find('[data-wq-status]').textContent=error.message+' Your question is kept for retry.';}
     finally{busy=false;find('button[type=submit]').disabled=false;find('textarea').disabled=false;}
   };

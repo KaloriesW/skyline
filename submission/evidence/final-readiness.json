@@ -1,0 +1,79 @@
+{
+  "checked_at": "2026-11-16 Asia/Taipei",
+  "scope": "Integrated submission package; macOS Apple Silicon; Python 3.14.4",
+  "changes": [
+    "Restore commented Skyline .env.example required by its tests",
+    "Update submission directions for existing main/submission layout and judge access",
+    "Replace stale validation summary; mark original setup evidence historical",
+    "Remove obsolete demo result exceptions from .gitignore",
+    "Label absent YOLO checkpoints not installed instead of queued",
+    "Correct monitoring explanations and contextual follow-ups using application facts",
+    "Correct launcher README filename",
+    "Handle short summary typos and scan review suggestions with measured facts; label answer source in chat"
+  ],
+  "automated_checks": {
+    "map_backend_tests": 85,
+    "backend_subtests": 3,
+    "skyline_app_tests": 116,
+    "skyline_server_tests": 37,
+    "optional_skips": 3,
+    "javascript_tests": 13,
+    "javascript_syntax_files": 14,
+    "pip_check": "no broken requirements",
+    "real_unet_smoke_pixels": 293,
+    "model_sha256": "752989d5b2555dad4b26946ae34b3c31d6cfae97de873ad4d69aa4bf588daf8c"
+  },
+  "live_scan": {
+    "model": "U-Net · Taiwan · 13 bands",
+    "model_id": "unet13",
+    "count": 76,
+    "acquired": "2026-11-05T02:40:59.896000Z",
+    "width_km": 6.0,
+    "center": [
+      24.16,
+      121.6
+    ],
+    "usable_percent": 90.8,
+    "processing_seconds": 88.6,
+    "source_scene_ids": [
+      "S2C_51QUG_20261105_0_L2A"
+    ]
+  },
+  "live_checks": {
+    "weather_and_city_pm25_loaded": true,
+    "weather_overlay_samples": 12,
+    "before_date": "2026-10-01",
+    "after_date": "2026-11-05",
+    "road_and_one_hectare_filter_count": 5,
+    "csv_rows": 76,
+    "geojson_features": 76,
+    "coordinates_inside_polygons": true,
+    "mask_georeferenced": true,
+    "qwen_local_response_verified": true,
+    "monitor_control_followup_verified": true,
+    "monitoring_left_off": true,
+    "home_back_navigation_verified": true,
+    "browser_console_errors": 0,
+    "writeup_pages": 1,
+    "writeup_visual_review": "passed",
+    "exact_user_short_summary_verified": true
+  },
+  "distribution": {
+    "current_tracked_files_secret_pattern_scan": "no matches; not a full history audit",
+    "regular_git_file_size_limit": "all below 100 MiB",
+    "runtime_scans_and_chats": "excluded"
+  },
+  "submission_blockers": [
+    "Unauthenticated GitHub repository API returned HTTP 404. Owner must ensure anyone with link can view code before submission."
+  ],
+  "remaining_team_actions": [
+    "Fill and submit official form with team details",
+    "Record and share optional video of no more than two minutes"
+  ],
+  "limits": [
+    "Windows/Linux clean install not verified",
+    "Live imagery accuracy not independently measured",
+    "Monitoring pause/resume and new-scene scheduling tested with isolated fixtures; no long-duration monitoring run enabled",
+    "Optional MCP and live scikit-learn parity dependency checks skipped"
+  ]
+}

@@ -145,6 +145,18 @@ def grounded_scan_answer(question, context):
     brief=report.get('review_brief')
     if not brief:return None
     q=question.strip().lower().rstrip('.?!')
+    q=re.sub(r'\bsummeri[sz]e\b','summarize',q)
+    q=re.sub(r'\s+',' ',q)
+    short_summary=re.fullmatch(r"(?:please )?(?:(?:simple|brief|short|quick) (?:summary|summari[sz]e)(?: (?:this|the) scan)?|summari[sz]e(?: (?:it|that|this(?: scan)?|the scan))?(?: simply| briefly| in (?:simple|plain) (?:words|english))?|how(?:'s| is|s) (?:the|this) scan(?: going)?)",q)
+    if short_summary:
+        count=report.get('count',0)
+        both=report.get('both_checks_count',0)
+        rows=brief.get('review_first',[])
+        if not count:return 'No candidates passed the model threshold in usable imagery. Check cloud coverage or try another image; this does not prove the area is landslide-free.'
+        locations=', '.join(f"Area {r['id']}" for r in rows)
+        next_step=f' Start by comparing before/after images for {locations}.' if rows else ' Inspect the before/after imagery next.'
+        return (f"The scan found {count} suspected areas; {both} also meet both vegetation-loss and slope checks."
+                +next_step+' These are review candidates, not confirmed landslides.')
     ids=re.findall(r'(?:area|candidate|region|區域|区域)\s*#?\s*(\d+)',q,re.I)
     if len(ids)==1 and re.search(r'why|explain|flagged|review|evidence|為什麼|為何|解釋|證據',q):
         rows=context.get('candidates',[])+report.get('named_candidates',[])+brief.get('review_first',[])
@@ -163,7 +175,7 @@ def grounded_scan_answer(question, context):
             lines.append(f"• Area {r['id']}: {r['road_distance_m']:.0f} m from {r.get('nearest_road_name') or 'an unnamed road'} at {r['latitude']:.6f}, {r['longitude']:.6f}.")
         lines.append('Open these locations and inspect the before/after imagery. Missing road distances are unknown; proximity does not establish road damage or blockage.')
         return '\n'.join(lines)
-    if re.fullmatch(r'(?:please )?(?:tell (?:me )?(?:the )?predictions|summari[sz]e(?: (?:this|the) scan)?|(?:scan )?overview|what should i review(?: first)?|which (?:three|3) areas should i review first.*)',q):
+    if re.fullmatch(r'(?:please )?(?:tell (?:me )?(?:the )?predictions|summari[sz]e(?: (?:this|the) scan)?|(?:scan )?overview|what should i review(?: in (?:this|the) scan)?(?: first)?|which (?:three|3) areas should i review first.*)',q):
         prefix='This is a review of detected surface changes, not a forecast of future landslides.\n' if 'prediction' in q else ''
         return prefix+brief['summary']
     return None

@@ -97,7 +97,7 @@ def model_list():
     for key, (label, folder, status_name, size) in MODEL_CONFIG.items():
         f = TRAINING / status_name
         bundled = HERE / 'models' / f'{key}.pt'
-        status = json.loads(f.read_text()) if f.exists() else {'state': 'completed' if bundled.exists() else 'queued'}
+        status = json.loads(f.read_text()) if f.exists() else {'state': 'completed' if bundled.exists() else 'not installed'}
         weights = model_weights(key)
         calibration = model_profiles.release() if key == model_profiles.KEY else model_profiles.profile(key) if key == 'unet13' else None
         available = status['state']=='completed' and weights.exists()

@@ -7,7 +7,7 @@ if [[ -x "$APP_DIR/.venv/bin/python" ]]; then
 elif [[ -x "$TASK_DIR/work/landslide-venv/bin/python" ]]; then
   APP_PYTHON="$TASK_DIR/work/landslide-venv/bin/python"
 else
-  echo 'Set up the Python environment using README.txt first.'
+  echo 'Set up the Python environment using README.md first.'
   exit 1
 fi
 cd "$APP_DIR"

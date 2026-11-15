@@ -1,46 +1,39 @@
-# GitHub and hackathon submission
+# Final GitHub submission checklist
 
-## What is prepared
+The integrated app is in [`submission/`](https://github.com/KaloriesW/special-octo-enigma/tree/main/submission) on the **main** branch of [KaloriesW/special-octo-enigma](https://github.com/KaloriesW/special-octo-enigma). The original teammate source remains in `ui/`; run the integrated app from `submission/`.
 
-`skyline-terrain/` is the final, self-contained repository folder. Use that folder's **contents as the repository root**. It includes the app, tested U-Net, the one-page PDF, demo script, credits and evaluation evidence. It does not include local chats, caches, API secrets, monitoring state or the large experimental YOLO weights.
-
-No GitHub repository has been created or pushed by this preparation step. The existing teammate repository is `https://github.com/KaloriesW/special-octo-enigma`; its current remote contents/access were not authenticated. Do not claim that an older remote copy contains this release.
-
-## Upload with GitHub Desktop (simplest)
-
-1. Open GitHub Desktop and choose **File → Add Local Repository**; select the `skyline-terrain` folder. If it is not a repository, use the offered create-repository option for this folder.
-2. Review the included files, create the initial commit and **Publish repository**. Make it public so judges can access it. Choose the final repository name with your team.
-3. If updating your friend's existing repository, use its actual local Git checkout and merge this folder on a branch. Do not overwrite newer teammate work. The bundled `skyline/` snapshot is intentionally used so the tested version stays consistent.
-4. Open the published repository while signed out. Confirm README, PDF, credits, `models/unet13.pt` are visible.
-
-GitHub's browser uploader has a 25 MiB file limit. Our checkpoint is approximately 93.48 MiB, below Git's 100 MiB hard limit but above the browser limit. Use **GitHub Desktop or Git CLI**, not a browser drag-and-drop of the checkpoint or ZIP. A Git large-file warning above 50 MiB is expected; no file in this prepared repository exceeds 100 MiB. Do not add virtual environments or the ZIP to the repository.
-
-## Git CLI alternative
-
-Run from the prepared `skyline-terrain/` directory. Create an EMPTY public GitHub repository first (no generated README or license), copy its HTTPS remote URL, then:
+## Open the final app
 
 ```bash
-git init -b main
-git add .
-git status --short
-git commit -m "Submit Skyline Terrain Watch hackathon project"
-git remote add origin YOUR_PUBLIC_REPOSITORY_HTTPS_URL
-git push -u origin main
+git clone https://github.com/KaloriesW/special-octo-enigma.git
+cd special-octo-enigma/submission
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python check_setup.py --inference
+python run.py
 ```
 
-Replace the uppercase URL with the actual repository URL; it is not a literal command-ready address. Use your own GitHub authentication. Do not paste a token into repository files. If the remote already contains work, use a branch/merge workflow instead of force-pushing.
+Open http://127.0.0.1:8765/skyline/. This is a local application, not a hosted public website. The tested environment is macOS Apple Silicon with Python 3.14.4. See [README](README.md) for optional Qwen setup. No API key is required for manual satellite scans. A new installation has no saved scans or simulated data.
 
-## Form checklist
+The repository contains the trained U-Net, 22 city air-quality models, setup checks, one-page write-up, recording script and evaluation evidence. It excludes runtime conversations, scan histories, monitoring state, environments and experimental YOLO weights. The retained checkpoint is below GitHub's 100 MiB per-file limit; clone with Git/GitHub Desktop rather than uploading it through the browser.
 
-- Track: **Climate**.
-- Code link: the public GitHub repository containing this final release.
-- Write-up: `one-page-writeup.pdf` (upload directly), or the public README if preferred.
-- Credits: `CREDITS.md`, linked from README.
-- Team: every teammate's full name, email and school, plus confirmation each contributed. Enter these in the form; no personal details were invented here.
-- Optional recommended video: an unlisted YouTube or publicly viewable Drive link, **no more than two minutes**. The prepared script is not a video.
-- Verify every shared link in a signed-out/private window.
+## Required before submitting
 
-Deadline: **Monday 16 November 2026, 12:59 PM Asia/Taipei** (Sunday 15 November, 11:59 PM Eastern Time). Aim to submit by 11:30 AM Taipei. The organizer permits resubmission before the deadline and judges the latest version.
+1. **Code access:** verify the repository opens while signed out. The unauthenticated check on 16 November returned HTTP 404. Uploading commits does not change repository visibility. An owner must make this repository public, or publish a reviewed public submission copy; then repeat the signed-out check. Do not submit a private-only link.
+2. **Track:** Climate.
+3. **Write-up:** upload [one-page-writeup.pdf](one-page-writeup.pdf), or provide the public README. Only one write-up format is required.
+4. **Credits:** include/link [CREDITS.md](CREDITS.md).
+5. **Team:** enter every contributing teammate's full name, email and school accurately in the form.
+6. **Optional video:** record the [two-minute script](two-minute-demo-script.txt), upload to unlisted YouTube or viewable-by-link Drive, and test access while signed out. A script is not a recorded video; no recording link is bundled.
+7. Submit through the [official form linked here](https://highschoolhackathon.org/briefs). A GitHub push alone does not submit the project to the hackathon.
 
-Official requirements: https://highschoolhackathon.org/briefs
-GitHub file limits: https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github
+Deadline: **Monday 16 November 2026 at 12:59 PM Asia/Taipei** (Sunday 15 November at 11:59 PM Eastern Time). Aim to submit early. The organizer permits resubmission before the deadline and judges the latest version.
+
+The team confirmed that the teammate's Skyline contribution was built during this hackathon. Review the organizer's timing and contribution rules and ensure the final form accurately describes the team's work.
+
+## Final checks
+
+Use [evidence/final-readiness.json](evidence/final-readiness.json) for the latest audit and [MODEL_CARD.md](MODEL_CARD.md) for results and limitations. Automated checks establish application behavior and reproducibility of the bundled smoke sample, not independent live landslide accuracy. Monitoring stays off until a user selects an area and enables it.
+
+Sources: [organizer requirements](https://highschoolhackathon.org/briefs); [GitHub file limits](https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github).

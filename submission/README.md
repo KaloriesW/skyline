@@ -50,7 +50,7 @@ Monitoring is **off by default**. Select a footprint, preview its boundary and p
 2. Align 11 reflectance bands, Copernicus DEM and slope to the analysis grid.
 3. Apply the trained **ResNet34 U-Net, 13 inputs, 128 × 128 native windows**, stride 96, frozen normalization and threshold **0.024**. Coarse bands are resampled; this does not create finer native detail.
 4. Exclude cloud, shadow, water and missing inputs; convert predicted pixels to georeferenced polygons.
-5. Attach vegetation comparison, road distance and forecast context **after segmentation**. Qwen reads structured evidence and cannot turn a weather forecast into a validated landslide probability.
+5. Attach vegetation comparison, road distance and forecast context **after segmentation**. Common review questions use measured answers labelled “Measured scan evidence”; Qwen handles broader follow-ups using structured context. Neither provides a validated landslide probability.
 
 Coordinates are points inside polygons derived from imagery, not surveyed locations. Road proximity does not prove blockage. Terrain is both a model input and a supporting check, so that check is not independent validation.
 
@@ -73,10 +73,12 @@ The landslide holdout is small, geographically limited and positive-enriched. Bo
 python check_setup.py --inference
 python -m pip install -r requirements-dev.txt
 python -m pytest test_*.py -q
-node --test test_location.cjs test_review_filters.cjs
+node --test test_location.cjs test_review_filters.cjs test_scan_display.cjs
+(cd skyline/ui/app && python -m pytest test_server.py test_predict.py -q)
+(cd skyline/ui/server && python -m pytest test_skyline_extras.py -q)
 ```
 
-The setup check opens both apps, all 22 city reports, verifies model SHA-256 and runs the real U-Net on a bundled satellite patch. It does not request live imagery or enable monitoring. See `evidence/clean-setup.json` and `evidence/validation.txt` for the recorded release checks. `requirements-tested-macos-arm64.txt` records the complete installed environment; it includes test dependencies.
+The setup check opens both apps, all 22 city reports, verifies model SHA-256 and runs the real U-Net on a bundled satellite patch. It does not request live imagery or enable monitoring. See `evidence/final-readiness.json` and `evidence/validation.txt` for the latest release checks. Optional MCP and scikit-learn parity checks are skipped when those development dependencies are absent; neither is required to run the integrated app. `requirements-tested-macos-arm64.txt` records the complete installed environment; it includes test dependencies.
 
 ## Contribution and credits
 

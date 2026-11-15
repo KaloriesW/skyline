@@ -29,3 +29,17 @@ def test_area_explanation_uses_measurements_without_claiming_model_causality():
     assert '0.080' in answer and '40.8°' in answer and '24.377140' in answer
     assert 'do not explain' in answer and 'No verified road distance' in answer
     assert grounded_scan_answer('How does U-Net work?',context) is None
+
+
+def test_short_summary_handles_user_typo_and_does_not_repeat_detailed_brief():
+    from scan_assistant import grounded_scan_answer
+    report={'count':148,'both_checks_count':29,'review_brief':{'review_first':[{'id':105},{'id':51},{'id':134}],
+             'summary':'Long detailed evidence report with NDVI and slopes'}}
+    for question in ['simple summerize', 'Summarize briefly', 'hows the scan', 'Summarize this scan in simple words']:
+        answer=grounded_scan_answer(question,{'scan':report})
+        assert answer is not None, question
+        assert len(answer.split())<65
+        assert '148' in answer and '29' in answer and 'Area 105' in answer
+        assert 'NDVI' not in answer
+    assert grounded_scan_answer('What should I review in this scan?',{'scan':report})==report['review_brief']['summary']
+    assert grounded_scan_answer('Summarize the weather',{'scan':report}) is None

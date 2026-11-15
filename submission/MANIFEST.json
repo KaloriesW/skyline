@@ -2,8 +2,8 @@
   "files": [
     {
       "path": ".gitignore",
-      "bytes": 385,
-      "sha256": "5b54c444438a292d3831ff822c3c365f3d2ea84ced7938432c4e5117788e88d9"
+      "bytes": 298,
+      "sha256": "d4dc8573c5a863e9450cc86e4019ff7c3acbd8ace658038b1839f69ebfee658e"
     },
     {
       "path": "CREDITS.md",
@@ -12,8 +12,8 @@
     },
     {
       "path": "GITHUB_SUBMISSION.md",
-      "bytes": 3547,
-      "sha256": "b46729636b2ee873af39ab656998833f6e80c5b295ee66d5e7817e2f065e49a8"
+      "bytes": 3431,
+      "sha256": "790fcac4fabcf10f0583d9be0d2dfb327f5e00f53b119ae8cc441cc583b50f70"
     },
     {
       "path": "MODEL_CARD.md",
@@ -22,18 +22,28 @@
     },
     {
       "path": "README.md",
-      "bytes": 6951,
-      "sha256": "0a96ca141f8b9c1eadbeebbfcdb7e74e16ef4e305783dc5bf3a4e8ed00ad5c39"
+      "bytes": 7357,
+      "sha256": "66a9f37c82827c7295b3a1bd0774341c224035cd588b3f9c7ea157a29f0a9e49"
     },
     {
       "path": "app.py",
-      "bytes": 34933,
-      "sha256": "a8a9548d07772391931c382601d610a7453d03600134a3f95e933165cb037efc"
+      "bytes": 34940,
+      "sha256": "677792ad342c4cd1995e023ea10aa35508b14c2ce26575e7d5d0e08f6f3ceb1e"
     },
     {
       "path": "check_setup.py",
       "bytes": 2577,
       "sha256": "78852f5984efdd19d187642b89af80a89ad30e8c2a152dd86bb1bff8aaf531f4"
+    },
+    {
+      "path": "docs/final-audit-qwen.jpg",
+      "bytes": 129284,
+      "sha256": "6bee93908f59b9d467e4e8b4754091378e41ece9c6db0f26d3cb401b6effbe00"
+    },
+    {
+      "path": "docs/final-short-summary.jpg",
+      "bytes": 121044,
+      "sha256": "29520b9bd83004b0e8720ad747825077c31039a5959b109f285b2ad99b8c5dbd"
     },
     {
       "path": "docs/qwen-evidence-fix.jpg",
@@ -107,8 +117,8 @@
     },
     {
       "path": "evidence/clean-setup.json",
-      "bytes": 483,
-      "sha256": "2d85e31422c5bf6c40e638249754c074d44725a425fb0fa26f55bdfab90fcffb"
+      "bytes": 616,
+      "sha256": "560247b3e6258e78ffad6f8778930f92b9011b39f5906a88327ab1d014e3a3ab"
     },
     {
       "path": "evidence/demo-filter-validation.json",
@@ -119,6 +129,11 @@
       "path": "evidence/error-examples.png",
       "bytes": 1605623,
       "sha256": "a7ba74708fa281ef6f712057554cfe4d682f717433abbf423973d8f7da241e79"
+    },
+    {
+      "path": "evidence/final-readiness.json",
+      "bytes": 2996,
+      "sha256": "500686be41bd202566408e1e5144846193efd81a6ad1f3156764946c8344eb46"
     },
     {
       "path": "evidence/glass-ui-validation.json",
@@ -162,8 +177,8 @@
     },
     {
       "path": "evidence/validation.txt",
-      "bytes": 1623,
-      "sha256": "02004e216b79c1691ca59c0b533da892f7c6ef7ae952383e6aab1c88c91f0452"
+      "bytes": 2290,
+      "sha256": "e11a1c4a1fde6ac2e22c9209547901dff2e89ba508ebf28730f9e9261c3993d0"
     },
     {
       "path": "evidence.py",
@@ -242,8 +257,8 @@
     },
     {
       "path": "scan_assistant.py",
-      "bytes": 38410,
-      "sha256": "ed541d339d10a36dd7ecef52be9779545fa559059ed568c67c9d3b4e0ad7ec28"
+      "bytes": 39523,
+      "sha256": "6b0d98f987e17b20722fe5d712f644a536ba54b612bb1177b9964a41414dcfc6"
     },
     {
       "path": "skyline/README.md",
@@ -264,6 +279,11 @@
       "path": "skyline/ui/README.md",
       "bytes": 3758,
       "sha256": "953052b3c19bdaa46db9873860c3fa3855dfbf1241f6b0336ae07188aa534697"
+    },
+    {
+      "path": "skyline/ui/app/.env.example",
+      "bytes": 2873,
+      "sha256": "93d18937f20809dd4b0b0c4bb908a4b4ffbd73a62c913a13fb6cda55221091c7"
     },
     {
       "path": "skyline/ui/app/README.md",
@@ -587,8 +607,8 @@
     },
     {
       "path": "skyline/ui/app/web/index.html",
-      "bytes": 7773,
-      "sha256": "8ced830a337622e9cfab43d3b8728aa2d7dc6a61f8c4afa804ee64c2c95f2d23"
+      "bytes": 7786,
+      "sha256": "8fb9ec46cc9b9172901b9e05c4058862517f13ceba3a0fd6be5f326b0ff56c64"
     },
     {
       "path": "skyline/ui/app/web/location.js",
@@ -677,8 +697,8 @@
     },
     {
       "path": "start.command",
-      "bytes": 468,
-      "sha256": "32cc47c987cfd6b1f5c08f90d75b4fff6437ec70b4261ce11d7575efab4d6427"
+      "bytes": 467,
+      "sha256": "e5ab9e72619d298ded7d19c26e0807c27ef2c3ddf4f67c1c11d7a25e9cccd6e9"
     },
     {
       "path": "static/app.js",
@@ -692,8 +712,8 @@
     },
     {
       "path": "static/index.html",
-      "bytes": 17653,
-      "sha256": "b4a50ec3195f1a449e06e5dd0e6fe9c6b0ee5985419956398d7033e95d5c772f"
+      "bytes": 17666,
+      "sha256": "e1bdf9462cb50b517dfd0bbdb2de231ea13bb8eefc995ee90ed1286c43f69678"
     },
     {
       "path": "static/monitor-ui.js",
@@ -757,8 +777,8 @@
     },
     {
       "path": "static/workspace.js",
-      "bytes": 4028,
-      "sha256": "05ff3a7566e69e81dfb821e70eac3ab9db991f75eea47021f61a64ba6e3bae16"
+      "bytes": 4096,
+      "sha256": "9872facb5b95602f6661c2d345e30e9ab5a8012c37c7c21403f47c83e6a7011b"
     },
     {
       "path": "test_assistant.py",
@@ -802,8 +822,8 @@
     },
     {
       "path": "test_review_brief.py",
-      "bytes": 1895,
-      "sha256": "03be61b0f49b96912c0677962457d53c57e61f95316ec0f9d405973fe34375ab"
+      "bytes": 2795,
+      "sha256": "2e430155577003474fab305d3761f0a1240c0b7cb08563bfb2f9dd373804b6e8"
     },
     {
       "path": "test_review_filters.cjs",
@@ -837,8 +857,8 @@
     },
     {
       "path": "test_workspace.py",
-      "bytes": 4722,
-      "sha256": "92728a7ebc071737ea8e2c8c7eadb1a1ca6bb5bdcbfb8c605685aaba325499f5"
+      "bytes": 5921,
+      "sha256": "258f89161d88d0d763f8423ab1d5a1b6759a59097190ed55921933db497b839d"
     },
     {
       "path": "tests/fixtures/unet-smoke.npz",
@@ -848,7 +868,7 @@
     {
       "path": "two-minute-demo-script.txt",
       "bytes": 4793,
-      "sha256": "588fa53225838e4b9bac0f5c9a2f21acef960c4e629c133ec77acfde623afeb8"
+      "sha256": "be73b68bc7dc0c9b7e41a6ef91d4ab465d66a232eee46264c24c6f05f2169945"
     },
     {
       "path": "unet_inference.py",
@@ -862,8 +882,8 @@
     },
     {
       "path": "workspace_assistant.py",
-      "bytes": 7465,
-      "sha256": "be214a608922db2f75dd028375e551797b6ba95f620ab8e849503d31419244d3"
+      "bytes": 9625,
+      "sha256": "f4fc560e9974c04641bb16fc401064ba4b00f440d47052409ef5ddd365295745"
     }
   ]
 }

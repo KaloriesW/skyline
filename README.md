@@ -25,6 +25,8 @@ Open http://127.0.0.1:8765/skyline/ for the home workspace. Tested on macOS Appl
 - [Demo script and recording instructions](submission/two-minute-demo-script.txt)
 - [Model results and limitations](submission/MODEL_CARD.md)
 - [Data, model and AI-tool credits](submission/CREDITS.md)
+- [Final readiness audit](submission/evidence/final-readiness.json)
+- [Submission checklist and judge access](submission/GITHUB_SUBMISSION.md)
 - [Validation evidence](submission/evidence/)
 
 The retained U-Net achieved 54.27% pixel IoU and 70.36% Dice on a small, repeatedly consulted development holdout. Live Taiwan accuracy remains unmeasured. Detected regions are **suspected landslides**, not confirmed hazards or validated predictions of slope failure.

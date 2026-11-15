@@ -52,7 +52,7 @@ RECORDING CHECKLIST
    Keep the genuine answer visible in a separate tab. Do not invent an answer or
    imply a prerecorded response was generated instantly. If Qwen is unavailable,
    show the structured scan report and describe the optional assistant verbally.
-4. Rehearse once with a timer. The narration is 243 words: shorten pauses or
+4. Rehearse once with a timer. The narration is 242 words: shorten pauses or
    speak around 135–145 words/minute; cut the optional Qwen view if you run long.
 5. On Mac, press Shift-Command-5. Select the browser window or selected portion.
    Under Options, choose your microphone if narrating and enable mouse clicks.
