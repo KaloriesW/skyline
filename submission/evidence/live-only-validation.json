@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "python": "3.14.4",
+  "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+  "checks": [
+    "/",
+    "/skyline/",
+    "/api/health",
+    "/api/models",
+    "/api/model/cities",
+    "demo endpoint removed",
+    "model SHA-256",
+    {
+      "actual_model_inference": "passed",
+      "seconds": 1.541,
+      "candidate_pixels": 293
+    }
+  ],
+  "note": "Offline setup and inference checks; not a new accuracy evaluation.",
+  "backend_tests": 80,
+  "frontend_tests": 9,
+  "subtests": 3,
+  "real_history_preserved": true,
+  "demo_snapshots_shipped": 0,
+  "sky_preview_removed": true,
+  "browser_errors": [],
+  "monitoring_enabled": false,
+  "github_updated": false
+}

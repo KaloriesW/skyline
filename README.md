@@ -2,7 +2,7 @@
 
 **Taiwan landslide review, weather and air quality — Veritas AI Hackathon 2026, Climate track.**
 
-The final tested hackathon app is in **[submission/](submission/)**. It includes the trained multispectral U-Net checkpoint, Sentinel-2 scan pipeline, local Qwen assistant, Skyline interface, saved demos, evaluation evidence and submission documents.
+The final tested hackathon app is in **[submission/](submission/)**. It includes the trained multispectral U-Net checkpoint, Sentinel-2 scan pipeline, local Qwen assistant, new glass Skyline interface, automatic monitoring controls, evaluation evidence and submission documents.
 
 ![Terrain Watch](submission/docs/workspace.jpg)
 
@@ -29,6 +29,6 @@ Open http://127.0.0.1:8765/skyline/ for the home workspace. Tested on macOS Appl
 
 The retained U-Net achieved 54.27% pixel IoU and 70.36% Dice on a small, repeatedly consulted development holdout. Live Taiwan accuracy remains unmeasured. Detected regions are **suspected landslides**, not confirmed hazards or validated predictions of slope failure.
 
-The original teammate source remains in `ui/`. The integrated release uses its tested bundled Skyline snapshot in `submission/skyline/`. No original UI files were replaced by this submission branch.
+The original teammate source remains in `ui/`. The integrated release uses its tested bundled Skyline snapshot in `submission/skyline/`. The integrated frontend includes the teammate’s ui-glass update while keeping landslide review as the focus. Demo scans and simulated-weather controls are excluded.
 
 Before submitting, ensure judges can access the repository; this branch upload does not change its visibility.

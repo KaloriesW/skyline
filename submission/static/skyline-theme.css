@@ -44,10 +44,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .results-header .text-button:hover { transform:scale(1.08); background:rgba(255,255,255,.24); }
 .workspace-nav { border-color:var(--line); }
 .workspace-nav span,.result-toggle { color:var(--ink); }
-.workspace-nav a,.demo-notice a { color:var(--accent); }
+.workspace-nav a { color:var(--accent); }
 .meta,.notice,.compare-caution { color:var(--muted); }
 .hint a { color:#b9d9ff; }
-.history-item,.assistant-location,.weather-card,.chat-turn,.assistant-plan-card,.demo-notice { background:rgba(18,28,48,.3); border:1px solid var(--line); border-radius:14px; color:var(--ink); }
+.history-item,.assistant-location,.weather-card,.chat-turn,.assistant-plan-card { background:rgba(18,28,48,.3); border:1px solid var(--line); border-radius:14px; color:var(--ink); }
 .history-item,.assistant-location { transition:transform .25s var(--spring),background .2s,border-color .2s; }
 .history-item:hover,.assistant-location:hover { background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.28); transform:translateY(-2px); }
 .assistant-drawer { width:380px; }
@@ -63,8 +63,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .chat-turn strong { color:var(--accent); font-size:11px; }
 .chat-turn p { font-size:13px; }
 .weather-totals span { color:var(--muted); }
-.weather-totals b,#skyline-air strong,.demo-notice strong { color:var(--ink); }
-.demo-notice p,.compare-dates,#compare-evidence { color:var(--muted); }
+.weather-totals b,#skyline-air strong { color:var(--ink); }
+.compare-dates,#compare-evidence { color:var(--muted); }
 #skyline-typhoon,td { border-color:var(--line); }
 .score { color:#a3d8b1; }
 input[type=range],.filter-check input,#compare-position { accent-color:var(--accent); }

@@ -443,14 +443,6 @@ def scan_status(job_id: str):
     if f and f.exists():return {'id':job_id,'state':'completed','progress':100,'result':json.loads(f.read_text())}
     raise HTTPException(404,'Scan not found.')
 
-@app.get('/api/demos')
-def demos():
-    path=HERE/'demo_scans.json'
-    entries=json.loads(path.read_text()) if path.exists() else []
-    return {'demos':[{**{k:v for k,v in row.items() if k!='required_assets'},
-                       'available':all((RESULTS/row['scan_id']/name).is_file() for name in row['required_assets'])}
-                      for row in entries]}
-
 @app.get('/api/history')
 def history():
     results=[]

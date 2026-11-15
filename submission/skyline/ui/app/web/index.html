@@ -13,9 +13,10 @@
 <link rel="apple-touch-icon" href="icon-maskable.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=terrain-fielddesk-v6">
-<link rel="stylesheet" href="/static/workspace.css?v=1"><link rel="stylesheet" href="field-desk.css?v=1"></head>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- ?v= forces a fresh copy: Cloudflare lets browsers cache .js/.css for 4 hours. Bump it on each deploy. -->
+<link rel="stylesheet" href="styles.css?v=terrain-glass-v9">
+<link rel="stylesheet" href="/static/workspace.css?v=2"><link rel="stylesheet" href="field-desk.css?v=2"></head>
 <body data-page="home" data-mood="neutral" data-day="1">
 <!-- Sky behind every screen: mood gradient, haze and the effects canvas (sky.js) -->
 <div id="sky" aria-hidden="true">
@@ -40,7 +41,7 @@
     <a href="#ask" data-workspace-qwen>Ask Qwen</a><a href="/">Landslide map ↗</a>
     <a href="#settings" data-nav="settings">Settings</a>
   </nav>
-  <div class="compact" id="compact" aria-hidden="true"><span id="compactPlace"></span><span class="sep">|</span><span id="compactTemp"></span><span id="compactCond"></span></div>
+  <div class="compact" id="compact" aria-hidden="true"><b id="compactPlace"></b><span class="c2"><span id="compactTemp"></span><i class="sep">|</i><span id="compactCond"></span></span></div>
   <div class="top-actions">
     <button type="button" class="search-btn" data-action="open-search" aria-keyshortcuts="Meta+K Control+K /" aria-label="Search for a location">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -93,11 +94,17 @@
   <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Details" tabindex="-1"></div>
 </div>
 
+<div class="pop-backdrop" id="popBackdrop" hidden></div>
+<div class="pop" id="pop" role="dialog" aria-label="Details" hidden><i class="pop-arrow" aria-hidden="true"></i><div class="pop-scroll" id="popBody"></div></div>
+<aside class="map-panel" id="mapPanel" aria-label="Map" hidden></aside>
+
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="icons.js"></script>
-<script src="sky.js"></script>
+<script src="icons.js?v=terrain-glass-v9"></script>
+<script src="sky.js?v=terrain-glass-v9"></script>
+<script src="horizon.js?v=terrain-glass-v9"></script>
 <script src="location.js?v=1"></script>
-<script src="/static/workspace.js?v=1"></script><script src="/static/monitor-ui.js?v=1"></script><script src="app.js?v=terrain-fielddesk-v6"></script>
+<script src="/static/workspace.js?v=1"></script><script src="/static/monitor-ui.js?v=1"></script>
+<script src="app.js?v=terrain-glass-v9"></script>
 </body>
 </html>

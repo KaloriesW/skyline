@@ -1,10 +1,8 @@
 const $=id=>document.getElementById(id);
-const requestedDemo=new URLSearchParams(location.search).get('demo');
-const demoSlug=['taroko','taichung'].includes(requestedDemo)?requestedDemo:null;
 const map=L.map('map',{zoomControl:false}).setView([23.7,121],7);
 map.createPane('satellitePane').style.zIndex=300;
 const base=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});
-if(!demoSlug)base.addTo(map);
+base.addTo(map);
 map.attributionControl.addAttribution('Copernicus Sentinel data / DEM · Earth Search');
 L.control.zoom({position:'topright'}).addTo(map);
 const layers=L.control.layers({'OpenStreetMap':base},{},{collapsed:true}).addTo(map);
@@ -93,16 +91,15 @@ function showResult(r){
   excluded=L.imageOverlay(`/results/${r.id}/excluded.png`,r.overlay_bounds,{opacity:.25,pane:'satellitePane'});layers.addOverlay(imagery,'Sentinel-2 imagery');showEvidence(r);layers.addOverlay(excluded,'Excluded pixels');
   createDetectionLayers(true);
   showReview(r);showWeatherResult(r);renderCandidates();map.fitBounds(r.overlay_bounds,{paddingTopLeft:[300,40],paddingBottomRight:[50,60]});
-  updateFilterSummary();applyDemoView(r);$('usable').textContent=r.usable_percent+'%';
+  updateFilterSummary();$('usable').textContent=r.usable_percent+'%';
   $('coverage').textContent=r.imagery_coverage_percent==null?'Saved single-tile scan':`${r.source_tiles?.length||1} satellite tile${(r.source_tiles?.length||1)===1?'':'s'} · ${r.imagery_coverage_percent}% imagery coverage${r.coverage_warning?' · some pixels unassessed':''}`;
   $('acquired').textContent=r.acquired.slice(0,10);$('map-title').textContent='Taiwan · satellite observation';$('map-badge-text').textContent=`${r.acquired.slice(0,10)} · ${r.model} · 10 m imagery`;
   $('result-note').textContent=`${r.model} · threshold ${r.confidence_threshold.toFixed(3)} · ${r.tiles_analyzed} tiles analyzed. ${r.count?'Review each candidate against the imagery.':'No candidates passed the threshold; this is not evidence that no landslides exist.'} Confidence is a model score, not a calibrated probability.`;
   $('mask-download').hidden=r.model_id!=='unet13';$('mask-download').href=`/results/${r.id}/segmentation.tif`;$('downloads').hidden=false;$('csv').href=`/results/${r.id}/coordinates.csv`;$('geojson').href=`/results/${r.id}/detections.geojson`;
 }
 async function loadHistory(id){error('');try{const j=await api('/api/scans/'+id);showResult(j.result);}catch(e){error(e.message);}}
-async function refreshHistory(loadLatest=false){try{const rows=await api('/api/history');$('history').innerHTML=rows.length?rows.map(r=>`<button class="history-item" data-id="${r.id}">${r.acquired.slice(0,10)} · ${esc(r.model)} · ${r.count} candidates</button>`).join(''):'No completed scans yet.';for(const b of document.querySelectorAll('.history-item'))b.onclick=()=>loadHistory(b.dataset.id);if(loadLatest&&!demoSlug&&!new URLSearchParams(location.search).has('selection')){const scan=new URLSearchParams(location.search).get('scan');if(scan&&/^[a-f0-9]{32}$/.test(scan))loadHistory(scan);else if(rows.length)loadHistory(rows[0].id);}}catch(e){console.warn(e);}}
+async function refreshHistory(loadLatest=false){try{const rows=await api('/api/history');$('history').innerHTML=rows.length?rows.map(r=>`<button class="history-item" data-id="${r.id}">${r.acquired.slice(0,10)} · ${esc(r.model)} · ${r.count} candidates</button>`).join(''):'No completed scans yet.';for(const b of document.querySelectorAll('.history-item'))b.onclick=()=>loadHistory(b.dataset.id);if(loadLatest&&!new URLSearchParams(location.search).has('selection')){const scan=new URLSearchParams(location.search).get('scan');if(scan&&/^[a-f0-9]{32}$/.test(scan))loadHistory(scan);else if(rows.length)loadHistory(rows[0].id);}}catch(e){console.warn(e);}}
 async function refreshWatch(){
-  if(demoSlug||currentResult?.demo_snapshot){$('watch').disabled=true;$('check-now').hidden=true;return;}
   try{
     const w=await api('/api/watch');watchEnabled=w.enabled;
     $('watch').innerHTML=w.enabled?'Stop monitoring <span>◼</span>':'Start monitoring <span>◉</span>';
@@ -116,12 +113,12 @@ async function refreshWatch(){
     // Initial page load already restores the newest saved result. An older
     // monitor result must not replace a newer manual scan during that load.
     if(!watchInitialized){watchInitialized=true;lastAutoResult=w.last_result||null;return;}
-    if(w.last_result&&w.last_result!==lastAutoResult){lastAutoResult=w.last_result;refreshHistory();if(!currentJob&&!currentResult?.demo_snapshot)loadHistory(w.last_result);}
+    if(w.last_result&&w.last_result!==lastAutoResult){lastAutoResult=w.last_result;refreshHistory();if(!currentJob)loadHistory(w.last_result);}
   }catch(e){$('watch-status').textContent='Cannot reach the local server. Automatic checks require it to be running.';}
 }
 $('check-now').onclick=async()=>{error('');$('check-now').disabled=true;try{await api('/api/watch/check',{});await refreshWatch();}catch(e){error(e.message);}finally{$('check-now').disabled=false;}};
 $('watch').onclick=async()=>{error('');$('watch').disabled=true;try{await api('/api/watch',{...getArea(),enabled:!watchEnabled,model:$('model').value,confidence:Number($('confidence').value)});await refreshWatch();}catch(e){error(e.message);}finally{$('watch').disabled=false;}};
-drawArea(true);refreshModels();refreshHistory(true);refreshWatch();if(demoSlug)loadDemo(demoSlug);setInterval(refreshModels,60000);setInterval(refreshWatch,15000);
+drawArea(true);refreshModels();refreshHistory(true);refreshWatch();setInterval(refreshModels,60000);setInterval(refreshWatch,15000);
 
 function filterSettings(){return {vegetation:$('filter-vegetation').checked,road:$('filter-road').checked,minArea:Number($('filter-size').value)};}
 function visibleCandidates(){return ReviewFilters.select(currentResult?.geojson.features||[],filterSettings());}
@@ -149,21 +146,6 @@ function applyReviewFilters(){if(!currentResult)return;map.closePopup();createDe
 function resetReviewFilters(){for(const id of ['filter-vegetation','filter-road'])$(id).checked=false;$('filter-size').value='0';applyReviewFilters();}
 for(const id of ['filter-vegetation','filter-road','filter-size'])$(id).addEventListener('change',applyReviewFilters);
 $('reset-filters').onclick=resetReviewFilters;
-$('open-demo').onclick=()=>location.assign('/?demo='+encodeURIComponent($('demo-choice').value));
-async function loadDemo(slug){
-  try{const d=await api('/api/demos'),chosen=d.demos.find(r=>r.slug===slug);
-    if(!chosen?.available)throw Error('This saved demo is incomplete. Restore the bundled demo files or use the live workspace.');
-    $('demo-choice').value=slug;await loadHistory(chosen.scan_id);
-  }catch(e){error(e.message);}
-}
-function applyDemoView(r){
-  const demo=!!r.demo_snapshot;$('demo-notice').hidden=!demo;
-  if(demo){map.removeLayer(base);$('demo-description').textContent=`${r.demo_name} · imagery ${r.acquired.slice(0,10)}. Saved observations and dated forecast; not a live scan. Basemap hidden to avoid online tile requests.`;}
-  for(const id of ['scan','watch','recent','search','weather-toggle','check-roads','refresh-result-weather'])$(id).disabled=demo;
-  if(!demo)$('scan').disabled=!!currentJob||$('scene').disabled;
-  if(demo)$('watch-status').textContent='Saved demo · live scan and refresh controls are disabled. Qwen can discuss this saved scan.';
-}
-
 if(new URLSearchParams(location.search).has('selection')){
   const params=new URLSearchParams(location.search),lat=Number(params.get('lat')),lon=Number(params.get('lon')),width=Number(params.get('width_km'));
   if(lat>=21.8&&lat<=26.5&&lon>=118&&lon<=122.1&&width>=2&&width<=60){

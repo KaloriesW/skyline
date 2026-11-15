@@ -16,3 +16,12 @@
 #workspace-qwen textarea{box-sizing:border-box;width:100%;background:#081a19;color:#fff;border:1px solid #48635b;border-radius:6px;padding:12px;font:inherit;resize:vertical}
 #workspace-qwen form button{margin-top:10px;background:#c7e6d7;color:#123327;font-weight:600}
 #workspace-qwen [data-wq-status],#workspace-qwen [data-wq-context]{font-size:11px;color:#a3b7b0}
+
+/* Shared Skyline glass and gold treatment for the global Qwen panel. */
+#workspace-qwen { background:rgba(16,26,48,.9); border-color:rgba(255,255,255,.14); border-radius:18px; backdrop-filter:blur(22px) saturate(150%); -webkit-backdrop-filter:blur(22px) saturate(150%); }
+#workspace-qwen h2 { font-family:'Bricolage Grotesque',system-ui,sans-serif; }
+#workspace-qwen button { border-radius:999px; background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.22); color:#fff; }
+#workspace-qwen a,.wq-kicker { color:#FFC24B; }
+#workspace-qwen textarea { border-radius:12px; background:rgba(6,12,26,.28); border-color:rgba(255,255,255,.22); }
+#workspace-qwen form button { background:#FFC24B; color:#2A1A00; }
+#workspace-qwen article { border-color:rgba(255,255,255,.14); }

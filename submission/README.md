@@ -10,7 +10,7 @@ Terrain Watch uses a trained multispectral U-Net to outline suspected landslides
 
 ## Run it
 
-The final release includes the retained U-Net checkpoint and two saved demonstration scans. No account or paid API key is needed for manual scans. Internet access is needed to install dependencies and retrieve live satellite, terrain, weather and road data. Qwen is optional.
+The final release includes the retained U-Net checkpoint. No account or paid API key is needed for manual scans. Internet access is needed to install dependencies and retrieve live satellite, terrain, weather and road data. Qwen is optional.
 
 Tested with **Python 3.14.4 on macOS Apple Silicon** in a newly created virtual environment. Other operating systems are not yet verified; use the supplied tested environment rather than assuming all binary wheels exist for an older Python.
 
@@ -24,12 +24,9 @@ python run.py
 
 Open **http://127.0.0.1:8765/skyline/** for the home workspace or **http://127.0.0.1:8765/** for the map. On Windows, environment activation is `.venv\Scripts\activate`; Windows has not been tested. `python run.py --port 8766` selects another port. Keep the server local; this prototype is not configured for an unauthenticated public deployment.
 
-### Reliable saved demo
+### Real scans only
 
-- Taroko / Hualien: http://127.0.0.1:8765/?demo=taroko
-- Taichung mountains: http://127.0.0.1:8765/?demo=taichung
-
-Saved demos show actual completed scans, clearly dated **5 November 2026**. They do not rerun inference. The saved-demo mode hides the online basemap and disables live scan/refresh controls. Before/after, segmentation, road filters, coordinate exports and stored weather can be reviewed without new satellite downloads. Qwen and live dashboard feeds are separate optional services.
+The app does not include demo scans, an offline demo mode or a simulated-weather selector. Choose an area, find satellite scenes and run a scan. Completed scans appear in local history with their acquisition dates; reviewing history does not rerun inference. A fresh installation starts with no scan results. Missing live data is shown as unavailable.
 
 ### Optional local Qwen
 
@@ -41,7 +38,7 @@ export TERRAIN_QWEN_MODEL='qwen3:8b'
 python run.py
 ```
 
-Keep Ollama running. The configurable endpoint defaults to `http://127.0.0.1:11434`; override with `TERRAIN_OLLAMA_URL` if needed. The public alternative was verified as available, but response quality and performance are not claimed identical to the local demo model. Missing Qwen is reported clearly; manual scans, saved demos and exports still work.
+Keep Ollama running. The configurable endpoint defaults to `http://127.0.0.1:11434`; override with `TERRAIN_OLLAMA_URL` if needed. The public alternative was verified as available, but response quality and performance are not claimed identical to the local demo model. Missing Qwen is reported clearly; manual scans and exports still work.
 
 ### Automatic monitoring
 
@@ -79,7 +76,7 @@ python -m pytest test_*.py -q
 node --test test_location.cjs test_review_filters.cjs
 ```
 
-The setup check opens both apps, all 22 city reports and both demo assets, verifies model SHA-256 and runs the real U-Net on a bundled satellite patch. It does not request live imagery or enable monitoring. See `evidence/clean-setup.json` and `evidence/validation.txt` for the recorded release checks. `requirements-tested-macos-arm64.txt` records the complete installed environment; it includes test dependencies.
+The setup check opens both apps, all 22 city reports, verifies model SHA-256 and runs the real U-Net on a bundled satellite patch. It does not request live imagery or enable monitoring. See `evidence/clean-setup.json` and `evidence/validation.txt` for the recorded release checks. `requirements-tested-macos-arm64.txt` records the complete installed environment; it includes test dependencies.
 
 ## Contribution and credits
 

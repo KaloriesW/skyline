@@ -1,0 +1,22 @@
+{
+  "change": "Merged teammate ui-glass frontend with landslide-first working app",
+  "backend_tests": 80,
+  "backend_subtests": 3,
+  "javascript_tests": 9,
+  "browser_checks": [
+    "landslide-first home with real saved scan",
+    "local Qwen dialog and follow-up controls",
+    "monitoring controls remain off",
+    "live wind detail chart and weather map drawer",
+    "settings without Sky preview demo",
+    "mobile 390px terrain layout",
+    "home navigation returns to top",
+    "landslide map and back-to-home navigation"
+  ],
+  "browser_console_errors": [],
+  "new_assets": [
+    "horizon.js"
+  ],
+  "demo_runtime_reintroduced": false,
+  "publication": "local app and package only; not pushed to GitHub"
+}

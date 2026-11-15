@@ -2,10 +2,10 @@ SKYLINE / TERRAIN WATCH — TWO-MINUTE SUBMISSION DEMO
 
 Target: 1:50–1:58, including short click pauses. Do not exceed 2:00.
 Read only NARRATION. ACTION describes the screen, not words to read aloud.
-This is a saved-scan demonstration, not a claim that inference happens instantly.
+Use a real completed scan from History. Its acquisition date and measured results must remain visible. Do not imply reviewing history performs new inference.
 
 00:00–00:15 | THE PROBLEM
-ACTION: Show the Skyline home workspace, then open the saved Taroko demo.
+ACTION: Show the Skyline home workspace, then open a real completed scan from History.
 NARRATION:
 After heavy rain in Taiwan, where should a reviewer look first? Skyline Terrain Watch turns free satellite imagery into a map of suspected landslides, with the evidence needed to inspect them.
 
@@ -17,16 +17,16 @@ Our trained U-Net uses eleven Sentinel-2 bands, elevation and slope. It segments
 00:32–00:50 | BEFORE AND AFTER
 ACTION: Open Before / after. Move the comparison slider, then close comparison.
 NARRATION:
-This saved Taroko scan covers six by six kilometres using November fifth imagery. It found seventy-six candidates. The before-and-after view helps a reviewer compare vegetation and exposed ground. Clouds and missing data remain unassessed.
+This is a real completed scan from our local history. Its acquisition date, footprint and candidate count are visible here. The before-and-after view helps a reviewer compare vegetation and exposed ground. Clouds and missing data remain unassessed.
 
 00:50–01:09 | PRIORITIZE AND LOCATE
 ACTION: In Review filters, select roads within 200 m; then minimum footprint 1 ha.
-Show the resulting five candidates, open one, and point to its coordinates/export.
+Show the resulting candidates, open one, and point to its coordinates/export.
 NARRATION:
-Twenty-two candidates are within two hundred metres of a mapped road. Requiring at least one hectare leaves five to review. Each has coordinates and exportable geometry. Nearby does not mean the road is blocked.
+We can filter candidates by proximity to roads and by footprint size to focus the review. Each has coordinates and exportable geometry. Nearby does not mean the road is blocked.
 
 01:09–01:26 | QWEN AND MONITORING
-ACTION: Show a preloaded, real Qwen response about the saved scan. Return home and
+ACTION: Show a preloaded, real Qwen response about the completed scan. Return home and
 show the monitoring controls, left OFF. Do not start a new download during filming.
 NARRATION:
 Qwen explains scans and answers follow-up questions using weather, air-quality and model results. A user can also preview an area and enable hourly checks for newly published satellite images. New captures are days apart, and the server must stay running.
@@ -45,9 +45,9 @@ RECORDING CHECKLIST
 
 1. Run the app and open these tabs before recording:
    Home: http://127.0.0.1:8765/skyline/
-   Saved scan: http://127.0.0.1:8765/?demo=taroko
+   Map and scan history: http://127.0.0.1:8765/
    Results: open README.md or one-page-writeup.pdf locally.
-2. Reset all scan filters. The starting count is 76. Close extra panels.
+2. Reset all scan filters. Read the actual count shown for your selected scan. Close extra panels.
 3. Ask Qwen beforehand: “Which model made this scan, and are these confirmed landslides?”
    Keep the genuine answer visible in a separate tab. Do not invent an answer or
    imply a prerecorded response was generated instantly. If Qwen is unavailable,

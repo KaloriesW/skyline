@@ -12,7 +12,7 @@ def check(inference=False):
     import rasterio
     checks=[]
     client=TestClient(app.app)  # No lifespan: the monitoring thread stays stopped.
-    for route in ['/','/skyline/','/api/health','/api/models','/api/model/cities','/api/demos']:
+    for route in ['/','/skyline/','/api/health','/api/models','/api/model/cities']:
         response=client.get(route);assert response.status_code==200,(route,response.text[:200])
         checks.append(route)
     cities=client.get('/api/model/cities').json()['cities']
@@ -21,15 +21,8 @@ def check(inference=False):
         report=client.get('/api/model',params={'city':city['id']})
         assert report.status_code==200
     assert not client.get('/api/watch').json().get('enabled'), 'Pause monitoring before a release check.'
-    for demo in client.get('/api/demos').json()['demos']:
-        assert demo['available'],demo['slug']
-        result=client.get('/api/scans/'+demo['scan_id']).json()['result']
-        assert result['count']==len(result['geojson']['features'])
-        for f in result['geojson']['features']:
-            assert shape(f['geometry']).is_valid
-        for name in next(d['required_assets'] for d in json.loads((ROOT/'demo_scans.json').read_text()) if d['scan_id']==demo['scan_id']):
-            assert client.get('/results/'+demo['scan_id']+'/'+name).status_code==200,name
-        checks.append('saved demo '+demo['slug'])
+    assert client.get('/api/demos').status_code==404
+    checks.append('demo endpoint removed')
     for file in ['static/workspace.js','static/monitor-ui.js','skyline/ui/app/web/field-desk.css']:
         assert (ROOT/file).is_file(),file
     meta=json.loads((ROOT/'models/unet13.json').read_text())

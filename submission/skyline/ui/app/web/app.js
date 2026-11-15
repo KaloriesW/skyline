@@ -4,7 +4,6 @@
 /* ============================================================
    Data
    ============================================================ */
-var ISL = 'M200,30 L235,45 L245,75 L238,120 L232,170 L228,230 L215,290 L200,340 L180,400 L160,460 L148,470 L140,440 L118,395 L100,350 L90,300 L95,250 L110,200 L130,150 L155,100 L175,60 Z';
 var PALS = { 'default': ['#4ADE80', '#FACC15', '#FB923C', '#EF4444'], cb: ['#2C7BB6', '#ABD9E9', '#FDAE61', '#D7191C'] };
 var TIMES = ['−72h', '−48h', '−24h', '−12h', 'Now', '+6h', '+12h', '+24h', '+48h', '+72h', '+5d', '+7d'];
 var NOW = 4;
@@ -536,35 +535,15 @@ var COAST = [
   ['Hualien', 23.98, 121.63], ['Su’ao', 24.60, 121.87], ['Toucheng', 24.86, 121.84], ['Fulong', 25.02, 121.95]
 ];
 
-var SKYLINES = (function () {
-  var mk = function (hs, x0, w) { return hs.map(function (h, i) { return { x: x0 + i * (w + 6), y: 220 - h, w: w, h: h }; }); };
-  return {
-    Taipei: { lat: 25.0330, lon: 121.5654, label: 'Taipei skyline: Taipei 101 between city blocks, with Elephant Mountain and Yangmingshan behind',
-      mtnFar: 'M0,220 L0,120 Q140,60 300,100 Q420,40 560,90 Q640,70 700,110 L1200,140 L1200,220 Z', mtnNear: 'M820,220 L820,170 Q900,120 980,150 Q1060,110 1200,160 L1200,220 Z',
-      blds: mk([60, 90, 70, 110, 80, 50, 95, 120, 70], 420, 30).concat(mk([70, 100, 60, 85, 55], 860, 34)),
-      landmark: 'M752,220 V160 H744 L752,142 H746 L754,124 H748 L756,106 H750 L758,88 H752 L760,70 H756 V44 H760 V14 H764 V44 H768 V70 H764 L772,88 H766 L774,106 H768 L776,124 H770 L778,142 H772 L780,160 H772 V220 Z' },
-    Taichung: { lat: 24.1477, lon: 120.6736, label: 'Taichung skyline: the National Taichung Theater, a box cut by curved openings, in front of the Dakeng hills',
-      mtnFar: 'M0,220 L0,140 L160,80 L260,120 L380,60 L520,110 L660,70 L800,120 L960,80 L1200,120 L1200,220 Z', mtnNear: 'M0,220 L0,180 Q200,140 400,170 Q600,150 800,175 Q1000,150 1200,180 L1200,220 Z',
-      blds: mk([50, 80, 65, 95, 70, 55], 270, 34).concat(mk([60, 85, 75, 50], 840, 34)),
-      landmark: 'M520,220 V108 H780 V220 Z M536,108 a7,7 0 0 1 14,0 Z M578,108 a5,5 0 0 1 10,0 Z M630,108 a9,9 0 0 1 18,0 Z M690,108 a6,6 0 0 1 12,0 Z M742,108 a8,8 0 0 1 16,0 Z',
-      glass: 'M505,111 L535,111 C550,117.3 550,139.7 535,146 L505,146 C490,139.7 490,117.3 505,111 Z M569,111 L599,111 C614,117.3 614,139.7 599,146 L569,146 C554,139.7 554,117.3 569,111 Z M633,111 L663,111 C678,117.3 678,139.7 663,146 L633,146 C618,139.7 618,117.3 633,111 Z M697,111 L727,111 C742,117.3 742,139.7 727,146 L697,146 C682,139.7 682,117.3 697,111 Z M761,111 L791,111 C806,117.3 806,139.7 791,146 L761,146 C746,139.7 746,117.3 761,111 Z M537,147 L567,147 C582,153.5 582,176.5 567,183 L537,183 C522,176.5 522,153.5 537,147 Z M601,147 L631,147 C646,153.5 646,176.5 631,183 L601,183 C586,176.5 586,153.5 601,147 Z M665,147 L695,147 C710,153.5 710,176.5 695,183 L665,183 C650,176.5 650,153.5 665,147 Z M729,147 L759,147 C774,153.5 774,176.5 759,183 L729,183 C714,176.5 714,153.5 729,147 Z M505,184 L535,184 C550,190.5 550,213.5 535,220 L505,220 C490,213.5 490,190.5 505,184 Z M569,184 L599,184 C614,190.5 614,213.5 599,220 L569,220 C554,213.5 554,190.5 569,184 Z M633,184 L663,184 C678,190.5 678,213.5 663,220 L633,220 C618,213.5 618,190.5 633,184 Z M697,184 L727,184 C742,190.5 742,213.5 727,220 L697,220 C682,213.5 682,190.5 697,184 Z M761,184 L791,184 C806,190.5 806,213.5 791,220 L761,220 C746,213.5 746,190.5 761,184 Z', glassClip: [520, 108, 260, 112] },
-    Tainan: { lat: 22.9999, lon: 120.2270, label: 'Tainan skyline: a temple roof with upturned eaves among low old-town houses',
-      mtnFar: 'M0,220 L0,170 Q300,140 600,165 Q900,145 1200,170 L1200,220 Z', mtnNear: 'M0,220 L1200,220 L1200,219 L0,219 Z',
-      blds: mk([40, 55, 45, 60, 50, 42], 300, 40).concat(mk([45, 58, 40, 52, 48], 820, 40)),
-      landmark: 'M590,220 V170 H556 Q584,164 600,138 H720 Q736,164 764,170 H730 V220 Z M612,138 Q640,126 660,108 Q680,126 708,138 Z' },
-    Kaohsiung: { lat: 22.6273, lon: 120.3014, label: 'Kaohsiung skyline: the 85 Sky Tower with Shoushan behind',
-      mtnFar: 'M0,220 L0,130 Q120,70 260,110 Q320,130 380,160 L1200,175 L1200,220 Z', mtnNear: 'M0,220 L0,205 Q300,198 600,206 Q900,198 1200,206 L1200,220 Z',
-      blds: mk([60, 95, 70, 110, 80], 420, 34).concat(mk([90, 65, 100, 75, 55], 820, 34)),
-      landmark: 'M640,220 V100 H660 V70 H680 V30 H686 V4 H690 V30 H696 V70 H716 V100 H736 V220 H706 V150 H670 V220 Z' },
-    Hualien: { lat: 23.9769, lon: 121.6044, label: 'Hualien: the steep Central Range dropping to Pacific waves',
-      mtnFar: 'M0,220 L0,110 L110,30 L200,100 L320,10 L430,90 L560,20 L690,100 L820,40 L960,110 L1080,50 L1200,100 L1200,220 Z', mtnNear: 'M0,220 L0,150 L160,80 L300,150 L460,90 L620,160 L800,110 L1000,170 L1200,140 L1200,220 Z',
-      blds: mk([30, 40, 34, 45, 30, 38, 42], 380, 36),
-      landmark: 'M0,220 V206 Q30,196 60,206 Q90,196 120,206 Q150,196 180,206 Q210,196 240,206 L240,220 Z M900,220 V206 Q930,196 960,206 Q990,196 1020,206 Q1050,196 1080,206 Q1110,196 1140,206 Q1170,196 1200,206 V220 Z' },
-    World: { label: 'A generic city skyline. City art is drawn for Taiwan locations.',
-      mtnFar: 'M0,220 L0,170 Q300,130 600,160 Q900,130 1200,165 L1200,220 Z', mtnNear: 'M0,220 L1200,220 L1200,219 L0,219 Z',
-      blds: mk([50, 80, 60, 100, 70, 55, 90], 380, 40).concat(mk([60, 75, 50], 820, 40)), landmark: '' }
-  };
-})();
+// Where each skyline is centred, and its alt text. The art itself is drawn in horizon.js.
+var SKYLINES = {
+  Taipei: { lat: 25.0330, lon: 121.5654, label: 'Taipei skyline with Taipei 101' },
+  Taichung: { lat: 24.1477, lon: 120.6736, label: 'Taichung skyline with the National Taichung Theater' },
+  Tainan: { lat: 22.9999, lon: 120.2270, label: 'Tainan skyline with Chihkan Tower' },
+  Kaohsiung: { lat: 22.6273, lon: 120.3014, label: 'Kaohsiung skyline with the 85 Sky Tower' },
+  Hualien: { lat: 23.9769, lon: 121.6044, label: 'Hualien: the Central Range dropping to the Pacific' },
+  World: { label: 'A generic city skyline. City art is drawn for Taiwan locations.' }
+};
 
 var MAP_PLACES = [
   { name: 'Taipei', x: 205, y: 55 }, { name: 'Taichung', x: 125, y: 190 }, { name: 'Nantou', x: 165, y: 230 },
@@ -599,8 +578,8 @@ var DATASETS = [
 var KEY = 'skyline-v1', OLD_KEY = 'skyline-mockup-v1';
 var DEFAULTS = {
   loc: { name: 'Xinyi District', sub: 'Taipei · 110 信義區', lat: 25.0330, lon: 121.5654, kind: 'District' },
-  locationMode: 'manual', weather: 'live', dataV: 2, uiV: 2, layout: null,
-  accent: '#FFC24B', risk: 'default', bgMode: 'live', fonts: 'default', radius: 18, skyline: 'city', mapBase: 'auto',
+  locationMode: 'manual', skylineTerrainLayout: false, weather: 'live', dataV: 2, uiV: 3, layout: null,
+  accent: '#FFC24B', risk: 'default', bgMode: 'live', fonts: 'system', radius: 18, skyline: 'city', mapBase: 'auto',
   reduceMotion: false, units: 'C', lang: 'en',
   sources: { openMeteo: true, windyMap: true, pm25: true, landslide: true, typhoon: true },
   recents: [], predBase: {}, predT: NOW,
@@ -621,7 +600,7 @@ try {
     S.dataV = DEFAULTS.dataV;
     // Settings saved before the widget dashboard: the old grid order, sizes, hidden tiles, pinned items and
     // tile style are not carried over (they are not in DEFAULTS), and the old default corner radius becomes the new one.
-    if (saved.uiV !== DEFAULTS.uiV) { if (saved.radius === 24) S.radius = DEFAULTS.radius; migrated = true; }
+    if (saved.uiV !== DEFAULTS.uiV) { if (saved.radius === 24) S.radius = DEFAULTS.radius; if (saved.uiV < 3 && saved.fonts === 'default') S.fonts = 'system'; migrated = true; }   // v3: the system font (SF on Apple devices) is the new default
     S.uiV = DEFAULTS.uiV;
     if (S.layout != null && !Array.isArray(S.layout)) S.layout = null;
     if (migrated) localStorage.setItem(KEY, JSON.stringify(S));
@@ -701,13 +680,13 @@ function autoLoc(lat, lon, kind, extraSub) {
   return { name: extraSub === 'Current location' ? 'My location' : c, sub: p && np.d < 150 ? 'Near ' + p.name : (extraSub || 'Coordinates'), lat: lat, lon: lon, kind: kind };
 }
 function skylineFor(L) {
-  if (!inTW(L.lat, L.lon)) return SKYLINES.World;
+  if (!inTW(L.lat, L.lon)) return { key: 'World', label: SKYLINES.World.label };
   var best = 'Taipei', bd = Infinity;
   ['Taipei', 'Taichung', 'Tainan', 'Kaohsiung', 'Hualien'].forEach(function (n) {
     var d = km(L.lat, L.lon, SKYLINES[n].lat, SKYLINES[n].lon);
     if (d < bd) { bd = d; best = n; }
   });
-  return SKYLINES[best];
+  return { key: best, label: SKYLINES[best].label };
 }
 function project(L) { return { x: 205 + (L.lon - 121.5654) * 69, y: 55 + (25.033 - L.lat) * 137.5 }; }
 function toast(msg) {
@@ -738,7 +717,7 @@ var MOODS = [['clear-day', 'Clear day'], ['partly-day', 'Partly cloudy'], ['clou
   ['dawn', 'Dawn'], ['dusk', 'Dusk'], ['clear-night', 'Clear night'], ['partly-night', 'Partly cloudy night'], ['cloudy-night', 'Cloudy night']];
 var NIGHT_MOODS = { 'clear-night': 1, 'partly-night': 1, 'cloudy-night': 1 };
 function moodLabel(k) { for (var i = 0; i < MOODS.length; i++) if (MOODS[i][0] === k) return MOODS[i][1]; return ''; }
-function previewOn() { return S.weather !== 'live' && !!moodLabel(S.weather); }
+function previewOn() { return false; }
 function clockMins(iso) { return +String(iso).substr(11, 2) * 60 + +String(iso).substr(14, 2); }
 // Mood for live weather: the weather code first, then sunrise/sunset (within 40 minutes), then day or night.
 function liveMood(wx) {
@@ -755,11 +734,11 @@ function liveMood(wx) {
 }
 // What the sky shows now: a preview pick (Settings) wins, then live weather, else neutral.
 function skyState() {
-  if (previewOn()) return { mood: S.weather, day: !NIGHT_MOODS[S.weather], wind: 6, haze: 0 };
+  if (previewOn()) return { mood: S.weather, day: !NIGHT_MOODS[S.weather], wind: 6, haze: 0, pm: 12 };
   var wx = S.bgMode === 'live' ? liveWx() : null;
-  if (!wx) return { mood: 'neutral', day: true, wind: 0, haze: 0 };
+  if (!wx) return { mood: 'neutral', day: true, wind: 0, haze: 0, pm: 12 };
   var c = wx.current, air = liveAir(), pm = air && isNum(air.current.pm2_5) ? air.current.pm2_5 : 12;
-  return { mood: liveMood(wx), day: !!c.is_day, haze: Math.max(0, Math.min(0.6, (pm - 12) / 70)),
+  return { mood: liveMood(wx), day: !!c.is_day, pm: pm, haze: Math.max(0, Math.min(0.6, (pm - 12) / 70)),
     wind: -(c.wind_speed_10m || 0) * Math.sin((c.wind_direction_10m || 0) * Math.PI / 180) };
 }
 function applySky() {
@@ -769,35 +748,27 @@ function applySky() {
   if (window.Sky) Sky.start({ mood: s.mood, wind: s.wind, haze: s.haze, reduce: !!S.reduceMotion });
 }
 
-// ----- city silhouettes (ours), drawn over the sky at the foot of the Home hero -----
-var MTN_TINT = { 'clear-day': '#FFFFFF', 'partly-day': '#FFFFFF', 'cloudy-day': '#DDE3EC', rain: '#9AA6B8', storm: '#6B7486', fog: '#EEF1F4',
-  'clear-night': '#3A4C80', 'partly-night': '#3A4C80', 'cloudy-night': '#55607A', dawn: '#6B4E7A', dusk: '#5A3A6A', neutral: '#9FB4DA' };
+// ----- city skyline: the canvas is drawn by horizon.js after the hero HTML is in place -----
 // Share of windows that are lit: most at night and in storms, none on a clear day
 function litShare(mood, day) {
   if (mood === 'rain') return day ? 0.24 : 0.4;
   return { 'clear-night': 0.42, 'partly-night': 0.42, 'cloudy-night': 0.4, dusk: 0.34, storm: 0.38, dawn: 0.16, fog: 0.18, 'cloudy-day': 0.1 }[mood] || 0;
 }
-function seededRandom(seed) {
-  return function () { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
+// A 270° gauge for an AQI value (full scale 200), drawn in the category colour
+function aqiRing(v, color) {
+  var size = 74, st = 7, r = (size - st) / 2, c = 2 * Math.PI * r, arc = c * 0.75;
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" style="transform:rotate(135deg)" aria-hidden="true">' +
+    '<circle cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="' + st + '" stroke-linecap="round" stroke-dasharray="' + arc + ' ' + c + '"/>' +
+    '<circle cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="' + st + '" stroke-linecap="round" stroke-dasharray="' + (arc * clamp(v / 200, 0.02, 1)).toFixed(1) + ' ' + c + '"/></svg>';
 }
-function litWindows(city, share) {
-  if (!share) return '';
-  var R = seededRandom(7), w = '';
-  city.blds.forEach(function (r) {
-    for (var y = r.y + 7; y < 210; y += 9) for (var x = r.x + 5; x <= r.x + r.w - 8; x += 7) if (R() < share) w += '<rect x="' + x + '" y="' + y + '" width="3" height="4"/>';
-  });
-  return '<g fill="#FFD58A" fill-opacity="0.78">' + w + '</g>';
+function skylineHTML(city) {
+  var s = skyState();
+  return '<div class="skyline-wrap" data-city="' + city.key + '" data-pm="' + Math.round(s.pm) + '" data-lit="' + litShare(s.mood, s.day) + '" data-day="' + (s.day ? 1 : 0) +
+    '" data-mood="' + s.mood + '" data-label="' + esc(city.label) + '"></div>';
 }
-function skylineSVG(city) {
-  var s = skyState(), share = litShare(s.mood, s.day), lit = share >= 0.24;
-  var blds = city.blds.map(function (r) { return '<rect x="' + r.x + '" y="' + r.y + '" width="' + r.w + '" height="' + r.h + '" rx="2"/>'; }).join('');
-  return '<div class="skyline-wrap"><svg class="skyline" viewBox="0 0 1200 220" preserveAspectRatio="xMidYMax slice" role="img" aria-label="' + esc(city.label) + '">' +
-    '<path d="' + city.mtnFar + '" fill="' + (MTN_TINT[s.mood] || MTN_TINT.neutral) + '" fill-opacity="0.3"/>' +
-    '<path class="sil" d="' + city.mtnNear + '" fill-opacity="0.42"/>' +
-    '<g class="sil" fill-opacity="0.84">' + blds + '</g>' + litWindows(city, share) +
-    (city.landmark ? '<path class="sil" d="' + city.landmark + '" fill-opacity="0.96"/>' : '') +
-    (city.glass ? '<clipPath id="lm-clip"><rect x="' + city.glassClip[0] + '" y="' + city.glassClip[1] + '" width="' + city.glassClip[2] + '" height="' + city.glassClip[3] + '"/></clipPath><path clip-path="url(#lm-clip)" d="' + city.glass + '" fill="' + (lit ? '#FFD58A' : '#C7D6EE') + '" fill-opacity="' + (lit ? 0.62 : 0.42) + '"/>' : '') +
-    '<rect class="sil" x="0" y="214" width="1200" height="8"/></svg></div>';
+function mountSkyline(root) {
+  var el = root.querySelector('.skyline-wrap');
+  if (el && window.Horizon) Horizon.mount(el, { city: el.dataset.city, pm: +el.dataset.pm, lit: +el.dataset.lit, day: el.dataset.day === '1', label: el.dataset.label, reduce: reduced() });
 }
 
 /* ============================================================
@@ -1191,21 +1162,53 @@ function tyView() {
   return { state: 'active', src: src, ty: ty, sub: bits.join(' · '),
     title: ty.name + ' · ' + fmtKm(km(L.lat, L.lon, c.ll[0], c.ll[1])) + ' ' + compass(bearing(L.lat, L.lon, c.ll[0], c.ll[1])) };
 }
+// Taiwan's main island, [lon, lat] clockwise from the north tip, and the Central Mountain Range down its spine
+var TW_COAST = [[121.54, 25.30], [121.62, 25.28], [121.69, 25.22], [121.75, 25.14], [121.83, 25.14], [121.92, 25.12], [122.00, 25.00], [121.93, 24.86], [121.88, 24.72], [121.85, 24.60],
+  [121.80, 24.42], [121.74, 24.25], [121.65, 24.05], [121.62, 23.90], [121.55, 23.70], [121.50, 23.52], [121.43, 23.30], [121.40, 23.10], [121.28, 22.95], [121.17, 22.77], [121.08, 22.68],
+  [121.00, 22.58], [120.92, 22.40], [120.88, 22.20], [120.86, 22.00], [120.85, 21.91], [120.78, 21.96], [120.72, 22.07], [120.66, 22.22], [120.62, 22.34], [120.55, 22.42], [120.46, 22.47],
+  [120.38, 22.52], [120.28, 22.60], [120.25, 22.72], [120.20, 22.82], [120.17, 22.95], [120.12, 23.08], [120.10, 23.25], [120.13, 23.38], [120.13, 23.52], [120.12, 23.65], [120.17, 23.78],
+  [120.26, 23.88], [120.35, 24.00], [120.43, 24.12], [120.50, 24.22], [120.55, 24.32], [120.62, 24.42], [120.72, 24.52], [120.82, 24.65], [120.90, 24.78], [121.00, 24.88], [121.10, 25.02],
+  [121.20, 25.10], [121.32, 25.14], [121.42, 25.19], [121.50, 25.26]];
+var TW_RIDGE = [[121.30, 24.55], [121.20, 24.35], [121.05, 24.10], [120.98, 23.80], [120.95, 23.47], [120.92, 23.10], [120.90, 22.75], [120.88, 22.42]];
+function smoothClosed(p) {   // a smooth curve through every point, closed
+  var n = p.length, d = 'M' + p[0][0].toFixed(1) + ',' + p[0][1].toFixed(1), i, a, b, c, e;
+  for (i = 0; i < n; i++) {
+    a = p[(i - 1 + n) % n]; b = p[i]; c = p[(i + 1) % n]; e = p[(i + 2) % n];
+    d += 'C' + (b[0] + (c[0] - a[0]) / 6).toFixed(1) + ',' + (b[1] + (c[1] - a[1]) / 6).toFixed(1) + ' ' + (c[0] - (e[0] - b[0]) / 6).toFixed(1) + ',' + (c[1] - (e[1] - b[1]) / 6).toFixed(1) + ' ' + c[0].toFixed(1) + ',' + c[1].toFixed(1);
+  }
+  return d + 'Z';
+}
 function tyTileHTML(tv) {
-  var X = function (ll) { return 40 + 0.42 * (205 + (ll[1] - 121.5654) * 69); }, Y = function (ll) { return 10 + 0.42 * (55 + (25.033 - ll[0]) * 137.5); };
-  var art = '', fit = '';
+  // A 200 x 240 frame: 58 px per degree of latitude, longitude scaled by cos(24°), Taiwan on the left so a storm has room to approach from the east
+  var KY = 58, KX = KY * 0.913, P = function (lon, lat) { return [20 + (lon - 119.95) * KX, 14 + (25.45 - lat) * KY]; };
+  var art = '', fit = '', k = 1, u = function (v) { return (v / k).toFixed(1); };
   if (tv.state === 'active') {
     // Zoom out just enough to keep the island and the whole track in frame
-    var c = tv.ty.cur.ll, x0 = 40, x1 = 170, y0 = 10, y1 = 220;
-    tv.ty.pts.forEach(function (p) { x0 = Math.min(x0, X(p.ll)); x1 = Math.max(x1, X(p.ll)); y0 = Math.min(y0, Y(p.ll)); y1 = Math.max(y1, Y(p.ll)); });
-    x0 -= 30; x1 += 30; y0 -= 30; y1 += 30;
-    var k = Math.min(1, 300 / (x1 - x0), 240 / (y1 - y0)), u = function (v) { return (v / k).toFixed(1); };
-    fit = ' transform="translate(' + ((300 - (x1 - x0) * k) / 2 - x0 * k).toFixed(1) + ',' + ((240 - (y1 - y0) * k) / 2 - y0 * k).toFixed(1) + ') scale(' + k.toFixed(3) + ')"';
-    art = '<polyline points="' + tv.ty.pts.map(function (p) { return X(p.ll).toFixed(1) + ',' + Y(p.ll).toFixed(1); }).join(' ') + '" fill="none" stroke="#FFC24B" stroke-width="' + u(5) + '" stroke-dasharray="' + u(12) + ' ' + u(10) + '"/>' +
-      '<circle cx="' + X(c).toFixed(1) + '" cy="' + Y(c).toFixed(1) + '" r="' + u(26) + '" fill="#EF4444" fill-opacity="0.3" stroke="#fff" stroke-width="' + u(3) + '"/><circle cx="' + X(c).toFixed(1) + '" cy="' + Y(c).toFixed(1) + '" r="' + u(7) + '" fill="#fff"/>';
+    var c = tv.ty.cur.ll, x0 = 0, x1 = 200, y0 = 0, y1 = 240, qs = tv.ty.pts.map(function (p) { return P(p.ll[1], p.ll[0]); });
+    qs.forEach(function (q) { x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); y0 = Math.min(y0, q[1]); y1 = Math.max(y1, q[1]); });
+    x0 -= 16; x1 += 16; y0 -= 16; y1 += 16;
+    k = Math.min(1, 200 / (x1 - x0), 240 / (y1 - y0));
+    fit = ' transform="translate(' + ((200 - (x1 - x0) * k) / 2 - x0 * k).toFixed(1) + ',' + ((240 - (y1 - y0) * k) / 2 - y0 * k).toFixed(1) + ') scale(' + k.toFixed(3) + ')"';
+    var q0 = P(c[1], c[0]);
+    art = '<polyline points="' + qs.map(function (q) { return q[0].toFixed(1) + ',' + q[1].toFixed(1); }).join(' ') + '" fill="none" stroke="#FFC24B" stroke-width="' + u(3) + '" stroke-linecap="round" stroke-dasharray="' + u(7) + ' ' + u(6) + '"/>' +
+      '<circle cx="' + q0[0].toFixed(1) + '" cy="' + q0[1].toFixed(1) + '" r="' + u(16) + '" fill="#EF4444" fill-opacity="0.3" stroke="#fff" stroke-width="' + u(1.6) + '"/><circle cx="' + q0[0].toFixed(1) + '" cy="' + q0[1].toFixed(1) + '" r="' + u(4.5) + '" fill="#fff"/>';
   }
-  return '<div class="ty"><svg width="108" height="86" viewBox="0 0 300 240" aria-hidden="true">' +
-      '<g' + fit + '><g transform="translate(40,10) scale(0.42)"><path d="' + ISL + '" fill="#3F7A63"/></g>' + art + '</g></svg>' +
+  var coast = smoothClosed(TW_COAST.map(function (p) { return P(p[0], p[1]); })), ridge = TW_RIDGE.map(function (p) { return P(p[0], p[1]); });
+  var grid = '', g;
+  for (g = 120; g <= 122; g++) grid += '<line x1="' + P(g, 0)[0].toFixed(1) + '" x2="' + P(g, 0)[0].toFixed(1) + '" y1="-400" y2="640"/>';
+  for (g = 22; g <= 25; g++) grid += '<line y1="' + P(0, g)[1].toFixed(1) + '" y2="' + P(0, g)[1].toFixed(1) + '" x1="-400" x2="640"/>';
+  var city = function (lon, lat, r) { var q = P(lon, lat); return '<circle cx="' + q[0].toFixed(1) + '" cy="' + q[1].toFixed(1) + '" r="' + u(r) + '" fill="#fff" fill-opacity=".9"/>'; };
+  var here = '', L = S.loc;
+  if (L && inTW(L.lat, L.lon)) { var h = P(L.lon, L.lat); here = '<circle cx="' + h[0].toFixed(1) + '" cy="' + h[1].toFixed(1) + '" r="' + u(11) + '" fill="' + S.accent + '" fill-opacity=".3"/><circle cx="' + h[0].toFixed(1) + '" cy="' + h[1].toFixed(1) + '" r="' + u(4.2) + '" fill="' + S.accent + '" stroke="#fff" stroke-width="' + u(1.6) + '"/>'; }
+  return '<div class="ty"><svg width="87" height="104" viewBox="0 0 200 240" aria-hidden="true">' +
+      '<defs><radialGradient id="twSea" cx=".3" cy=".35" r=".95"><stop offset="0" stop-color="#1d4c7c"/><stop offset="1" stop-color="#0a1d3a"/></radialGradient>' +
+      '<linearGradient id="twLand" x1="0" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="#86dcb2"/><stop offset=".55" stop-color="#3fa186"/><stop offset="1" stop-color="#2a7a6a"/></linearGradient></defs>' +
+      '<rect width="200" height="240" fill="url(#twSea)"/>' +
+      '<g' + fit + '><g stroke="#fff" stroke-opacity=".09" stroke-width="' + u(1) + '" stroke-dasharray="' + u(3) + ' ' + u(5) + '">' + grid + '</g>' +
+      '<path d="' + coast + '" fill="none" stroke="#7fe3ff" stroke-opacity=".25" stroke-width="' + u(9) + '" stroke-linejoin="round"/>' +
+      '<path d="' + coast + '" fill="url(#twLand)" stroke="#fff" stroke-opacity=".7" stroke-width="' + u(1.4) + '" stroke-linejoin="round"/>' +
+      '<polyline points="' + ridge.map(function (q) { return q[0].toFixed(1) + ',' + q[1].toFixed(1); }).join(' ') + '" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="' + u(5) + '" stroke-linecap="round" stroke-linejoin="round"/>' +
+      city(121.565, 25.033, 2.4) + city(120.674, 24.148, 2.4) + city(120.30, 22.627, 2.4) + here + art + '</g></svg>' +
     (tv.state === 'active'
       ? '<div><div class="ty-t">' + esc(tv.title) + '</div><p class="note">' + esc(tv.sub) + '</p></div></div>'
       : '<div><div class="ty-t">No active typhoon</div><p class="note">No tropical cyclone is being tracked near Taiwan right now.</p></div></div>');
@@ -1594,7 +1597,7 @@ var TILES = {
       return '<div class="days">' + idx.map(function (q, n) {
         var mn = d.temperature_2m_min[q], mx = d.temperature_2m_max[q], pp = d.precipitation_probability_max[q];
         var dot = n === 0 ? '<b style="left:' + clamp(pos(c.cur.temperature_2m), 0, 100) + '%"></b>' : '';
-        return '<div class="day"><span>' + (n === 0 ? 'Today' : weekdayOf(d.time[q])) + '</span>' +
+        return '<div class="day" data-date="' + d.time[q] + '"><span>' + (n === 0 ? 'Today' : weekdayOf(d.time[q])) + '</span>' +
           '<span class="ic">' + Icons.art(Icons.wmo(d.weather_code[q], true).art, 24) + (pp >= 20 ? '<small>' + pp + '%</small>' : '') + '</span>' +
           '<span class="lo">' + num(tU(mn)) + '°</span>' +
           '<span class="bar"><i style="left:' + pos(mn) + '%;width:' + (pos(mx) - pos(mn)) + '%;background:linear-gradient(90deg,' + tcol(mn) + ',' + tcol(mx) + ')"></i>' + dot + '</span>' +
@@ -1620,8 +1623,9 @@ var TILES = {
       var note = t.kind === 'model'
         ? niceDate(p.date) + ' · ' + cityName(t.city) + (better != null ? tx(' · ' + Math.abs(better) + '% ' + (better >= 0 ? 'lower' : 'higher') + ' historical test error than baseline', ' · 歷史測試誤差比基準' + (better >= 0 ? '低 ' : '高 ') + Math.abs(better) + '%') : '') + tx(' · tap for details', ' · 點一下看細節')
         : niceDate(p.date) + tx(' · CAMS forecast via Open-Meteo, not a Skyline model', ' · CAMS 預報（經 Open-Meteo），不是 Skyline 模型');
-      return '<div class="tm"><div class="aqibig"><span data-count="' + p.aqi + '">' + p.aqi + '</span><small style="color:' + p.color + '">AQI · ' + tx(shortCat(p.category), zh(shortCat(p.category))) + '</small></div>' +
-        '<div class="vals"><div><b data-count="' + p.pm25 + '" data-dec="1">' + p.pm25 + '</b>µg/m³ PM2.5 ' + trend +
+      return '<div class="tm"><div class="aqring">' + aqiRing(p.aqi, p.color) + '<div class="aqibig"><span data-count="' + p.aqi + '">' + p.aqi + '</span><small>AQI</small></div></div>' +
+        '<div class="vals"><div class="cat"><span style="color:' + p.color + '">' + tx(shortCat(p.category), zh(shortCat(p.category))) + '</span> ' + trend + '</div>' +
+        '<div><b data-count="' + p.pm25 + '" data-dec="1">' + p.pm25 + '</b>µg/m³ PM2.5' +
         (p.pm25_range ? '<br><span class="rng">' + tx('likely ', '可能範圍 ') + p.pm25_range[0] + '–' + p.pm25_range[1] + '</span>' : '') + '</div>' +
         '<div><b data-count="' + p.pm10 + '" data-dec="1">' + p.pm10 + '</b>µg/m³ PM10</div></div></div>' +
         '<div class="note dim">' + note + '</div>';
@@ -1872,7 +1876,7 @@ var TILES = {
   typhoon: {
     title: 'Typhoon Watch', icon: 'cyclone', size: 'w', source: 'CWA', needs: 'none', desc: 'The active typhoon near Taiwan: its track, distance and strength, from CWA warnings.',
     available: function () { return S.sources.typhoon !== false; },
-    open: function () { if (tyStorm()) location.hash = 'predictions/typhoon'; },
+    open: function () { openMapPanel('wind', 'typhoon'); },
     na: function () { return factNA('typhoon'); },
     render: function () { return tyTileHTML(tyView()); }
   },
@@ -1905,7 +1909,7 @@ var TILES = {
     head: function () { return '<div class="chips">' + MAP_LAYERS.map(function (o) { return '<button type="button" data-layer="' + o[0] + '" class="' + (MAP_LAYER === o[0] ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>'; },
     render: function () {
       var lay = MAP_LAYERS.filter(function (o) { return o[0] === MAP_LAYER; })[0] || MAP_LAYERS[0];
-      return '<div class="map-wrap">' + windyFrame('Windy map of ' + S.loc.name, windyURL(lay[2], inTW(S.loc.lat, S.loc.lon) ? 8 : 6, 0, true)) + '</div>';
+      return '<div class="map-wrap">' + windyFrame('Windy map of ' + S.loc.name, windyURL(lay[2], inTW(S.loc.lat, S.loc.lon) ? 8 : 6, 0, true)) + '<button type="button" class="map-hit" data-action="open-map" aria-label="Open the map"></button></div>';
     }
   }
 };
@@ -1917,16 +1921,17 @@ var TILE_GROUPS = [
   ['Storms & sea', ['thunder', 'storms', 'typhoon', 'waves', 'climate']],
   ['Maps', ['map']]
 ];
-var DEFAULT_LAYOUT = ['precip', 'storms', 'typhoon', 'tomorrow', 'model', 'pmtrend', 'hourly'];
+var DEFAULT_LAYOUT = ['landslide', 'hourly', 'tomorrow', 'daily', 'aqi', 'advice', 'pmtrend', 'wind', 'uv', 'sunrise', 'feels', 'map', 'thunder', 'storms', 'typhoon',
+  'pm25', 'pm10', 'precip', 'humidity', 'visibility', 'pressure', 'waves', 'climate', 'model'];
 
 // ----- layout (saved in S.layout) -----
 function tileOn(id) { var t = TILES[id]; return !!t && (!t.available || t.available()); }
 // The saved layout, minus anything unknown (an older build's ids) or not available right now
 function layoutIds() {
-  var seen = {}, src = S.fielddeskLayout && Array.isArray(S.layout) ? S.layout : DEFAULT_LAYOUT;
+  var seen = {}, src = S.skylineTerrainLayout && Array.isArray(S.layout) ? S.layout : DEFAULT_LAYOUT;
   return src.filter(function (id) { if (seen[id] || !tileOn(id)) return false; seen[id] = 1; return true; });
 }
-function saveLayout(ids) { S.fielddeskLayout = true; S.layout = ids; save(); }
+function saveLayout(ids) { S.skylineTerrainLayout = true; S.layout = ids; save(); }
 
 // ----- one tile -----
 var FACTS = null;
@@ -1968,7 +1973,7 @@ function tileView(id) {
   var label = typeof t.label === 'function' ? t.label() : (t.label || t.title), age = na ? '' : tileAge(t, id);
   var right = !na && t.head ? t.head() : '';
   if (!right && (t.source || age)) right = '<em class="src' + (age ? ' stale' : '') + '">' + [t.source, age].filter(Boolean).join(' · ') + '</em>';
-  return { cls: 'tile size-' + t.size + (gold ? ' gold' : '') + (t.open && !na ? ' clickable' : '') + (na && na.st !== 'loading' ? ' is-na' : ''),
+  return { cls: 'tile size-' + t.size + (gold ? ' gold' : '') + (!na ? ' clickable' : '') + (na && na.st !== 'loading' ? ' is-na' : ''),
     head: Icons.ui(t.icon) + '<span>' + label + '</span>' + right, body: body, na: !!na };
 }
 function paintTile(el, v) {
@@ -2085,7 +2090,7 @@ function heroHTML(first) {
       '<span class="dot" style="background:' + esc(p.color) + ';color:' + esc(p.color) + '"></span><span class="tag">' + (ta.kind === 'model' ? 'Tomorrow' : 'CAMS forecast · Tomorrow') + '</span>' +
       tx(catName + ' air · PM2.5 ≈ ' + p.pm25 + ' µg/m³', '空氣' + catName + ' · PM2.5 ≈ ' + p.pm25 + ' µg/m³') + (ta.kind === 'model' ? ' · ' + esc(cityName(ta.city)) : '') + '</button>';
   }
-  return '<button type="button" class="place" data-action="open-search" aria-label="Location: ' + esc(L.name) + '. Change location">' +
+  return '<div class="hero-main"><button type="button" class="place" data-action="open-search" aria-label="Location: ' + esc(L.name) + '. Change location">' +
       '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>' +
       '<span>' + esc(L.name) + '</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>' +
     (L.sub ? '<div class="place-sub">' + esc(L.sub) + '</div>' : '') +
@@ -2093,8 +2098,8 @@ function heroHTML(first) {
                 : '<div class="temp na" aria-label="Temperature not available">—</div>') +
     '<div class="cond">' + cond + '</div>' +
     '<div class="hl"' + (hl ? ' aria-label="Today: high ' + fmtT(hl.hi) + ', low ' + fmtT(hl.lo) + '"><span>H:' + fmtT(hl.hi) + '</span><span>L:' + fmtT(hl.lo) + '</span>' : '>&nbsp;') + '</div>' +
-    pill + '<div class="chips">' + chips + '</div>' + locationControlsHTML() +
-    (S.skyline === 'city' ? skylineSVG(skylineFor(L)) : '');
+    pill + '<div class="chips">' + chips + '</div>' + locationControlsHTML() + '</div>' +
+    (S.skyline === 'city' ? skylineHTML(skylineFor(L)) : '');
 }
 function footHTML() {
   var pm = pmData(), m = modelMetrics();
@@ -2116,10 +2121,10 @@ function terrainFocusHTML() {
       esc(Number(d.center[0]).toFixed(4)) + ', ' + esc(Number(d.center[1]).toFixed(4)) + ' · ' + esc(d.model) + '</p>'
     : '<p class="terrain-meta">' + tx('Choose an area on the map or ask Qwen to prepare a scan.', '在地圖選擇區域，或請 Qwen 規劃掃描。') + '</p>';
   return '<div class="terrain-intro"><p class="terrain-kicker">Skyline / Terrain Watch</p>' +
-    '<h1>' + tx('Observe. Compare. Keep watch.', '觀測・比對・持續監測') + '</h1>' +
-    '<p class="terrain-lead">' + tx('A Taiwan field desk for satellite change, rainfall and air quality. Start with the land. Keep the context close.', '從地表變化出發，整合衛星、降雨與空氣品質的台灣觀測工作台。') + '</p>' +
+    '<h1>' + tx('Taiwan landslide watch.', '台灣山崩觀測') + '</h1>' +
+    '<p class="terrain-lead">' + tx('Explore suspected landslides from space. Compare the evidence, find the coordinates, and keep watch as new imagery arrives.', '從衛星觀測疑似山崩，比對影像證據、查看座標，並持續監測新影像。') + '</p>' +
     '<div class="terrain-actions"><a class="terrain-primary" href="/">' + tx('Open landslide map ↗', '開啟山崩地圖 ↗') + '</a>' +
-    '<a href="/?demo=taroko">Open saved demo →</a><a href="#monitor-panel" data-action="show-monitor">Set up monitoring →</a><button type="button" data-workspace-qwen>Ask Qwen →</button></div>' + facts +
+    '<a href="#monitor-panel" data-action="show-monitor">Set up monitoring →</a><button type="button" data-workspace-qwen>Ask Qwen →</button></div>' + facts +
     '<p class="terrain-note">' + tx('Satellite candidates need review. Weather supports the assessment; it does not confirm or predict a landslide.', '衛星辨識的疑似區域仍需查證。天氣提供判讀背景，並非山崩確認或預測。') + '</p></div>' +
     '<a class="terrain-preview" href="' + scanLink + '" aria-label="' + tx('Review saved scan on the map', '在地圖檢視儲存的掃描') + '">' +
     (ready ? '<img src="/results/' + d.id + '/satellite.png" alt="' + tx('Satellite image of the latest scanned footprint', '最近掃描範圍的衛星影像') + '">' : '<span class="terrain-empty">' + tx('Your next study area starts on the map.', '從地圖開始選擇下一個研究區域。') + '</span>') +
@@ -2127,7 +2132,8 @@ function terrainFocusHTML() {
 }
 function homeView() {
   return '<div class="home"><section id="terrain-focus" class="terrain-focus" aria-label="Landslide review"></section>' +
-    '<div class="workspace-middle"><section id="monitor-panel" aria-label="Automatic landslide monitoring"></section><section class="hero" id="hero" aria-label="Current weather"></section></div><div class="context-heading"><div><p class="terrain-kicker">02 / ENVIRONMENTAL CONTEXT</p><h2>Conditions that inform the review</h2></div><button type="button" data-workspace-qwen>Explain these readings ↗</button></div>' +
+    '<details class="monitor-disclosure"><summary>Satellite monitoring <span>Choose an area &amp; keep watch ↗</span></summary><section id="monitor-panel" aria-label="Automatic landslide monitoring"></section></details>' +
+    '<section class="hero" id="hero" aria-label="Current weather"></section>' +
     '<section class="grid" id="grid" aria-label="Widgets"></section><footer class="foot" id="foot"></footer></div>';
 }
 // Fills Home from the feeds. Called after the first paint and whenever a feed arrives or the location changes.
@@ -2141,7 +2147,8 @@ function homeUpdate(first) {
   var h = heroHTML(false);
   if (hero._h !== h) {
     var anim = first || (hero._na && wxNow().live);
-    hero.innerHTML = '<p class="terrain-kicker">CITY WEATHER / '+esc(S.loc.name)+'</p>' + (anim ? heroHTML(true) : h) + '<p class="monitor-note">City context. Weather at the scanned mountains is included in each scan report.</p>'; hero._h = h; hero._na = !wxNow().live;
+    hero.innerHTML = anim ? heroHTML(true) : h; hero._h = h; hero._na = !wxNow().live;
+    mountSkyline(hero);
     if (anim) countUp(hero);
   }
   if (first) renderGrid(true); else syncGrid();
@@ -2156,10 +2163,31 @@ function syncCompact() {
   $('#compactTemp').textContent = w.live ? fmtT(w.temp) : '—';
   $('#compactCond').textContent = w.live ? w.label : '';
 }
+// One scroll progress drives the whole collapse (CSS reads --p, --c, --bar, --y): the big title fades and
+// shrinks while the compact one in the top bar fades in at the same pace, then the bar's glass appears.
+var scrollQueued = false, homeY = 0, lastTile = null;
+// Opening or closing a side panel reflows the widgets; keep the one you clicked at the same place on screen
+function keepTile(mutate) {
+  var a = lastTile && document.contains(lastTile) ? lastTile : null, y0 = a ? a.getBoundingClientRect().top : 0;
+  mutate();
+  if (a) window.scrollBy({ top: a.getBoundingClientRect().top - y0, behavior: 'instant' });
+}
 function onScroll() {
-  var y = window.scrollY || 0, home = document.body.dataset.page === 'home', hero = $('#hero');
-  $('#topbar').classList.toggle('scrolled', y > (home ? 170 : 8));
-  $('#topbar').classList.toggle('show-compact', home && hero && y > hero.offsetTop);
+  if (scrollQueued) return;
+  scrollQueued = true;
+  requestAnimationFrame(function () {
+    scrollQueued = false;
+    var y = Math.max(0, window.scrollY || 0), home = document.body.dataset.page === 'home';
+    if (home) homeY = y;
+    var hero = $('#hero'), relativeY = home && hero ? Math.max(0, y - hero.offsetTop) : 0;
+    var p = home ? clamp((relativeY - 20) / 170, 0, 1) : 0, c = home ? clamp((p - 0.35) / 0.5, 0, 1) : 0;
+    var r = document.documentElement.style;
+    r.setProperty('--y', (reduced() ? 0 : relativeY).toFixed(1) + 'px');
+    r.setProperty('--p', p.toFixed(3));
+    r.setProperty('--c', c.toFixed(3));
+    r.setProperty('--bar', clamp(y / 80, 0, 1).toFixed(3));
+    document.body.classList.toggle('hero-gone', home && p > 0.7);
+  });
 }
 window.addEventListener('scroll', onScroll, { passive: true });
 
@@ -2179,10 +2207,14 @@ document.addEventListener('click', function (e) {
   var hm = e.target.closest('[data-hmode]');
   if (hm) { HOURLY_MODE = hm.dataset.hmode; rerenderTile('hourly'); return; }
   var ml = e.target.closest('[data-layer]');
-  if (ml) { MAP_LAYER = ml.dataset.layer; rerenderTile('map'); return; }
+  if (ml) { MAP_LAYER = ml.dataset.layer; rerenderTile('map'); refreshMapPanel(); return; }
   if (e.target.closest('button,a,iframe')) return;
   var t = e.target.closest('.tile.clickable');
-  if (t && TILES[t.dataset.id].open) TILES[t.dataset.id].open();
+  if (!t) return;
+  lastTile = t;
+  var row = e.target.closest('.day[data-date]');
+  if (row && t.dataset.id === 'daily') { openDetail(t, row.dataset.date); return; }
+  if (TILES[t.dataset.id].open) TILES[t.dataset.id].open(); else openDetail(t);
 });
 var dragEl = null, lastMove = 0;
 document.addEventListener('dragstart', function (e) {
@@ -2234,18 +2266,437 @@ function openSheet(html, label) {
   clearTimeout(sheetTimer);
   if (bd.hidden) sheetFocus = document.activeElement;
   sh.innerHTML = html; sh.scrollTop = 0; sh.setAttribute('aria-label', label || 'Details');
-  bd.hidden = false;
+  closePop(); closeMapPanel();
+  bd.hidden = false; keepTile(function () { document.body.classList.add('sheet-open'); });
   requestAnimationFrame(function () { bd.classList.add('open'); sh.focus({ preventScroll: true }); });
 }
 function closeSheet() {
   var bd = $('#sheetBackdrop');
   if (bd.hidden) return false;
-  bd.classList.remove('open');
+  bd.classList.remove('open'); keepTile(function () { document.body.classList.remove('sheet-open'); });
   sheetTimer = setTimeout(function () { bd.hidden = true; }, reduced() ? 0 : 320);
   if (sheetFocus && sheetFocus.focus && document.contains(sheetFocus)) sheetFocus.focus({ preventScroll: true });
   return true;
 }
 $('#sheetBackdrop').addEventListener('click', function (e) { if (e.target.id === 'sheetBackdrop') closeSheet(); });
+
+/* ============================================================
+   Widget details: tap a widget and an Apple-style popover opens beside it (a bottom sheet on phones)
+   with that widget's day-by-day chart and a few plain-language lines. The data is the same
+   Open-Meteo and CAMS feeds the tiles read; nothing is invented.
+   ============================================================ */
+var POP = null;   // { id, el, date, mode }
+function dayKeys(h) {
+  var out = [], last = '';
+  h.time.forEach(function (t) { var d = t.slice(0, 10); if (d !== last) { out.push(d); last = d; } });
+  return out;
+}
+function dayVals(h, key, date) {
+  var i0 = h.time.indexOf(date + 'T00:00'), out = [], i, v;
+  for (i = 0; i < 24; i++) { v = i0 < 0 ? null : h[key][i0 + i]; out.push(isNum(v) ? v : null); }
+  return out;
+}
+function known(a) { return a.filter(function (v) { return v != null; }); }
+function peak(a) { var k = known(a); return k.length ? Math.max.apply(null, k) : null; }
+function low(a) { var k = known(a); return k.length ? Math.min.apply(null, k) : null; }
+function mean(a) { var k = known(a); return k.length ? sumOf(k) / k.length : null; }
+function longDate(date) {
+  try { return new Date(date + 'T12:00:00').toLocaleDateString(S.lang === 'zh' ? 'zh-TW' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }); } catch (e) { return date; }
+}
+function dayWord(c, date) {
+  var d = c.w.daily.time, i = d.indexOf(date);
+  return i === c.di ? 'today' : i === c.di - 1 ? 'yesterday' : i === c.di + 1 ? 'tomorrow' : 'on ' + weekdayOf(date);
+}
+function prevDate(dates, date) { var i = dates.indexOf(date); return i > 0 ? dates[i - 1] : null; }
+function smoothPath(p) {
+  var d = 'M' + p[0][0].toFixed(1) + ',' + p[0][1].toFixed(1), i, p0, p1, p2, p3;
+  for (i = 0; i < p.length - 1; i++) {
+    p0 = p[i - 1] || p[i]; p1 = p[i]; p2 = p[i + 1]; p3 = p[i + 2] || p2;
+    d += 'C' + (p1[0] + (p2[0] - p0[0]) / 6).toFixed(1) + ',' + (p1[1] + (p2[1] - p0[1]) / 6).toFixed(1) + ' ' +
+      (p2[0] - (p3[0] - p1[0]) / 6).toFixed(1) + ',' + (p2[1] - (p3[1] - p1[1]) / 6).toFixed(1) + ' ' + p2[0].toFixed(1) + ',' + p2[1].toFixed(1);
+  }
+  return d;
+}
+// A 24-hour chart. o: { lo, hi, ticks: [[value, label]], color(v), bars, ref (a second, quieter series), marks (H/L), now (hour index), label }
+function popChart(vals, o) {
+  var W = 300, H = o.h || 124, L = 2, R = 34, T = 12, B = 18, pw = W - L - R, ph = H - T - B, lo = o.lo, hi = o.hi;
+  var X = function (j) { return L + pw * j / 23; }, Y = function (v) { return T + ph * (1 - (clamp(v, lo, hi) - lo) / ((hi - lo) || 1)); };
+  var s = '<svg class="pop-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(o.label || 'Chart') + '">', pts = [];
+  (o.ticks || []).forEach(function (t) {
+    var y = Y(t[0]);
+    s += '<line class="g" x1="' + L + '" x2="' + (W - R) + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '"/><text class="ax" x="' + (W - R + 6) + '" y="' + (y + 3).toFixed(1) + '">' + esc(t[1]) + '</text>';
+  });
+  [0, 6, 12, 18].forEach(function (j) { s += '<text class="ax" x="' + X(j).toFixed(1) + '" y="' + (H - 4) + '" text-anchor="middle">' + hhLabel(j) + '</text>'; });
+  vals.forEach(function (v, j) { if (v != null) pts.push([X(j), Y(v), v, j]); });
+  if (!pts.length) return s + '<text class="ax" x="' + W / 2 + '" y="' + H / 2 + '" text-anchor="middle">' + tx('No data for this day', '這天沒有資料') + '</text></svg>';
+  if (o.bars) {
+    var bw = pw / 24 * 0.62, y0 = Y(lo);
+    pts.forEach(function (p) { s += '<rect x="' + (p[0] - bw / 2).toFixed(1) + '" y="' + p[1].toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(0.5, y0 - p[1]).toFixed(1) + '" rx="1.5" fill="' + (o.color ? o.color(p[2]) : '#8EC5FF') + '" opacity=".92"/>'; });
+  } else {
+    if (o.ref) {
+      var rp = []; o.ref.forEach(function (v, j) { if (v != null) rp.push([X(j), Y(v)]); });
+      if (rp.length > 1) s += '<path d="' + smoothPath(rp) + '" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.6" stroke-dasharray="2 4" stroke-linecap="round"/>';
+    }
+    s += '<defs><linearGradient id="popg" gradientUnits="userSpaceOnUse" x1="' + pts[0][0].toFixed(1) + '" x2="' + (pts[pts.length - 1][0] + 0.01).toFixed(2) + '" y1="0" y2="0">' +
+      pts.map(function (p, k) { return '<stop offset="' + (pts.length > 1 ? k / (pts.length - 1) : 0).toFixed(3) + '" stop-color="' + (o.color ? o.color(p[2]) : '#fff') + '"/>'; }).join('') + '</linearGradient></defs>' +
+      '<path d="' + (pts.length > 1 ? smoothPath(pts) : 'M' + pts[0][0] + ',' + pts[0][1]) + '" fill="none" stroke="url(#popg)" stroke-width="3" stroke-dasharray="4 4.5" stroke-linecap="round"/>';
+  }
+  if (o.marks && pts.length > 2) {
+    var mx = pts[0], mn = pts[0];
+    pts.forEach(function (p) { if (p[2] > mx[2]) mx = p; if (p[2] < mn[2]) mn = p; });
+    s += '<text class="mk" x="' + mx[0].toFixed(1) + '" y="' + (mx[1] - 6).toFixed(1) + '" text-anchor="middle">H</text><text class="mk" x="' + mn[0].toFixed(1) + '" y="' + (mn[1] + 13).toFixed(1) + '" text-anchor="middle">L</text>';
+  }
+  if (o.now != null && vals[o.now] != null) s += '<circle cx="' + X(o.now).toFixed(1) + '" cy="' + Y(vals[o.now]).toFixed(1) + '" r="4" fill="#fff" stroke="rgba(0,0,0,.35)" stroke-width="1.5"/>';
+  return s + '</svg>';
+}
+function popBig(value, sub) { return '<div class="pop-big"><b>' + value + '</b>' + (sub ? '<span>' + sub + '</span>' : '') + '</div>'; }
+function popSec(title, text) { return '<div class="pop-sec"><h4>' + title + '</h4><p>' + text + '</p></div>'; }
+function popRow(label, value) { return '<div class="pop-row"><span>' + label + '</span><b>' + value + '</b></div>'; }
+function popMapBtn(layer, label) { return '<button type="button" class="pop-btn" data-pop-map="' + layer + '">' + Icons.ui('map', 15) + '<span>' + label + '</span></button>'; }
+function cmpLine(c, date, noun, a, b, tol) {
+  if (a == null || b == null) return '';
+  var d = a - b;
+  return Math.abs(d) < tol ? 'The ' + noun + ' ' + dayWord(c, date) + ' is about the same as the day before.' : 'The ' + noun + ' ' + dayWord(c, date) + ' is ' + (d > 0 ? 'higher' : 'lower') + ' than the day before.';
+}
+function uvLevel(v) { return v < 3 ? 'Low' : v < 6 ? 'Moderate' : v < 8 ? 'High' : v < 11 ? 'Very High' : 'Extreme'; }
+function uvColor(v) { return v < 3 ? '#3ad06e' : v < 6 ? '#f5d33b' : v < 8 ? '#ff8c32' : v < 11 ? '#ff4545' : '#a35cd6'; }
+function beaufort(k) {
+  var s = [1, 6, 12, 20, 29, 39, 50, 62, 75, 89, 103, 118], n = 0;
+  while (n < s.length && k >= s[n]) n++;
+  return ['Calm', 'Light air', 'Light breeze', 'Gentle breeze', 'Moderate breeze', 'Fresh breeze', 'Strong breeze', 'Near gale', 'Gale', 'Strong gale', 'Storm', 'Violent storm', 'Hurricane'][n];
+}
+function nowIdx(c, date) { return date === c.w.daily.time[c.di] ? c.now.hh : null; }
+function hoursRange(vals, test) {
+  var f = -1, l = -1;
+  vals.forEach(function (v, i) { if (v != null && test(v)) { if (f < 0) f = i; l = i; } });
+  return f < 0 ? null : hhLabel(f) + ' to ' + hhLabel(l + 1);
+}
+function moonInfo() {
+  var syn = 29.530588853, ref = Date.UTC(2000, 0, 6, 18, 14), p = ((((Date.now() - ref) / 86400000) % syn) + syn) % syn / syn, lit = (1 - Math.cos(2 * Math.PI * p)) / 2;
+  var name = p < 0.03 || p > 0.97 ? 'New Moon' : p < 0.22 ? 'Waxing Crescent' : p < 0.28 ? 'First Quarter' : p < 0.47 ? 'Waxing Gibbous' : p < 0.53 ? 'Full Moon' : p < 0.72 ? 'Waning Gibbous' : p < 0.78 ? 'Last Quarter' : 'Waning Crescent';
+  var fmt = function (days) { return new Date(Date.now() + days * 86400000).toLocaleDateString(S.lang === 'zh' ? 'zh-TW' : 'en-US', { month: 'long', day: 'numeric' }); };
+  return { name: name, lit: Math.round(lit * 100), full: fmt(((0.5 - p + 1) % 1) * syn), fresh: fmt(((1 - p) % 1) * syn) };
+}
+
+var DETAIL = {
+  hourly: {
+    title: 'Conditions', icon: 'cloud', days: 'wx', modes: [['actual', 'Actual'], ['feels', 'Feels Like']],
+    render: function (c, st) {
+      var h = c.w.hourly, feels = st.mode === 'feels', key = feels ? 'apparent_temperature' : 'temperature_2m', d = c.w.daily, k = d.time.indexOf(st.date);
+      var vals = dayVals(h, key, st.date).map(function (v) { return v == null ? null : tU(v); }), now = nowIdx(c, st.date);
+      var codes = dayVals(h, 'weather_code', st.date), isDay = dayVals(h, 'is_day', st.date), icons = '';
+      for (var i = 0; i < 24; i += 2) icons += '<span>' + (codes[i] == null ? '' : Icons.art(Icons.wmo(codes[i], !!isDay[i]).art, 17)) + '</span>';
+      var headVal = now != null ? (feels ? c.cur.apparent_temperature : c.cur.temperature_2m) : d.temperature_2m_max[k];
+      var sub = now != null ? (feels ? 'Actual: ' + num(tU(c.cur.temperature_2m)) + '°' : 'Feels like: ' + num(tU(c.cur.apparent_temperature)) + '°') : 'High · Low ' + num(tU(d.temperature_2m_min[k])) + '°';
+      var pop = dayVals(h, 'precipitation_probability', st.date);
+      return popBig(num(tU(headVal)) + '°', sub) + '<div class="pop-icons">' + icons + '</div>' +
+        popChart(vals, { lo: Math.floor(Math.min(low(vals) == null ? 0 : low(vals), 100) / 3) * 3 - 3, hi: Math.ceil((peak(vals) == null ? 30 : peak(vals)) / 3) * 3 + 3, ticks: null, color: function (v) { return tcol(S.units === 'F' ? (v - 32) * 5 / 9 : v); }, marks: true, now: now, label: 'Temperature by hour' }) +
+        (feels ? '<p class="pop-note">What the temperature feels like, as a result of humidity, sunlight or wind.</p>' : '<p class="pop-note">The measured air temperature.</p>') +
+        popSec('Chance of Precipitation', dayWord(c, st.date).replace(/^./, function (ch) { return ch.toUpperCase(); }) + '’s chance: ' + num(d.precipitation_probability_max[k]) + '%') +
+        popChart(pop, { lo: 0, hi: 100, ticks: [[0, '0%'], [50, '50%'], [100, '100%']], bars: true, h: 96, label: 'Chance of precipitation by hour' });
+    }
+  },
+
+  daily: {
+    title: '10-Day Forecast', icon: 'calendar', days: 'wx',
+    render: function (c, st) {
+      var h = c.w.hourly, d = c.w.daily, k = d.time.indexOf(st.date), t = dayVals(h, 'temperature_2m', st.date).map(function (v) { return v == null ? null : tU(v); });
+      return popBig(num(tU(d.temperature_2m_max[k])) + '° / ' + num(tU(d.temperature_2m_min[k])) + '°', (WMO_TEXT[d.weather_code[k]] || '')) +
+        popChart(t, { lo: Math.floor((low(t) == null ? 0 : low(t)) / 3) * 3 - 3, hi: Math.ceil((peak(t) == null ? 30 : peak(t)) / 3) * 3 + 3, color: function (v) { return tcol(S.units === 'F' ? (v - 32) * 5 / 9 : v); }, marks: true, now: nowIdx(c, st.date), label: 'Temperature by hour' }) +
+        '<div class="pop-rows">' + popRow('Chance of rain', num(d.precipitation_probability_max[k]) + '%') + popRow('Rain total', num(d.precipitation_sum[k], 1) + ' mm') +
+        popRow('Strongest wind', num(d.wind_speed_10m_max[k]) + ' km/h') + popRow('Peak UV index', num(d.uv_index_max[k]) + ' · ' + uvLevel(d.uv_index_max[k])) +
+        (d.sunrise[k] ? popRow('Sunrise · Sunset', timeLabel(d.sunrise[k]) + ' · ' + timeLabel(d.sunset[k])) : '') + '</div>';
+    }
+  },
+
+  aqi: {
+    title: 'Air Quality', icon: 'leaf', days: 'air',
+    render: function (c, st) {
+      var a = c.a, v = dayVals(a.hourly, 'us_aqi', st.date), pm = dayVals(a.hourly, 'pm2_5', st.date), now = st.date === c.w.daily.time[c.di] ? c.now.hh : null;
+      var big = now != null && v[now] != null ? v[now] : peak(v), cat = aqiCat(big == null ? 0 : big), dates = dayKeys(a.hourly), pd = prevDate(dates, st.date);
+      var cmp = pd ? cmpLine(c, st.date, 'average PM2.5', mean(pm), mean(dayVals(a.hourly, 'pm2_5', pd)), 2) : '';
+      return popBig(big == null ? '--' : num(big), '<span style="color:' + cat[2] + '">' + tx(shortCat(cat[1]), zh(shortCat(cat[1]))) + '</span>') +
+        popChart(v, { lo: 0, hi: 200, ticks: [[50, '50'], [100, '100'], [150, '150']], color: function (x) { return aqiCat(x)[2]; }, now: now, label: 'US AQI by hour' }) +
+        '<p class="pop-note">' + cat[3] + '</p>' +
+        popSec('About this reading', 'US AQI from Copernicus CAMS model estimates for ' + esc(S.loc.name) + ', not a station reading. ' + (mean(pm) == null ? '' : 'PM2.5 averages ' + num(mean(pm), 1) + ' µg/m³ ' + dayWord(c, st.date) + '. ') + cmp) +
+        popMapBtn('pm2p5', 'Open PM2.5 map');
+    }
+  },
+
+  wind: {
+    title: 'Wind', icon: 'wind', days: 'wx',
+    render: function (c, st) {
+      var h = c.w.hourly, v = dayVals(h, 'wind_speed_10m', st.date), dir = dayVals(h, 'wind_direction_10m', st.date), now = nowIdx(c, st.date), dates = dayKeys(h), pd = prevDate(dates, st.date);
+      var sp = now != null ? c.cur.wind_speed_10m : mean(v), dg = now != null ? c.cur.wind_direction_10m : dir[12], arrows = '', i;
+      for (i = 1; i < 24; i += 3) arrows += '<span>' + (dir[i] == null ? '' : '<i style="transform:rotate(' + (dir[i] + 180) + 'deg)">↑</i>' + hhLabel(i)) + '</span>';
+      var cmp = pd ? cmpLine(c, st.date, 'average wind', mean(v), mean(dayVals(h, 'wind_speed_10m', pd)), 2) : '';
+      return popBig(num(sp) + '<small> km/h</small>', beaufort(sp) + (dg == null ? '' : ' · from ' + compass(dg))) +
+        popChart(v, { lo: 0, hi: Math.max(20, Math.ceil((peak(v) || 0) / 10) * 10), ticks: [[0, '0'], [Math.max(20, Math.ceil((peak(v) || 0) / 10) * 10) / 2, String(Math.max(20, Math.ceil((peak(v) || 0) / 10) * 10) / 2)]], color: function () { return '#8EC5FF'; }, now: now, label: 'Wind speed by hour' }) +
+        '<div class="pop-arrows">' + arrows + '</div>' +
+        popSec('Wind', (now != null && isNum(c.cur.wind_gusts_10m) ? 'Gusts reach ' + num(c.cur.wind_gusts_10m) + ' km/h right now. ' : '') + 'Average ' + num(mean(v)) + ' km/h ' + dayWord(c, st.date) + ', strongest ' + num(peak(v)) + ' km/h. ' + cmp) + popMapBtn('wind', 'Open wind map');
+    }
+  },
+
+  uv: {
+    title: 'UV Index', icon: 'sun', days: 'wx',
+    render: function (c, st) {
+      var h = c.w.hourly, v = dayVals(h, 'uv_index', st.date).map(function (x) { return x == null ? null : Math.round(x * 10) / 10; }), now = nowIdx(c, st.date), dates = dayKeys(h), pd = prevDate(dates, st.date);
+      var big = now != null && v[now] != null ? v[now] : peak(v), strong = hoursRange(v, function (x) { return x >= 3; }), future = st.date > c.w.daily.time[c.di];
+      var cmp = pd ? cmpLine(c, st.date, 'peak UV index', peak(v), peak(dayVals(h, 'uv_index', pd)), 0.5) : '';
+      var line = strong ? 'Levels of Moderate or higher ' + (future ? 'are expected' : 'were reached') + ' from ' + strong + '.' : 'The UV index stays Low all day.';
+      return popBig(num(Math.round(big || 0)), uvLevel(big || 0)) +
+        popChart(v, { lo: 0, hi: 11, ticks: [[3, 'Mod'], [6, 'High'], [8, 'V.High'], [11, 'Ext']], color: uvColor, now: now, label: 'UV index by hour' }) +
+        popSec(now != null ? 'Now, ' + timeLabel(c.cur.time) : 'Peak ' + dayWord(c, st.date), (now != null && peak(v) != null && c.now.hh > 18 ? 'Low for the rest of the day. ' : '') + line) +
+        popSec('Daily Comparison', cmp || 'No earlier day to compare with.') +
+        popSec('About the UV index', 'UV from the sun can burn skin even on cloudy days. From 3 up, wear sunscreen and a hat; at 8 and above, avoid midday sun. Scale from the World Health Organization.');
+    }
+  },
+
+  sunrise: {
+    title: 'Sunrise & Sunset', icon: 'sunrise', days: 'wx',
+    render: function (c, st) {
+      var d = c.w.daily, k = d.time.indexOf(st.date);
+      if (!d.sunrise[k] || !d.sunset[k]) return '<p class="pop-note">No sunrise data for this day.</p>';
+      var len = pt(d.sunset[k]).mins - pt(d.sunrise[k]).mins, pl = k > 0 && d.sunrise[k - 1] ? pt(d.sunset[k - 1]).mins - pt(d.sunrise[k - 1]).mins : null, diff = pl == null ? null : len - pl;
+      var f = function (m) { return Math.floor(m / 60) + ' h ' + (m % 60) + ' min'; };
+      return popBig(timeLabel(d.sunrise[k]), 'Sunrise · Sunset ' + timeLabel(d.sunset[k])) +
+        '<div class="pop-rows">' + popRow('Daylight', f(len)) + popRow('Solar noon', timeLabel('2000-01-01T' + ('0' + Math.floor((pt(d.sunrise[k]).mins + len / 2) / 60)).slice(-2) + ':' + ('0' + Math.round((pt(d.sunrise[k]).mins + len / 2) % 60)).slice(-2))) + '</div>' +
+        popSec('Daily Comparison', diff == null ? 'No earlier day to compare with.' : Math.abs(diff) < 1 ? 'Daylight ' + dayWord(c, st.date) + ' is about the same as the day before.' : 'Daylight ' + dayWord(c, st.date) + ' is ' + Math.abs(diff) + ' min ' + (diff > 0 ? 'longer' : 'shorter') + ' than the day before.');
+    }
+  },
+
+  feels: {
+    title: 'Feels Like', icon: 'thermo', days: 'wx',
+    render: function (c, st) {
+      var h = c.w.hourly, act = dayVals(h, 'temperature_2m', st.date).map(function (v) { return v == null ? null : tU(v); }), fl = dayVals(h, 'apparent_temperature', st.date).map(function (v) { return v == null ? null : tU(v); }), now = nowIdx(c, st.date);
+      var big = now != null ? c.cur.apparent_temperature : peak(dayVals(h, 'apparent_temperature', st.date)), lo = Math.floor(Math.min(low(act) == null ? 0 : low(act), low(fl) == null ? 0 : low(fl)) / 3) * 3 - 3, hi = Math.ceil(Math.max(peak(act) || 0, peak(fl) || 0) / 3) * 3 + 3;
+      return popBig(num(tU(big)) + '°', now != null ? 'Actual: ' + num(tU(c.cur.temperature_2m)) + '°' : 'Highest feels-like') +
+        popChart(fl, { lo: lo, hi: hi, ref: act, color: function (v) { return tcol(S.units === 'F' ? (v - 32) * 5 / 9 : v); }, now: now, label: 'Feels-like temperature by hour' }) +
+        '<p class="pop-note">The dotted line is the actual temperature. Feels-like adds humidity, sunshine and wind.</p>' +
+        popSec('Why it differs', now != null ? (Math.abs(c.cur.apparent_temperature - c.cur.temperature_2m) < 2 ? 'Right now it feels close to the actual temperature.' : c.cur.apparent_temperature > c.cur.temperature_2m ? 'High humidity slows sweat evaporating, so the heat feels stronger.' : 'Wind carries heat away from skin, so it feels cooler.') : 'In humid, still air it feels warmer than the thermometer says; wind makes it feel cooler.');
+    }
+  },
+
+  humidity: {
+    title: 'Humidity', icon: 'drop', days: 'wx',
+    render: function (c, st) {
+      var h = c.w.hourly, v = dayVals(h, 'relative_humidity_2m', st.date), dp = dayVals(h, 'dew_point_2m', st.date), now = nowIdx(c, st.date), dates = dayKeys(h), pd = prevDate(dates, st.date);
+      var d0 = now != null && isNum(c.cur.dew_point_2m) ? c.cur.dew_point_2m : mean(dp), feel = d0 == null ? '' : d0 < 10 ? 'dry' : d0 < 16 ? 'comfortable' : d0 < 21 ? 'humid' : 'oppressive';
+      return popBig(num(now != null ? c.cur.relative_humidity_2m : mean(v)) + '%', d0 == null ? '' : 'Dew point ' + num(tU(d0)) + '°') +
+        popChart(v, { lo: 0, hi: 100, ticks: [[25, '25%'], [50, '50%'], [75, '75%']], color: function () { return '#7cc6ff'; }, now: now, label: 'Relative humidity by hour' }) +
+        popSec('The air feels ' + (feel || '--'), 'The dew point is the temperature at which air is full of water. Under 10° feels dry, 10–16° comfortable, 16–21° humid and above 21° oppressive. ' + (pd ? cmpLine(c, st.date, 'average humidity', mean(v), mean(dayVals(h, 'relative_humidity_2m', pd)), 3) : ''));
+    }
+  },
+
+  visibility: {
+    title: 'Visibility', icon: 'eye', days: 'wx',
+    render: function (c, st) {
+      var h = c.w.hourly, v = dayVals(h, 'visibility', st.date).map(function (x) { return x == null ? null : x / 1000; }), now = nowIdx(c, st.date), top = Math.max(20, Math.ceil((peak(v) || 0) / 10) * 10);
+      var big = now != null ? (isNum(c.cur.visibility) ? c.cur.visibility / 1000 : v[now]) : mean(v), pm = c.a && now != null ? c.a.current.pm2_5 : null;
+      return popBig(num(big, big < 10 ? 1 : 0) + '<small> km</small>', big >= 20 ? 'Perfectly clear' : big >= 10 ? 'Clear' : big >= 5 ? 'Light haze' : 'Low visibility') +
+        popChart(v, { lo: 0, hi: top, ticks: [[top / 2, String(top / 2)], [top, String(top)]], color: function () { return '#c9d4e3'; }, now: now, label: 'Visibility in km by hour' }) +
+        popSec('What limits it', 'Fog, rain and haze scatter light. Fine particles (PM2.5) are a main cause of haze in Taiwan' + (pm != null ? ': PM2.5 is ' + num(pm, 1) + ' µg/m³ right now' : '') + '.');
+    }
+  },
+
+  pressure: {
+    title: 'Pressure', icon: 'gauge', days: 'wx',
+    render: function (c, st) {
+      var h = c.w.hourly, v = dayVals(h, 'pressure_msl', st.date), now = nowIdx(c, st.date), a = known(v), mn = Math.floor((a.length ? Math.min.apply(null, a) : 1000) - 1), mx = Math.ceil((a.length ? Math.max.apply(null, a) : 1020) + 1);
+      var later = h.pressure_msl[Math.min(h.time.length - 1, c.hi + 3)], tr = later - c.cur.pressure_msl > 0.6 ? 'rising' : later - c.cur.pressure_msl < -0.6 ? 'falling' : 'steady';
+      return popBig(num(now != null ? c.cur.pressure_msl : mean(v)) + '<small> hPa</small>', now != null ? tr.charAt(0).toUpperCase() + tr.slice(1) : '') +
+        popChart(v, { lo: mn, hi: mx, ticks: [[mn + (mx - mn) / 2, String(Math.round(mn + (mx - mn) / 2))]], color: function () { return '#d6c9ff'; }, now: now, label: 'Sea-level pressure by hour' }) +
+        popSec('What it means', 'Falling pressure usually brings clouds and rain; rising pressure brings clearer, calmer weather. Typhoons show up as a steep drop. Normal sea-level pressure is about 1013 hPa.');
+    }
+  },
+
+  clouds: {
+    title: 'Cloud Cover', icon: 'cloud', days: 'wx',
+    render: function (c, st) {
+      var h = c.w.hourly, v = dayVals(h, 'cloud_cover', st.date), now = nowIdx(c, st.date), i = c.hi;
+      return popBig(num(now != null ? c.cur.cloud_cover : mean(v)) + '%', now != null ? (c.cur.cloud_cover < 15 ? 'Clear skies' : c.cur.cloud_cover < 40 ? 'Mostly clear' : c.cur.cloud_cover < 70 ? 'Partly cloudy' : c.cur.cloud_cover < 90 ? 'Mostly cloudy' : 'Overcast') : '') +
+        popChart(v, { lo: 0, hi: 100, ticks: [[25, '25%'], [50, '50%'], [75, '75%']], color: function () { return '#c9d4e3'; }, now: now, label: 'Cloud cover by hour' }) +
+        (now != null && isNum(h.cloud_cover_low[i]) ? '<div class="pop-rows">' + popRow('Low clouds', num(h.cloud_cover_low[i]) + '%') + popRow('Middle clouds', num(h.cloud_cover_mid[i]) + '%') + popRow('High clouds', num(h.cloud_cover_high[i]) + '%') + '</div>' : '') +
+        popSec('About cloud cover', 'Low clouds are the ones that bring drizzle and block the sun; thin high clouds let most sunlight through.');
+    }
+  },
+
+  moon: {
+    title: 'Moon', icon: 'moon', days: null,
+    render: function () {
+      var m = moonInfo();
+      return popBig(m.name, m.lit + '% illuminated') + '<div class="pop-rows">' + popRow('Next full moon', m.full) + popRow('Next new moon', m.fresh) + '</div>' +
+        popSec('About the moon', 'The moon takes about 29.5 days to go from one new moon to the next. Tides are highest around full and new moons.');
+    }
+  },
+
+  precip: { panel: 'rain' },
+  map: { panel: true }
+};
+// PM tiles share the air-quality day view, with their own series and limits
+function pmDetail(key, title, ticks, hi, bp) {
+  return {
+    title: title, icon: 'drop', days: 'air',
+    render: function (c, st) {
+      var a = c.a, v = dayVals(a.hourly, key, st.date), now = st.date === c.w.daily.time[c.di] ? c.now.hh : null, big = now != null && v[now] != null ? v[now] : mean(v);
+      var cat = aqiCat(subIndex(big || 0, bp)), pd = prevDate(dayKeys(a.hourly), st.date);
+      return popBig(num(big, 1) + '<small> µg/m³</small>', '<span style="color:' + cat[2] + '">' + tx(shortCat(cat[1]), zh(shortCat(cat[1]))) + '</span>') +
+        popChart(v, { lo: 0, hi: hi, ticks: ticks, color: function (x) { return aqiCat(subIndex(x, bp))[2]; }, now: now, label: title + ' by hour' }) +
+        popSec('Daily average', num(mean(v), 1) + ' µg/m³ ' + dayWord(c, st.date) + '. ' + (pd ? cmpLine(c, st.date, 'average ' + title, mean(v), mean(dayVals(a.hourly, key, pd)), key === 'pm2_5' ? 2 : 3) : '')) +
+        popSec('About ' + title, key === 'pm2_5' ? 'Particles under 2.5 micrometres wide go deep into the lungs. The US 24-hour guideline is 35 µg/m³; Taiwan’s is 35 as well.' : 'Particles under 10 micrometres wide (dust, pollen, smoke). The US 24-hour guideline is 150 µg/m³.') +
+        popMapBtn('pm2p5', 'Open PM2.5 map');
+    }
+  };
+}
+DETAIL.pm25 = pmDetail('pm2_5', 'PM2.5', [[9, '9'], [35, '35'], [55, '55']], 80, PM25_BP);
+DETAIL.pm10 = pmDetail('pm10', 'PM10', [[54, '54'], [154, '154']], 200, PM10_BP);
+DETAIL.pmtrend = DETAIL.pm25;
+DETAIL.pollutants = {
+  title: 'Pollutants', icon: 'leaf', days: null,
+  render: function (c) {
+    var cur = c && c.a && c.a.current, rows = [['Ozone (O₃)', 'ozone', 'µg/m³'], ['Nitrogen dioxide (NO₂)', 'nitrogen_dioxide', 'µg/m³'], ['Sulphur dioxide (SO₂)', 'sulphur_dioxide', 'µg/m³'], ['Carbon monoxide (CO)', 'carbon_monoxide', 'µg/m³'], ['Dust', 'dust', 'µg/m³']];
+    return '<div class="pop-rows">' + rows.map(function (r) { return cur && isNum(cur[r[1]]) ? popRow(r[0], num(cur[r[1]], 1) + ' ' + r[2]) : ''; }).join('') + '</div>' +
+      popSec('Where it comes from', 'Traffic and industry add nitrogen dioxide and carbon monoxide; sunshine turns them into ozone on warm afternoons; dust blows in from deserts and building sites. Values are CAMS model estimates for the nearest grid point.');
+  }
+};
+
+// Anything without its own view gets the tile's value, a short explanation and its source
+function genericDetail(id) {
+  var t = TILES[id], el = POP.el, big = el.querySelector('.big'), note = el.querySelector('.note');
+  return { title: t.title, icon: t.icon, days: null, render: function () {
+    return (big ? popBig(big.innerHTML, '') : '') + (note ? '<p class="pop-note">' + note.innerHTML + '</p>' : '') + popSec('About this widget', esc(t.desc)) + (t.source ? popRow('Source', esc(t.source)) : '');
+  } };
+}
+function popDays(dates, sel) {
+  var i = Math.max(0, dates.indexOf(sel)), start = clamp(i - 3, 0, Math.max(0, dates.length - 7)), ini = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  return '<div class="pop-days">' + dates.slice(start, start + 7).map(function (d) {
+    return '<button type="button" data-pop-date="' + d + '" class="' + (d === sel ? 'on' : '') + '" aria-pressed="' + (d === sel) + '" aria-label="' + longDate(d) + '"><small>' + ini[new Date(d + 'T12:00:00').getDay()] + '</small><b>' + pt(d).d + '</b></button>';
+  }).join('') + '</div><div class="pop-date"><button type="button" data-pop-step="-1" aria-label="Previous day"' + (i <= 0 ? ' disabled' : '') + '>‹</button><span>' + longDate(sel) + '</span><button type="button" data-pop-step="1" aria-label="Next day"' + (i >= dates.length - 1 ? ' disabled' : '') + '>›</button></div>';
+}
+function popModes(modes, sel) {
+  return '<div class="pop-seg">' + modes.map(function (m) { return '<button type="button" data-pop-mode="' + m[0] + '" class="' + (m[0] === sel ? 'on' : '') + '" aria-pressed="' + (m[0] === sel) + '">' + m[1] + '</button>'; }).join('') + '</div>';
+}
+function popDates(d, c) {
+  if (d.days === 'wx') return dayKeys(c.w.hourly);
+  if (d.days === 'air') return c.a ? dayKeys(c.a.hourly) : [];
+  return null;
+}
+function renderPop() {
+  if (!POP) return;
+  var c = wctx(), d = POP.def, dates = c ? popDates(d, c) : null;
+  if (!c && d.days) return closePop();
+  $('#popBody').innerHTML = '<div class="pop-head">' + Icons.ui(d.icon, 15) + '<h3>' + d.title + '</h3><button type="button" class="pop-x" data-pop-close aria-label="Close">×</button></div>' +
+    (dates && dates.length ? popDays(dates, POP.date) : '') + (d.modes ? popModes(d.modes, POP.mode) : '') + '<div class="pop-main">' + d.render(c, POP) + '</div>';
+  placePop();
+}
+function openDetail(el, date) {
+  var id = el.dataset.id, c = wctx(), d = DETAIL[id] || null;
+  if (d && d.panel) { openMapPanel(typeof d.panel === 'string' ? d.panel : null); return; }
+  if (!d) { POP = { id: id, el: el, def: null }; d = genericDetail(id); }
+  var dates = c ? popDates(d, c) : null, today = c ? c.w.daily.time[c.di] : '';
+  POP = { id: id, el: el, def: d, mode: d.modes ? d.modes[0][0] : null, date: dates && dates.length ? (date && dates.indexOf(date) >= 0 ? date : dates.indexOf(today) >= 0 ? today : dates[0]) : today, row: date || null };
+  var pop = $('#pop'), bd = $('#popBackdrop');
+  pop.hidden = false; bd.hidden = false;
+  renderPop();
+  requestAnimationFrame(function () { pop.classList.add('open'); });
+}
+function closePop() {
+  if (!POP) return false;
+  POP = null;
+  var pop = $('#pop'); pop.classList.remove('open'); $('#popBackdrop').hidden = true;
+  setTimeout(function () { if (!POP) pop.hidden = true; }, reduced() ? 0 : 220);
+  return true;
+}
+function popAnchor() {
+  var t = POP && POP.el;
+  if (!t) return null;
+  if (!document.contains(t)) { t = document.querySelector('#grid [data-id="' + POP.id + '"]'); if (t) POP.el = t; }
+  if (t && POP.row) { var r = t.querySelector('.day[data-date="' + POP.date + '"]'); if (r) return r; }
+  return t;
+}
+function placePop() {
+  var pop = $('#pop'), el = popAnchor();
+  if (!el) return closePop();
+  var vw = window.innerWidth, vh = window.innerHeight, r = el.getBoundingClientRect();
+  if (vw < 760) { pop.classList.add('as-sheet'); pop.style.left = pop.style.top = pop.style.width = ''; return; }
+  pop.classList.remove('as-sheet');
+  var W = Math.min(344, vw - 32); pop.style.width = W + 'px';
+  var ph = pop.offsetHeight, side = r.right + 14 + W <= vw - 12 ? 'right' : (r.left - 14 - W >= 12 ? 'left' : 'right');
+  var left = side === 'right' ? r.right + 14 : r.left - 14 - W;
+  left = clamp(left, 12, vw - 12 - W);
+  var top = clamp(r.top + r.height / 2 - ph / 2, 66, Math.max(66, vh - ph - 12));
+  pop.style.left = left + 'px'; pop.style.top = top + 'px'; pop.dataset.side = side;
+  pop.style.setProperty('--ay', clamp(r.top + r.height / 2 - top, 24, Math.max(24, ph - 24)) + 'px');
+  if (r.bottom < 56 || r.top > vh - 20) closePop();
+}
+$('#pop').addEventListener('click', function (e) {
+  var b = e.target.closest('button'); if (!b || !POP) return;
+  var c = wctx(), dates = c ? popDates(POP.def, c) : null;
+  if (b.dataset.popDate) POP.date = b.dataset.popDate;
+  else if (b.dataset.popStep && dates) POP.date = dates[clamp(dates.indexOf(POP.date) + (+b.dataset.popStep), 0, dates.length - 1)];
+  else if (b.dataset.popMode) POP.mode = b.dataset.popMode;
+  else if (b.dataset.popMap) { closePop(); openMapPanel(b.dataset.popMap); return; }
+  else if (b.hasAttribute('data-pop-close')) { closePop(); return; }
+  else return;
+  renderPop();
+});
+$('#popBackdrop').addEventListener('click', function (e) {
+  var was = POP && POP.el;
+  closePop();
+  var under = document.elementFromPoint(e.clientX, e.clientY), tile = under && under.closest && under.closest('#grid .tile');
+  if (under && !(tile && tile === was)) under.click();
+});
+window.addEventListener('scroll', function () { if (POP) placePop(); }, { passive: true });
+window.addEventListener('resize', function () { if (POP) placePop(); });
+
+/* ============================================================
+   Map panel: the map opens on the right of the page, as Apple's Precipitation widget does
+   ============================================================ */
+function mapSummary(layer, c) {
+  if (!c) return '';
+  if (layer === 'rain') {
+    var h = c.w.hourly.precipitation, past = sumOf(h.slice(Math.max(0, c.hi - 23), c.hi + 1)), next = sumOf(h.slice(c.hi + 1, c.hi + 25));
+    return 'Last 24 h ' + num(past, 1) + ' mm · next 24 h ' + num(next, 1) + ' mm';
+  }
+  if (layer === 'wind') return num(c.cur.wind_speed_10m) + ' km/h from ' + compass(c.cur.wind_direction_10m) + (isNum(c.cur.wind_gusts_10m) ? ' · gusts ' + num(c.cur.wind_gusts_10m) : '');
+  if (layer === 'pm2p5') return c.a ? 'PM2.5 ' + num(c.a.current.pm2_5, 1) + ' µg/m³ · AQI ' + num(c.a.current.us_aqi) + ' ' + aqiCat(c.a.current.us_aqi)[1] : 'Air quality is loading';
+  return num(tU(c.cur.temperature_2m)) + '° · feels like ' + num(tU(c.cur.apparent_temperature)) + '°';
+}
+function mapPanelHTML() {
+  var c = wctx(), lay = MAP_LAYERS.filter(function (o) { return o[0] === MAP_LAYER; })[0] || MAP_LAYERS[0];
+  var ty = PANEL_MODE === 'typhoon' ? tyView() : null;
+  var head = ty ? '<h2>Typhoon Watch</h2><p>' + esc(ty.state === 'active' ? ty.title + (ty.sub ? ' · ' + ty.sub : '') : ty.state === 'none' ? 'No tropical cyclone is being tracked near Taiwan right now.' : 'The CWA typhoon feed isn’t available right now.') + '</p>'
+    : '<h2>' + esc(S.loc.name) + '</h2><p>' + esc(mapSummary(lay[0], c)) + '</p>';
+  return '<header class="mp-head"><div>' + head + '</div>' +
+    '<button type="button" class="mp-x" data-action="close-map" aria-label="Close map">×</button></header>' +
+    '<div class="mp-chips" role="group" aria-label="Map layer">' + MAP_LAYERS.map(function (o) { return '<button type="button" data-maplayer="' + o[0] + '" class="' + (MAP_LAYER === o[0] ? 'on' : '') + '" aria-pressed="' + (MAP_LAYER === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div>' +
+    '<div class="mp-map">' + windyFrame('Windy map of ' + S.loc.name, windyURL(lay[2], inTW(S.loc.lat, S.loc.lon) ? 8 : 6, 0, true)) + '</div>' +
+    '<p class="mp-src">Map: <a href="https://www.windy.com" target="_blank" rel="noopener">Windy.com</a> · ' + (lay[0] === 'pm2p5' ? 'Copernicus CAMS' : 'ECMWF') +
+    (ty ? ' · <a href="#predictions/typhoon">Open the full typhoon tracker</a>' : '') + '</p>';
+}
+var PANEL_MODE = 'map';
+function openMapPanel(layer, mode) {
+  if (layer) MAP_LAYER = layer;
+  PANEL_MODE = mode || 'map';
+  closePop(); closeSheet();
+  var p = $('#mapPanel');
+  p.innerHTML = mapPanelHTML(); p.hidden = false;
+  keepTile(function () { document.body.classList.add('map-open'); });
+  requestAnimationFrame(function () { p.classList.add('open'); });
+  rerenderTile('map');
+}
+function closeMapPanel() {
+  var p = $('#mapPanel');
+  if (p.hidden) return false;
+  p.classList.remove('open'); keepTile(function () { document.body.classList.remove('map-open'); });
+  setTimeout(function () { if (!document.body.classList.contains('map-open')) { p.hidden = true; p.innerHTML = ''; } }, reduced() ? 0 : 420);
+  return true;
+}
+function refreshMapPanel() { if (document.body.classList.contains('map-open')) { $('#mapPanel').innerHTML = mapPanelHTML(); rerenderTile('map'); } }
+$('#mapPanel').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-maplayer]');
+  if (b) { MAP_LAYER = b.dataset.maplayer; refreshMapPanel(); }
+});
 function openGallery() {
   var on = layoutIds();
   var card = function (id) {
@@ -3130,7 +3581,7 @@ function settingsView() {
     setRow('Risk color scale', '<span style="display:flex;gap:3px;margin-top:4px">' + pal().map(function (c) { return '<i style="display:block;width:18px;height:10px;border-radius:3px;background:' + c + '"></i>'; }).join('') + '</span>',
       seg('risk', 'Risk color scale', [['default', 'Default'], ['cb', 'Color-blind safe']])) +
     setRow('Sky', 'Follows live weather at your location, on every screen', seg('bgMode', 'Sky', [['live', 'Live weather'], ['static', 'Static']])) +
-    setRow('Fonts', '', seg('fonts', 'Fonts', [['default', 'Bricolage + Inter'], ['system', 'System']])) +
+    setRow('Fonts', '', seg('fonts', 'Fonts', [['system', 'System (SF on Apple)'], ['default', 'Bricolage + Inter']])) +
     '<div class="set-row"><label for="radius" class="lbl">Corner roundness<small id="radius-out">' + S.radius + ' px</small></label><input id="radius" class="plain" style="max-width:200px" type="range" min="6" max="36" value="' + S.radius + '" data-input="radius"></div>' +
     setRow('Skyline art', 'Taiwan city silhouettes under the temperature on Home', seg('skyline', 'Skyline art', [['city', 'Follow my city'], ['off', 'Off']])) +
     setRow('Map base', 'Default for prediction maps', seg('mapBase', 'Map base', [['auto', 'Auto'], ['sat', 'Satellite'], ['windy', 'Windy']])) +
@@ -3139,9 +3590,6 @@ function settingsView() {
   '</section>' +
 
   aiSettingsHTML() +
-  '<section class="card" aria-labelledby="st-sky"><h2 id="st-sky">Sky preview</h2><p class="hint">A preview control for demos and testing. It shows another sky behind every screen until you switch back or reload. Readings are never changed: they stay live.</p>' +
-    '<div class="set-row"><label for="demo-weather" class="lbl">Preview a sky<small>Default: live weather</small></label><select id="demo-weather" data-input="weather">' + skyOptions() + '</select></div>' +
-  '</section>' +
   '<section class="card" aria-labelledby="st-look"><h2 id="st-look">Motion</h2>' +
     setRow('Reduce motion', 'Stops drifting clouds, rain, lightning, count-up numbers and widget motion', sw('reduceMotion', 'Reduce motion')) +
   '</section>' +
@@ -3164,15 +3612,21 @@ function route() {
   if (['home', 'predictions', 'ask', 'settings'].indexOf(page) < 0) page = 'home';
   return { page: page, sub: parts[1] || '', stats: parts[0] === 'stats' };
 }
+var homeAnchor = null;   // the widget you were looking at when you left Home, and where it was on screen
 function render() {
   var r = route(), key = r.page + '/' + r.sub, app = $('#app');
   // Old bookmarks and widget links open the connected tools too.
   if (r.page === 'ask') { var question=pendingAsk;pendingAsk=null;location.hash='home';setTimeout(function(){workspaceQwen.open(question);},0);return; }
   if (r.page === 'predictions' && r.sub === 'landslide') { location.replace('/'); return; }
+  if (lastRoute.indexOf('home/') === 0 && r.page !== 'home') {
+    var seen = (lastTile && document.contains(lastTile) && lastTile.getBoundingClientRect().bottom > 0 ? [lastTile] : []).concat(Array.prototype.slice.call(document.querySelectorAll('#grid .tile')))
+      .filter(function (el) { return el.getBoundingClientRect().bottom > 70; })[0];
+    homeAnchor = seen ? { id: seen.dataset.id, top: seen.getBoundingClientRect().top } : null;
+  }
   document.body.dataset.page = r.page;
   destroyLive();
   loadLive(r.page); applyLiveSets();
-  if (key !== lastRoute) { closeSheet(); setEditing(false); }
+  if (key !== lastRoute) { closeSheet(); closePop(); closeMapPanel(); setEditing(false); }
   // Home already on screen (a feed arrived, the location or unit changed): update it in place, so
   // widgets keep their state and nothing re-animates. Otherwise build the page.
   if (r.page === 'home' && key === lastRoute && $('#grid')) homeUpdate(false);
@@ -3189,7 +3643,9 @@ function render() {
   document.title = { home: 'Taiwan landslide review · Skyline', predictions: 'Predictions · Skyline', ask: 'Ask AI · Skyline', settings: 'Settings · Skyline' }[r.page];
   if (key !== lastRoute) {
     if (r.stats) { var st = $('#grid'); if (st) st.scrollIntoView(); }
-    else window.scrollTo(0, 0);
+    else {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
   }
   lastRoute = key;
   onScroll();
@@ -3213,10 +3669,12 @@ function rerender() {
    Actions
    ============================================================ */
 var ACTIONS = {
-  'go-home': function () { location.hash='home';window.scrollTo(0,0); },
-  'show-monitor': function () { var panel=$('#monitor-panel');if(panel)panel.scrollIntoView({block:'start'}); },
+  'go-home': function () { homeY=0;homeAnchor=null;location.hash='home';window.scrollTo({top:0,behavior:'instant'}); },
+  'show-monitor': function () { var panel=$('#monitor-panel');if(panel){panel.closest('details').open=true;panel.scrollIntoView({block:'start'});} },
   'open-search': function () { openSearch(); },
   'close-search': function () { closeSearch(); },
+  'open-map': function () { openMapPanel(); },
+  'close-map': function () { closeMapPanel(); },
   'edit-widgets': function () { setEditing(!editing); },
   'done-widgets': function () { setEditing(false); },
   'add-widget': function () { openGallery(); },
@@ -3504,7 +3962,7 @@ document.addEventListener('keydown', function (e) {
   var typing = /INPUT|TEXTAREA|SELECT/.test((e.target.tagName || '')) || e.target.isContentEditable;
   if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) { e.preventDefault(); open ? closeSearch() : openSearch(); return; }
   if (!open && e.key === '/' && !typing) { e.preventDefault(); openSearch(); return; }
-  if (!open && e.key === 'Escape') { if (!closeSheet()) setEditing(false); return; }
+  if (!open && e.key === 'Escape') { if (!closePop() && !closeSheet() && !closeMapPanel()) setEditing(false); return; }
   if (!open) return;
   if (e.key === 'Escape') { e.preventDefault(); closeSearch(); return; }
   if (e.target.id === 'q') {
