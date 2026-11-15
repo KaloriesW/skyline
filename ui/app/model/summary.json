@@ -1,434 +1,137 @@
 {
- "model": "ridge",
+ "model": "v2: cross-validation winner per city and target (v1, ridge, boosted or blend)",
  "bad_day_threshold": 35.0,
  "data": "PM2.5/PM10: CAMS global via Open-Meteo (model estimates). Weather: ERA5 via Open-Meteo archive.",
  "baseline": "tomorrow = same as today",
+ "upwind": {
+  "north": [
+   25.0,
+   121.2
+  ],
+  "fujian": [
+   25.0,
+   119.0
+  ],
+  "southwest": [
+   23.8,
+   120.3
+  ],
+  "south": [
+   22.6,
+   120.3
+  ]
+ },
  "cities": [
-  {
-   "id": "taipei",
-   "name": "Taipei City",
-   "name_zh": "臺北市",
-   "lat": 25.0375,
-   "lon": 121.5637,
-   "n_train": 1007,
-   "n_test": 365,
-   "tested_on": "2025-11-08 .. 2026-11-07",
-   "deployed": "ridge",
-   "pm25": {
-    "baseline_mae": 6.291,
-    "model_mae": 4.71,
-    "improvement_pct": 25.1,
-    "beats_baseline": true,
-    "boosted_mae": 4.153,
-    "validation_choice": "boosted"
-   },
-   "pm10": {
-    "baseline_mae": 6.825,
-    "model_mae": 5.793,
-    "improvement_pct": 15.1,
-    "beats_baseline": true,
-    "boosted_mae": 5.461,
-    "validation_choice": "boosted"
-   },
-   "warnings": {
-    "bad_days": 54,
-    "warned": 45,
-    "caught": 31,
-    "precision": 0.689,
-    "recall": 0.574,
-    "baseline_precision": 0.574,
-    "baseline_recall": 0.574
-   },
-   "notes": [
-    "pm25: validation would have chosen the boosted model (validation MAE 5.01 vs ridge 5.22). Ridge is deployed for portability; on the test year ridge MAE is 4.71 and boosted 4.15 (ridge is 0.56 µg/m³ worse).",
-    "pm10: validation would have chosen the boosted model (validation MAE 5.70 vs ridge 5.78). Ridge is deployed for portability; on the test year ridge MAE is 5.79 and boosted 5.46 (ridge is 0.33 µg/m³ worse)."
-   ]
-  },
-  {
-   "id": "new_taipei",
-   "name": "New Taipei City",
-   "name_zh": "新北市",
-   "lat": 25.012,
-   "lon": 121.4657,
-   "n_train": 1007,
-   "n_test": 365,
-   "tested_on": "2025-11-08 .. 2026-11-07",
-   "deployed": "ridge",
-   "pm25": {
-    "baseline_mae": 6.291,
-    "model_mae": 4.752,
-    "improvement_pct": 24.5,
-    "beats_baseline": true,
-    "boosted_mae": 4.309,
-    "validation_choice": "boosted"
-   },
-   "pm10": {
-    "baseline_mae": 6.825,
-    "model_mae": 5.744,
-    "improvement_pct": 15.8,
-    "beats_baseline": true,
-    "boosted_mae": 5.336,
-    "validation_choice": "ridge"
-   },
-   "warnings": {
-    "bad_days": 54,
-    "warned": 43,
-    "caught": 30,
-    "precision": 0.698,
-    "recall": 0.556,
-    "baseline_precision": 0.574,
-    "baseline_recall": 0.574
-   },
-   "notes": [
-    "pm25: validation would have chosen the boosted model (validation MAE 5.31 vs ridge 5.31). Ridge is deployed for portability; on the test year ridge MAE is 4.75 and boosted 4.31 (ridge is 0.44 µg/m³ worse)."
-   ]
-  },
-  {
-   "id": "taoyuan",
-   "name": "Taoyuan City",
-   "name_zh": "桃園市",
-   "lat": 24.9937,
-   "lon": 121.301,
-   "n_train": 1007,
-   "n_test": 365,
-   "tested_on": "2025-11-08 .. 2026-11-07",
-   "deployed": "ridge",
-   "pm25": {
-    "baseline_mae": 6.147,
-    "model_mae": 4.052,
-    "improvement_pct": 34.1,
-    "beats_baseline": true,
-    "boosted_mae": 3.687,
-    "validation_choice": "boosted"
-   },
-   "pm10": {
-    "baseline_mae": 6.517,
-    "model_mae": 4.787,
-    "improvement_pct": 26.5,
-    "beats_baseline": true,
-    "boosted_mae": 4.538,
-    "validation_choice": "ridge"
-   },
-   "warnings": {
-    "bad_days": 33,
-    "warned": 14,
-    "caught": 11,
-    "precision": 0.786,
-    "recall": 0.333,
-    "baseline_precision": 0.333,
-    "baseline_recall": 0.333
-   },
-   "notes": [
-    "pm25: validation would have chosen the boosted model (validation MAE 5.00 vs ridge 5.24). Ridge is deployed for portability; on the test year ridge MAE is 4.05 and boosted 3.69 (ridge is 0.37 µg/m³ worse)."
-   ]
-  },
   {
    "id": "taichung",
    "name": "Taichung City",
    "name_zh": "臺中市",
    "lat": 24.1477,
    "lon": 120.6736,
-   "n_train": 1007,
+   "n_train": 1002,
    "n_test": 365,
    "tested_on": "2025-11-08 .. 2026-11-07",
-   "deployed": "ridge",
+   "cv_on": "2024-11-08 .. 2025-11-06 (4 folds)",
+   "chosen": {
+    "pm25": "blend",
+    "pm10": "v1"
+   },
    "pm25": {
+    "chosen": "blend",
     "baseline_mae": 5.906,
-    "model_mae": 4.45,
-    "improvement_pct": 24.6,
+    "model_mae": 4.379,
+    "improvement_pct": 25.9,
     "beats_baseline": true,
-    "boosted_mae": 4.651,
-    "validation_choice": "ridge"
+    "cv_mae": {
+     "v1": 5.107,
+     "ridge": 4.802,
+     "boosted": 5.072,
+     "blend": 4.749,
+     "baseline": 6.481
+    },
+    "test_mae": {
+     "baseline": 5.906,
+     "v1": 4.45,
+     "ridge": 4.323,
+     "boosted": 4.785,
+     "blend": 4.379,
+     "blend_no_weather": 5.117
+    },
+    "best_on_test": "ridge"
    },
    "pm10": {
+    "chosen": "v1",
     "baseline_mae": 6.042,
-    "model_mae": 4.865,
+    "model_mae": 4.864,
     "improvement_pct": 19.5,
     "beats_baseline": true,
-    "boosted_mae": 5.094,
-    "validation_choice": "ridge"
+    "cv_mae": {
+     "v1": 5.183,
+     "ridge": 5.457,
+     "boosted": 7.768,
+     "blend": 6.074,
+     "baseline": 6.66
+    },
+    "test_mae": {
+     "baseline": 6.042,
+     "v1": 4.864,
+     "ridge": 4.737,
+     "boosted": 5.326,
+     "blend": 4.69,
+     "blend_no_weather": 5.278
+    },
+    "best_on_test": "blend"
    },
+   "warn_threshold": 28.5,
    "warnings": {
-    "bad_days": 143,
-    "warned": 110,
-    "caught": 96,
-    "precision": 0.873,
-    "recall": 0.671,
-    "baseline_precision": 0.762,
-    "baseline_recall": 0.762
-   },
-   "notes": []
-  },
-  {
-   "id": "tainan",
-   "name": "Tainan City",
-   "name_zh": "臺南市",
-   "lat": 22.9908,
-   "lon": 120.185,
-   "n_train": 1007,
-   "n_test": 365,
-   "tested_on": "2025-11-08 .. 2026-11-07",
-   "deployed": "ridge",
-   "pm25": {
-    "baseline_mae": 4.003,
-    "model_mae": 3.232,
-    "improvement_pct": 19.3,
-    "beats_baseline": true,
-    "boosted_mae": 3.148,
-    "validation_choice": "ridge"
-   },
-   "pm10": {
-    "baseline_mae": 4.46,
-    "model_mae": 3.903,
-    "improvement_pct": 12.5,
-    "beats_baseline": true,
-    "boosted_mae": 4.08,
-    "validation_choice": "ridge"
-   },
-   "warnings": {
-    "bad_days": 9,
-    "warned": 1,
-    "caught": 0,
-    "precision": 0.0,
-    "recall": 0.0,
-    "baseline_precision": 0.333,
-    "baseline_recall": 0.333
-   },
-   "notes": []
-  },
-  {
-   "id": "kaohsiung",
-   "name": "Kaohsiung City",
-   "name_zh": "高雄市",
-   "lat": 22.6203,
-   "lon": 120.312,
-   "n_train": 1007,
-   "n_test": 365,
-   "tested_on": "2025-11-08 .. 2026-11-07",
-   "deployed": "ridge",
-   "pm25": {
-    "baseline_mae": 5.552,
-    "model_mae": 4.387,
-    "improvement_pct": 21.0,
-    "beats_baseline": true,
-    "boosted_mae": 4.117,
-    "validation_choice": "ridge"
-   },
-   "pm10": {
-    "baseline_mae": 5.762,
-    "model_mae": 4.772,
-    "improvement_pct": 17.2,
-    "beats_baseline": true,
-    "boosted_mae": 4.685,
-    "validation_choice": "ridge"
-   },
-   "warnings": {
-    "bad_days": 90,
-    "warned": 66,
-    "caught": 49,
-    "precision": 0.742,
-    "recall": 0.544,
-    "baseline_precision": 0.648,
-    "baseline_recall": 0.656
-   },
-   "notes": []
-  },
-  {
-   "id": "keelung",
-   "name": "Keelung City",
-   "name_zh": "基隆市",
-   "lat": 25.1317,
-   "lon": 121.7447,
-   "n_train": 1007,
-   "n_test": 365,
-   "tested_on": "2025-11-08 .. 2026-11-07",
-   "deployed": "ridge",
-   "pm25": {
-    "baseline_mae": 6.291,
-    "model_mae": 4.542,
-    "improvement_pct": 27.8,
-    "beats_baseline": true,
-    "boosted_mae": 3.91,
-    "validation_choice": "boosted"
-   },
-   "pm10": {
-    "baseline_mae": 6.825,
-    "model_mae": 5.471,
-    "improvement_pct": 19.8,
-    "beats_baseline": true,
-    "boosted_mae": 5.033,
-    "validation_choice": "boosted"
-   },
-   "warnings": {
-    "bad_days": 54,
-    "warned": 39,
-    "caught": 28,
-    "precision": 0.718,
-    "recall": 0.519,
-    "baseline_precision": 0.574,
-    "baseline_recall": 0.574
+    "at_35": {
+     "threshold": 35.0,
+     "bad_days": 143,
+     "warned": 117,
+     "caught": 98,
+     "false_alarms": 19,
+     "missed": 45,
+     "precision": 0.838,
+     "recall": 0.685
+    },
+    "tuned": {
+     "threshold": 28.5,
+     "bad_days": 143,
+     "warned": 230,
+     "caught": 139,
+     "false_alarms": 91,
+     "missed": 4,
+     "precision": 0.604,
+     "recall": 0.972
+    },
+    "baseline": {
+     "threshold": 35.0,
+     "bad_days": 143,
+     "warned": 143,
+     "caught": 109,
+     "false_alarms": 34,
+     "missed": 34,
+     "precision": 0.762,
+     "recall": 0.762
+    }
    },
    "notes": [
-    "pm25: validation would have chosen the boosted model (validation MAE 4.94 vs ridge 5.30). Ridge is deployed for portability; on the test year ridge MAE is 4.54 and boosted 3.91 (ridge is 0.63 µg/m³ worse).",
-    "pm10: validation would have chosen the boosted model (validation MAE 5.53 vs ridge 5.83). Ridge is deployed for portability; on the test year ridge MAE is 5.47 and boosted 5.03 (ridge is 0.44 µg/m³ worse)."
-   ]
-  },
-  {
-   "id": "hsinchu_city",
-   "name": "Hsinchu City",
-   "name_zh": "新竹市",
-   "lat": 24.8066,
-   "lon": 120.9686,
-   "n_train": 1007,
-   "n_test": 365,
-   "tested_on": "2025-11-08 .. 2026-11-07",
-   "deployed": "ridge",
-   "pm25": {
-    "baseline_mae": 4.937,
-    "model_mae": 3.808,
-    "improvement_pct": 22.9,
-    "beats_baseline": true,
-    "boosted_mae": 3.665,
-    "validation_choice": "boosted"
-   },
-   "pm10": {
-    "baseline_mae": 5.855,
-    "model_mae": 5.028,
-    "improvement_pct": 14.1,
-    "beats_baseline": true,
-    "boosted_mae": 4.83,
-    "validation_choice": "ridge"
-   },
-   "warnings": {
-    "bad_days": 11,
-    "warned": 9,
-    "caught": 5,
-    "precision": 0.556,
-    "recall": 0.455,
-    "baseline_precision": 0.182,
-    "baseline_recall": 0.182
-   },
-   "notes": [
-    "pm25: validation would have chosen the boosted model (validation MAE 5.27 vs ridge 5.73). Ridge is deployed for portability; on the test year ridge MAE is 3.81 and boosted 3.66 (ridge is 0.14 µg/m³ worse)."
-   ]
-  },
-  {
-   "id": "chiayi_city",
-   "name": "Chiayi City",
-   "name_zh": "嘉義市",
-   "lat": 23.4812,
-   "lon": 120.4536,
-   "n_train": 1007,
-   "n_test": 365,
-   "tested_on": "2025-11-08 .. 2026-11-07",
-   "deployed": "ridge",
-   "pm25": {
-    "baseline_mae": 5.469,
-    "model_mae": 3.968,
-    "improvement_pct": 27.4,
-    "beats_baseline": true,
-    "boosted_mae": 3.666,
-    "validation_choice": "ridge"
-   },
-   "pm10": {
-    "baseline_mae": 5.675,
-    "model_mae": 4.667,
-    "improvement_pct": 17.8,
-    "beats_baseline": true,
-    "boosted_mae": 4.48,
-    "validation_choice": "ridge"
-   },
-   "warnings": {
-    "bad_days": 50,
-    "warned": 41,
-    "caught": 28,
-    "precision": 0.683,
-    "recall": 0.56,
-    "baseline_precision": 0.54,
-    "baseline_recall": 0.54
-   },
-   "notes": []
-  },
-  {
-   "id": "hsinchu_county",
-   "name": "Hsinchu County",
-   "name_zh": "新竹縣",
-   "lat": 24.827,
-   "lon": 121.0129,
-   "n_train": 1007,
-   "n_test": 365,
-   "tested_on": "2025-11-08 .. 2026-11-07",
-   "deployed": "ridge",
-   "pm25": {
-    "baseline_mae": 6.147,
-    "model_mae": 4.081,
-    "improvement_pct": 33.6,
-    "beats_baseline": true,
-    "boosted_mae": 3.761,
-    "validation_choice": "boosted"
-   },
-   "pm10": {
-    "baseline_mae": 6.517,
-    "model_mae": 4.818,
-    "improvement_pct": 26.1,
-    "beats_baseline": true,
-    "boosted_mae": 4.651,
-    "validation_choice": "ridge"
-   },
-   "warnings": {
-    "bad_days": 33,
-    "warned": 15,
-    "caught": 12,
-    "precision": 0.8,
-    "recall": 0.364,
-    "baseline_precision": 0.333,
-    "baseline_recall": 0.333
-   },
-   "notes": [
-    "pm25: validation would have chosen the boosted model (validation MAE 4.62 vs ridge 5.36). Ridge is deployed for portability; on the test year ridge MAE is 4.08 and boosted 3.76 (ridge is 0.32 µg/m³ worse)."
-   ]
-  },
-  {
-   "id": "miaoli",
-   "name": "Miaoli County",
-   "name_zh": "苗栗縣",
-   "lat": 24.5649,
-   "lon": 120.8207,
-   "n_train": 1007,
-   "n_test": 365,
-   "tested_on": "2025-11-08 .. 2026-11-07",
-   "deployed": "ridge",
-   "pm25": {
-    "baseline_mae": 5.344,
-    "model_mae": 3.687,
-    "improvement_pct": 31.0,
-    "beats_baseline": true,
-    "boosted_mae": 3.281,
-    "validation_choice": "boosted"
-   },
-   "pm10": {
-    "baseline_mae": 5.556,
-    "model_mae": 4.251,
-    "improvement_pct": 23.5,
-    "beats_baseline": true,
-    "boosted_mae": 4.169,
-    "validation_choice": "ridge"
-   },
-   "warnings": {
-    "bad_days": 25,
-    "warned": 7,
-    "caught": 4,
-    "precision": 0.571,
-    "recall": 0.16,
-    "baseline_precision": 0.36,
-    "baseline_recall": 0.36
-   },
-   "notes": [
-    "pm25: validation would have chosen the boosted model (validation MAE 4.29 vs ridge 4.67). Ridge is deployed for portability; on the test year ridge MAE is 3.69 and boosted 3.28 (ridge is 0.41 µg/m³ worse)."
+    "pm25: cross-validation chose blend (test-year MAE 4.379); ridge did better on the test year (4.323). The choice was not changed.",
+    "pm10: cross-validation chose v1 (test-year MAE 4.864); blend did better on the test year (4.690). The choice was not changed."
    ]
   }
  ],
  "missing": [
+  "taipei",
+  "new_taipei",
+  "taoyuan",
+  "tainan",
+  "kaohsiung",
+  "keelung",
+  "hsinchu_city",
+  "chiayi_city",
+  "hsinchu_county",
+  "miaoli",
   "changhua",
   "nantou",
   "yunlin",
