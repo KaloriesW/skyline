@@ -607,8 +607,8 @@
     },
     {
       "path": "skyline/ui/app/web/index.html",
-      "bytes": 7786,
-      "sha256": "8fb9ec46cc9b9172901b9e05c4058862517f13ceba3a0fd6be5f326b0ff56c64"
+      "bytes": 7817,
+      "sha256": "af8495a24b4ea9c0d436e9a38d5a1f88264e095b2598de3213652ed0bbfabe3e"
     },
     {
       "path": "skyline/ui/app/web/location.js",
@@ -702,8 +702,8 @@
     },
     {
       "path": "static/app.js",
-      "bytes": 20928,
-      "sha256": "7429d0e21a95ffb0d229affe40a2f0fbb905a80cdcb4477f28cad04403ad9e56"
+      "bytes": 22189,
+      "sha256": "16299c0b232eaeccca5ef82945594c4c21a8517e947af852a3269684308a3727"
     },
     {
       "path": "static/assistant.js",
@@ -712,8 +712,8 @@
     },
     {
       "path": "static/index.html",
-      "bytes": 17666,
-      "sha256": "e1bdf9462cb50b517dfd0bbdb2de231ea13bb8eefc995ee90ed1286c43f69678"
+      "bytes": 17724,
+      "sha256": "594b54983310f66e082cab2b1a44e9901706a91a71e099873bafa1795ccb7cb3"
     },
     {
       "path": "static/monitor-ui.js",
@@ -742,8 +742,8 @@
     },
     {
       "path": "static/skyline.js",
-      "bytes": 3237,
-      "sha256": "da08ca0c57f6b1db8b0f38ecdfbe7e153f668aa3d61016894595e668fad5f712"
+      "bytes": 3314,
+      "sha256": "480c13ebdb1d12b519861e4fa1ac44a7a386edbeb18963e2b9fcec3ccc90723b"
     },
     {
       "path": "static/style.css",
@@ -772,13 +772,13 @@
     },
     {
       "path": "static/workspace.css",
-      "bytes": 2456,
-      "sha256": "892195c43228a191bded7186d49d96349e2c39611ba7715627f2f36858125594"
+      "bytes": 2694,
+      "sha256": "54a634928d273fb50e6f25e2ffbfb14f8785ce38c835839746d9745b9654fb8a"
     },
     {
       "path": "static/workspace.js",
-      "bytes": 4096,
-      "sha256": "9872facb5b95602f6661c2d345e30e9ab5a8012c37c7c21403f47c83e6a7011b"
+      "bytes": 5786,
+      "sha256": "1af83e465f02426e6540962d6112b38778582ff01590cc3bc3f4f262c2441938"
     },
     {
       "path": "test_assistant.py",
@@ -829,6 +829,11 @@
       "path": "test_review_filters.cjs",
       "bytes": 1211,
       "sha256": "54f33641c45655bc3c93aa7ca5e79e69279111a04296272a25773f56f8114c45"
+    },
+    {
+      "path": "test_review_links.cjs",
+      "bytes": 758,
+      "sha256": "56a90c1ffefb58426a3e6fcda28e33e5ae17651f3730f5746e99f51a1e38ca06"
     },
     {
       "path": "test_roads.py",

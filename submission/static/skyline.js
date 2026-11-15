@@ -1,7 +1,7 @@
 /* Skyline city forecasts share this server and map; no second API service. */
 (() => {
   let cities=[],selectedAir=null;
-  WorkspaceQwen.mount({context:()=>({lat:getArea().lat,lon:getArea().lon,location_name:'Map selection',scan_id:currentResult?.id||null,dashboard_snapshot:JSON.stringify({model:currentResult?.model,weather:currentResult?.weather?.summary,selected_city_air:selectedAir,weather_layer:weatherData?{forecast_start:weatherData.forecast_start,forecast_end:weatherData.forecast_end}:null})})});
+  WorkspaceQwen.mount({reviewAreas:()=>currentResult?.geojson.features||[],viewArea:focusReviewArea,context:()=>({lat:getArea().lat,lon:getArea().lon,location_name:'Map selection',scan_id:currentResult?.id||null,dashboard_snapshot:JSON.stringify({model:currentResult?.model,weather:currentResult?.weather?.summary,selected_city_air:selectedAir,weather_layer:weatherData?{forecast_start:weatherData.forecast_start,forecast_end:weatherData.forecast_end}:null})})});
   async function loadCity(){
     const city=cities.find(c=>c.id===$('skyline-city').value);if(!city)return;
     $('skyline-load').disabled=true;$('skyline-air').textContent='Loading '+city.name+'…';

@@ -25,3 +25,7 @@
 #workspace-qwen textarea { border-radius:12px; background:rgba(6,12,26,.28); border-color:rgba(255,255,255,.22); }
 #workspace-qwen form button { background:#FFC24B; color:#2A1A00; }
 #workspace-qwen article { border-color:rgba(255,255,255,.14); }
+
+.wq-area-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+#workspace-qwen .wq-area-actions button{border-color:#FFC24B;color:#FFC24B;font-weight:600}
+#workspace-qwen .wq-area-hint{font-size:11px;color:#a3b7b0;margin-top:8px}
