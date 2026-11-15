@@ -1,0 +1,12 @@
+# This repo auto-commits and pushes everything within a minute. Keep secrets and bulk out of it.
+.env
+.env.*
+!.env.example
+ask_spend.json
+.ask_spend.*
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.log
