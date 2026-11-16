@@ -387,13 +387,13 @@
     },
     {
       "path": "one-page-writeup.pdf",
-      "bytes": 4922,
-      "sha256": "a394bfd8423cac6c5b1f6e7aca94b9f54678b45b31df816057de721352685113"
+      "bytes": 5196,
+      "sha256": "12d7be801787269ad679fd59042f5a0c611ca6d6515f11c7dd9a36fe3b1118de"
     },
     {
       "path": "one-page-writeup.txt",
-      "bytes": 3944,
-      "sha256": "e252ea47277ff20b7bcd543426ae1c6d0ea2d008b55dbc7e3814ed40b7d91354"
+      "bytes": 3985,
+      "sha256": "6311fceaae7eaaa0da2291f874ee729961c5b11dad420d7357cb8988ad3d7b50"
     },
     {
       "path": "requirements-dev.txt",
