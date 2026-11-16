@@ -9,6 +9,7 @@ const layers=L.control.layers({'OpenStreetMap':base},{},{collapsed:true}).addTo(
 L.control.scale({imperial:false}).addTo(map);
 const scanDisplay=ScanDisplay.create();
 let preferredModel=null;
+let hourlyReportVersion='';
 let watchInitialized=false;
 let evidenceLayers={};
 let area,imagery,excluded,detections,markers,sceneArea=null,currentJob=null,currentResult=null,watchEnabled=false,lastAutoResult=null;
@@ -121,7 +122,7 @@ async function loadHistory(id){if(!scanDisplay.allows(id))return;const ticket=sc
 async function refreshHistory(loadLatest=false){try{const rows=await api('/api/history');$('history').innerHTML=rows.length?rows.map(r=>`<button class="history-item" data-id="${r.id}">${r.acquired.slice(0,10)} · ${esc(r.model)} · ${r.count} candidates</button>`).join(''):'No completed scans yet.';for(const b of document.querySelectorAll('.history-item'))b.onclick=()=>loadHistory(b.dataset.id);if(loadLatest&&!new URLSearchParams(location.search).has('selection')){const scan=new URLSearchParams(location.search).get('scan');if(scan&&/^[a-f0-9]{32}$/.test(scan))loadHistory(scan);else if(rows.length)loadHistory(rows[0].id);}}catch(e){console.warn(e);}}
 async function refreshWatch(){
   try{
-    const w=await api('/api/watch');watchEnabled=w.enabled;
+    const w=await api('/api/watch');watchEnabled=w.enabled;refreshHourlyReports();
     $('watch').innerHTML=w.enabled?'Stop monitoring <span>◼</span>':'Start monitoring <span>◉</span>';
     $('check-now').hidden=!w.enabled;
     $('check-now').disabled=!!w.active_job;
@@ -192,4 +193,22 @@ function focusReviewArea(id,scanId){
   }});
   error(hidden?'Review filters were reset to show the suggested area.':'');
   return true;
+}
+
+async function refreshHourlyReports(){
+  try{
+    const data=await api('/api/watch/reports'),version=JSON.stringify(data.reports.map(r=>r.id));
+    if(version===hourlyReportVersion)return;hourlyReportVersion=version;
+    const list=$('hourly-report-list');list.replaceChildren();
+    if(!data.reports.length){list.textContent='No reports yet. Choose your area and start monitoring to save the first report.';return;}
+    for(const report of data.reports){
+      const detail=document.createElement('details'),title=document.createElement('summary'),text=document.createElement('p'),download=document.createElement('a');
+      title.textContent=new Date(report.created_at).toLocaleString('en-GB',{timeZone:'Asia/Taipei'})+' · Taiwan time';
+      text.textContent=report.text;text.style.whiteSpace='pre-wrap';text.className='hint';
+      download.textContent='Download report ↓';download.href=`/api/watch/reports/${report.id}/download`;download.className='download';
+      detail.append(title,text,download);
+      if(report.latest_scan?.scan_id){const button=document.createElement('button');button.type='button';button.className='text-button';button.textContent='Open reported scan ↗';button.onclick=()=>{scanDisplay.release();loadHistory(report.latest_scan.scan_id);};detail.append(button);}
+      list.append(detail);
+    }
+  }catch(e){$('hourly-report-list').textContent='Hourly reports unavailable. Retry when the server is connected.';hourlyReportVersion='';}
 }

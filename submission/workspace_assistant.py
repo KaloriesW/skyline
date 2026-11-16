@@ -30,6 +30,11 @@ def monitoring_answer(question, history, watch):
     users=[t.get('content','') for t in history if t.get('role')=='user']
     previous=users[-1].lower() if users else ''
     followup=bool(re.search(r'\b(?:enable|start|turn on|activate|pause|stop|disable) (?:it|that)\b',text)) and bool(re.search(r'\bmonitor(?:ing)?\b',previous))
+    reports=bool(re.search(r'hourly report|monitor(?:ing)? report|每小時報告',text))
+    if reports:
+        latest=watch.get('latest_hourly_report')
+        if latest:return latest['text']+'\nOpen Hourly reports on the map to download this report.'
+        return 'No hourly reports have been saved yet. Choose an area and start monitoring. A report is saved immediately, then hourly, even without new imagery. Open Hourly reports on the map to read or download them. Keep the Mac awake and the server running.'
     if not (explicit or followup):return None
     if re.search(r'\b(?:pause|stop|disable|turn off)\b',text):
         return ('Use Stop monitoring on the map, or Pause in the home monitoring panel. '
@@ -47,6 +52,7 @@ def monitoring_answer(question, history, watch):
     active=' A scan is still finishing.' if watch.get('active_job') else ''
     return (f'Monitoring is currently {state}.{active} '
             'When enabled, it checks hourly for newly published Sentinel-2 scenes in your selected area. '
+            'It also saves an hourly report, including hours with no new imagery; open Hourly reports on the map. '
             'The Mac must stay awake and the server must remain running.')
 
 

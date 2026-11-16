@@ -1,0 +1,19 @@
+{
+  "date": "2026-11-16",
+  "python_tests": 243,
+  "optional_skipped": 3,
+  "javascript_tests": 15,
+  "hourly_report_tests": 5,
+  "live_api_checked": true,
+  "live_ui_empty_state_checked": true,
+  "monitoring_enabled_by_this_update": false,
+  "behaviour": [
+    "First snapshot on enable, then every 3600 seconds",
+    "No-new-image, busy, failure and missing-result states supported",
+    "Persisted schedule across restart; no fabricated backfill",
+    "Latest 24 shown, maximum 168 retained",
+    "Text downloads and Qwen latest report access",
+    "Saved forecasts explicitly not refreshed by report"
+  ],
+  "runtime_reports_shipped": false
+}

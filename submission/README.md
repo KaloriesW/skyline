@@ -73,7 +73,7 @@ The landslide holdout is small, geographically limited and positive-enriched. Bo
 python check_setup.py --inference
 python -m pip install -r requirements-dev.txt
 python -m pytest test_*.py -q
-node --test test_location.cjs test_review_filters.cjs test_scan_display.cjs
+node --test test_location.cjs test_review_filters.cjs test_scan_display.cjs test_review_links.cjs
 (cd skyline/ui/app && python -m pytest test_server.py test_predict.py -q)
 (cd skyline/ui/server && python -m pytest test_skyline_extras.py -q)
 ```
@@ -91,3 +91,7 @@ Our team trained/adapted the segmentation model and built the Taiwan scan, evide
 - [GitHub upload instructions](GITHUB_SUBMISSION.md)
 
 No emergency-service deployment, prevented disaster or measured time saving for field teams is claimed. The intended next step is independent annotation of recent Taiwan scenes and evaluation with landslide/road reviewers.
+
+### Hourly monitoring reports
+
+Choose an area and start monitoring. The server saves a report immediately and every hour while enabled, even when no new scene arrives or a scan is still running. Open **Hourly reports** on the map to read/download the latest 24 snapshots; up to 168 are retained locally. Reports include the watched coordinates, catalogue status and latest completed scan with review locations. Saved scan/weather timestamps are preserved; reports do not turn old imagery into new observations or refresh saved forecasts. Qwen can answer “show the latest hourly report.” The Mac must stay awake with the server running; missed hours are not backfilled. Runtime reports are excluded from the submission package.

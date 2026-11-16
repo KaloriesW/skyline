@@ -502,7 +502,7 @@ def update_watch(generation,**fields):
 @app.get('/api/watch')
 def watch_status():
     return {**read_watch(), 'source':'Sentinel-2 · Earth Search',
-            'lookback_days':WATCH_LOOKBACK_DAYS}
+            'lookback_days':WATCH_LOOKBACK_DAYS,'latest_hourly_report':next(iter(saved_watch_reports(1)),None)}
 
 
 @app.post('/api/watch/check')
@@ -531,10 +531,86 @@ def configure_watch(request: Watch):
             raise HTTPException(409,'Wait for the current scan to finish before changing the watched area or model.')
         state=previous.copy() if same else {'generation':uuid.uuid4().hex,
             'started_at':datetime.now(timezone.utc).isoformat(),'seen':[],'attempts':{}}
+        if request.enabled and not previous.get('enabled'):state['next_report']=0
         state.update(config,interval_seconds=WATCH_INTERVAL,next_check=0,
             message='Monitoring enabled. Checking for recent scenes…' if request.enabled else 'Monitoring paused')
         write_watch(state)
     return state
+
+
+# Persisted hourly snapshots; no synthetic backfill while the server is asleep/off.
+REPORT_LIMIT=168
+
+def report_directory():
+    return WATCH_FILE.parent/'monitor_reports'
+
+def saved_watch_reports(limit=24):
+    directory=report_directory()
+    if not directory.exists():return []
+    rows=[]
+    for path in directory.glob('*.json'):
+        try:rows.append(json.loads(path.read_text()))
+        except (OSError,ValueError):continue
+    return sorted(rows,key=lambda row:row['created_at'],reverse=True)[:limit]
+
+@app.get('/api/watch/reports')
+def watch_reports():
+    return {'reports':saved_watch_reports(), 'retention':REPORT_LIMIT,
+            'note':'Snapshots are saved while monitoring and the server are running. Missed hours are not backfilled.'}
+
+@app.get('/api/watch/reports/{report_id}/download')
+def download_watch_report(report_id:str):
+    if not re.fullmatch('[a-f0-9]{32}',report_id):raise HTTPException(404)
+    path=report_directory()/(report_id+'.json')
+    if not path.is_file():raise HTTPException(404)
+    report=json.loads(path.read_text())
+    return Response(report['text'],media_type='text/plain',
+                    headers={'Content-Disposition':f'attachment; filename="terrain-hourly-{report_id[:8]}.txt"'})
+
+def hourly_report_tick(now=None):
+    import time
+    now=time.time() if now is None else now
+    with WATCH_LOCK:
+        state=read_watch()
+        if not state.get('enabled') or now<state.get('next_report',0):return
+        stamp=datetime.fromtimestamp(now,timezone.utc).isoformat()
+        record={'id':uuid.uuid4().hex,'created_at':stamp,'generation':state.get('generation'),
+                'center':[state['lat'],state['lon']],'width_km':state['width_km'],
+                'model':state['model'],'last_catalogue_check':state.get('last_checked'),
+                'status':state.get('message','Waiting for the first catalogue check.'),
+                'active_job':state.get('active_job'),'latest_scan':None}
+        lines=['Terrain Watch — hourly monitoring report',f'Report time (UTC): {stamp}',
+               f"Watched center: {state['lat']:.6f}, {state['lon']:.6f} · {state['width_km']} × {state['width_km']} km",
+               'Status: '+record['status'],
+               'Last catalogue check: '+str(state.get('last_checked') or 'Not checked yet')]
+        if state.get('active_job'):lines.append('A satellite scan is in progress; its results are not available yet.')
+        if ACTIVE.locked():lines.append('The scanner is busy. Catalogue checks may be delayed; this report is still saved on schedule.')
+        if state.get('last_result'):
+            try:
+                result=scan_status(state['last_result']).get('result')
+                if result:
+                    measured=scan_assistant.measured_report(result)
+                    record['latest_scan']={k:measured.get(k) for k in ['scan_id','acquired','count','both_checks_count','usable_percent','priority_locations']}
+                    lines.extend(['','Latest completed scan — snapshot, not an hourly change count:',
+                                  'Satellite image: '+str(measured['acquired']),measured['overview']])
+                    forecast=measured.get('weather') or {}
+                    record['saved_weather']={k:forecast.get(k) for k in ['status','summary','forecast_start','forecast_end','fetched_at']}
+                    if forecast.get('summary'):
+                        lines.extend(['','Weather saved with that scan (not refreshed by this report):',
+                                      str(forecast['summary']),f"Forecast period: {forecast.get('forecast_start','unavailable')} → {forecast.get('forecast_end','unavailable')}"])
+            except (HTTPException,OSError,ValueError,KeyError,TypeError):
+                lines.append('The latest saved scan could not be read; candidate counts are unavailable.')
+        if not record['latest_scan']:lines.append('No completed scan results are available for this monitoring session.')
+        lines.extend(['','No new image is not evidence of no landslides. Candidates require review.',
+                      'Reports require an awake computer and running server; missed hours are not backfilled.'])
+        record['text']='\n'.join(lines)+'\n'
+        directory=report_directory();directory.mkdir(exist_ok=True)
+        path=directory/(record['id']+'.json');tmp=path.with_suffix('.tmp')
+        tmp.write_text(json.dumps(record,ensure_ascii=False,indent=2));tmp.replace(path)
+        state.update(next_report=now+WATCH_INTERVAL,last_report=record['id']);write_watch(state)
+        for old in saved_watch_reports(100000)[REPORT_LIMIT:]:
+            (directory/(old['id']+'.json')).unlink(missing_ok=True)
+        return record
 
 
 def monitor_tick():
@@ -657,6 +733,10 @@ def monitor_loop():
         try:
             promotion_tick()
             monitor_tick()
+        except Exception:
+            traceback.print_exc()
+        try:
+            hourly_report_tick()
         except Exception:
             traceback.print_exc()
 

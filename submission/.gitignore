@@ -18,3 +18,4 @@ models/*.pt
 !models/unet13.pt
 results/
 *.zip
+monitor_reports/

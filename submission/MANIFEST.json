@@ -2,8 +2,8 @@
   "files": [
     {
       "path": ".gitignore",
-      "bytes": 298,
-      "sha256": "d4dc8573c5a863e9450cc86e4019ff7c3acbd8ace658038b1839f69ebfee658e"
+      "bytes": 315,
+      "sha256": "297c48d5a2ea948dd087645c44ed25fbcf4b18162b4b312c1f303122a9f98cf7"
     },
     {
       "path": "CREDITS.md",
@@ -22,13 +22,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 7357,
-      "sha256": "66a9f37c82827c7295b3a1bd0774341c224035cd588b3f9c7ea157a29f0a9e49"
+      "bytes": 8111,
+      "sha256": "07de938ec9767a3f41f23cf95b570554de89becd38a5ecfb650872ae1301d825"
     },
     {
       "path": "app.py",
-      "bytes": 34940,
-      "sha256": "677792ad342c4cd1995e023ea10aa35508b14c2ce26575e7d5d0e08f6f3ceb1e"
+      "bytes": 39919,
+      "sha256": "5c5de4280f678efa2666c3e4c3bec0f8e3c6fa5dc5dff7efff01b3d52a58b7b2"
     },
     {
       "path": "check_setup.py",
@@ -139,6 +139,11 @@
       "path": "evidence/glass-ui-validation.json",
       "bytes": 714,
       "sha256": "c9a621bd9f994dd5a5dafa3d13bb15cf0a070cac2f7427f6c5063a4d12ebfd1e"
+    },
+    {
+      "path": "evidence/hourly-reports-validation.json",
+      "bytes": 647,
+      "sha256": "d9c44bbd6a122ce6a0018b1f0e54a1756d99c80f02555137a4d4ea24034115d7"
     },
     {
       "path": "evidence/live-only-validation.json",
@@ -702,8 +707,8 @@
     },
     {
       "path": "static/app.js",
-      "bytes": 22189,
-      "sha256": "16299c0b232eaeccca5ef82945594c4c21a8517e947af852a3269684308a3727"
+      "bytes": 23713,
+      "sha256": "fcbfd6cc390f728d4c9c87c2aacf81ae30a609fe4cec48896a5ab9c24a763f9a"
     },
     {
       "path": "static/assistant.js",
@@ -712,8 +717,8 @@
     },
     {
       "path": "static/index.html",
-      "bytes": 17724,
-      "sha256": "594b54983310f66e082cab2b1a44e9901706a91a71e099873bafa1795ccb7cb3"
+      "bytes": 18009,
+      "sha256": "f452acc2274ecb7ca0f1dc0f4860306835bce3a37426c14fe2ae400bfa88ce52"
     },
     {
       "path": "static/monitor-ui.js",
@@ -799,6 +804,11 @@
       "path": "test_geography.py",
       "bytes": 8216,
       "sha256": "a1e0c4ded36ec28f069d195dd944dd1617ad47a05ea3d117e33f45ae8bde5d3a"
+    },
+    {
+      "path": "test_hourly_reports.py",
+      "bytes": 3751,
+      "sha256": "74a46788fcbb09848543f8f1923ae771196958a9cd4984e27479cc067a50535f"
     },
     {
       "path": "test_location.cjs",
@@ -887,8 +897,8 @@
     },
     {
       "path": "workspace_assistant.py",
-      "bytes": 9625,
-      "sha256": "f4fc560e9974c04641bb16fc401064ba4b00f440d47052409ef5ddd365295745"
+      "bytes": 10259,
+      "sha256": "646184dea46404eec85197b4d34ff40a0483aea9d719c79d8f3115c7ba08ba80"
     }
   ]
 }
