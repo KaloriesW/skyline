@@ -579,13 +579,13 @@ var KEY = 'skyline-v1', OLD_KEY = 'skyline-mockup-v1';
 var DEFAULTS = {
   loc: { name: 'Xinyi District', sub: 'Taipei · 110 信義區', lat: 25.0330, lon: 121.5654, kind: 'District' },
   locationMode: 'manual', skylineTerrainLayout: false, weather: 'live', dataV: 2, uiV: 3, layout: null,
-  accent: '#FFC24B', risk: 'default', bgMode: 'live', fonts: 'system', radius: 18, skyline: 'city', mapBase: 'auto',
+  accent: '#FFC24B', risk: 'default', bgMode: 'live', appearance: 'dynamic', fonts: 'system', radius: 18, skyline: 'city', mapBase: 'auto',
   reduceMotion: false, units: 'C', lang: 'en',
   sources: { openMeteo: true, windyMap: true, pm25: true, landslide: true, typhoon: true },
   recents: [], predBase: {}, predT: NOW,
   ai: { provider: 'builtin', oaBase: 'https://openrouter.ai/api/v1', oaModel: '', claudeModel: 'claude-opus-5-5', remember: false }
 };
-var THEME_KEYS = ['accent', 'risk', 'bgMode', 'fonts', 'radius', 'skyline', 'mapBase'];
+var THEME_KEYS = ['accent', 'risk', 'bgMode', 'appearance', 'fonts', 'radius', 'skyline', 'mapBase'];
 function clone(o) { return JSON.parse(JSON.stringify(o)); }
 var S = clone(DEFAULTS);
 try {
@@ -741,8 +741,21 @@ function skyState() {
   return { mood: liveMood(wx), day: !!c.is_day, pm: pm, haze: Math.max(0, Math.min(0.6, (pm - 12) / 70)),
     wind: -(c.wind_speed_10m || 0) * Math.sin((c.wind_direction_10m || 0) * Math.PI / 180) };
 }
+// Appearance is shared with the TerrainWatch map page through localStorage 'skyline-appearance'.
+var DAY_OF = { 'clear-night': 'clear-day', 'partly-night': 'partly-day', 'cloudy-night': 'cloudy-day', dusk: 'clear-day', dawn: 'clear-day', neutral: 'clear-day' };
+var NIGHT_OF = { 'clear-day': 'clear-night', 'partly-day': 'partly-night', 'cloudy-day': 'cloudy-night', dusk: 'clear-night', dawn: 'clear-night', neutral: 'clear-night', fog: 'cloudy-night' };
+function appearance() { return S.appearance === 'light' || S.appearance === 'dark' ? S.appearance : 'dynamic'; }
+function applyAppearance(s) {
+  var a = appearance();
+  try { localStorage.setItem('skyline-appearance', a); } catch (e) {}
+  if (a === 'light') { s.mood = DAY_OF[s.mood] || s.mood; s.day = true; }
+  else if (a === 'dark') { s.mood = NIGHT_OF[s.mood] || s.mood; s.day = false; }
+  else if (s.mood === 'neutral') { var h = new Date().getHours(); s.day = h >= 6 && h < 18; s.mood = s.day ? 'clear-day' : 'clear-night'; }
+  document.documentElement.dataset.appearance = s.day ? 'light' : 'dark';
+  return s;
+}
 function applySky() {
-  var s = skyState();
+  var s = previewOn() ? skyState() : applyAppearance(skyState());
   document.body.dataset.mood = s.mood;
   document.body.dataset.day = s.day ? '1' : '0';
   if (window.Sky) Sky.start({ mood: s.mood, wind: s.wind, haze: s.haze, reduce: !!S.reduceMotion });
@@ -2130,6 +2143,7 @@ function homeView() {
   return '<div class="home"><section id="terrain-focus" class="terrain-focus" aria-label="Landslide review"></section>' +
     '<section class="hero" id="hero" aria-label="Current weather"></section>' +
     '<section class="grid" id="grid" aria-label="Widgets"></section>' +
+    '<div class="customize-row"><button type="button" class="pill-btn" onclick="document.getElementById(\'editBtn\').click()">' + tx('Edit widgets', '編輯小工具') + '</button><button type="button" class="pill-btn" onclick="document.getElementById(\'addBtn\').click()">+ ' + tx('Add widget', '新增小工具') + '</button></div>' +
     '<details class="monitor-disclosure"><summary>Satellite monitoring <span>Choose an area &amp; keep watch ↗</span></summary><section id="monitor-panel" aria-label="Automatic landslide monitoring"></section></details>' +
     '<footer class="foot" id="foot"></footer></div>';
 }
@@ -3586,6 +3600,7 @@ function settingsView() {
       '<input type="color" id="accent-custom" data-input="accent" value="' + S.accent + '" aria-label="Custom accent color"' + (isPreset ? '' : ' class="on"') + '></div></div>' +
     setRow('Risk color scale', '<span style="display:flex;gap:3px;margin-top:4px">' + pal().map(function (c) { return '<i style="display:block;width:18px;height:10px;border-radius:3px;background:' + c + '"></i>'; }).join('') + '</span>',
       seg('risk', 'Risk color scale', [['default', 'Default'], ['cb', 'Color-blind safe']])) +
+    setRow('Appearance', 'Dynamic follows the time of day and the weather. Applies to the landslide map too', seg('appearance', 'Appearance', [['dynamic', 'Dynamic'], ['light', 'Light'], ['dark', 'Dark']])) +
     setRow('Sky', 'Follows live weather at your location, on every screen', seg('bgMode', 'Sky', [['live', 'Live weather'], ['static', 'Static']])) +
     setRow('Fonts', '', seg('fonts', 'Fonts', [['system', 'System (SF on Apple)'], ['default', 'Original (Bricolage + Inter)']])) +
     '<div class="set-row"><label for="radius" class="lbl">Corner roundness<small id="radius-out">' + S.radius + ' px</small></label><input id="radius" class="plain" style="max-width:200px" type="range" min="6" max="36" value="' + S.radius + '" data-input="radius"></div>' +
@@ -3696,7 +3711,7 @@ var ACTIONS = {
   'set-base': function (el) { var sub = route().sub; S.predBase[sub] = el.dataset.base; save(); updatePred(); },
   'ask': function (el) { ask(typeof tr === 'function' ? tr(el.dataset.q) : el.dataset.q); },
   'ask-about': function (el) { pendingAsk = el.dataset.q; location.hash = 'ask'; },
-  'set': function (el) { S[el.dataset.key] = el.dataset.val; save(); applyTheme(); rerender(); },
+  'set': function (el) { S[el.dataset.key] = el.dataset.val; save(); applyTheme(); if (el.dataset.key === 'appearance') applySky(); rerender(); },
   'toggle': function (el) {
     var k = el.dataset.key;
     if (k.indexOf('sources.') === 0) { var sk = k.split('.')[1]; S.sources[sk] = !S.sources[sk]; } else S[k] = !S[k];
