@@ -1,0 +1,161 @@
+{
+  "note": "CSV and original PNG bytes are unchanged. JSON/YAML workstation path prefixes are removed; metrics are unchanged. training-curves.png is rendered from the Sentinel-2 results.csv by the adjacent plotting script. No checkpoint or dataset imagery is distributed here.",
+  "files": [
+    {
+      "source": "outputs/landslide-training/yolo11n-seg-224/results.csv",
+      "source_sha256": "e393033788950cf3d289a73249e87f222bb37d4df3da6b6bf105c831fb264fdc",
+      "file": "yolo11n-seg-224/results.csv",
+      "packaged_sha256": "e393033788950cf3d289a73249e87f222bb37d4df3da6b6bf105c831fb264fdc"
+    },
+    {
+      "source": "outputs/landslide-training/yolo11n-seg-224/args.yaml",
+      "source_sha256": "57a438269925140a0391de18da5d9218b8ca768e92d95c6ae994154f0f5b1b03",
+      "file": "yolo11n-seg-224/args.yaml",
+      "packaged_sha256": "93c56ae13ed0ab489bd3e75efe453867428b0623feade225b1b31117f3e255e7"
+    },
+    {
+      "source": "outputs/landslide-training/yolo11n-seg-224/results.png",
+      "source_sha256": "9ec378e65a02230131631a95c9e503e16d492fa5dba1e060a416f154f45d77e7",
+      "file": "yolo11n-seg-224/results.png",
+      "packaged_sha256": "9ec378e65a02230131631a95c9e503e16d492fa5dba1e060a416f154f45d77e7"
+    },
+    {
+      "source": "outputs/landslide-training/yolo11n-seg-224/MaskPR_curve.png",
+      "source_sha256": "df60943474ccaa880614fd78d8c87700f7177f685ad982401294e56a83dbe3ac",
+      "file": "yolo11n-seg-224/MaskPR_curve.png",
+      "packaged_sha256": "df60943474ccaa880614fd78d8c87700f7177f685ad982401294e56a83dbe3ac"
+    },
+    {
+      "source": "outputs/landslide-training/yolo11n-seg-224/confusion_matrix_normalized.png",
+      "source_sha256": "886275099cc2f61083e654142fc6d0b115d55be04e5e232add12d299f5718a2e",
+      "file": "yolo11n-seg-224/confusion_matrix_normalized.png",
+      "packaged_sha256": "886275099cc2f61083e654142fc6d0b115d55be04e5e232add12d299f5718a2e"
+    },
+    {
+      "source": "outputs/landslide-training/yolo11n-seg-448/results.csv",
+      "source_sha256": "e54957fcf634e0df4e5418f9040263edca0449845178e8f0bb3a68054219526f",
+      "file": "yolo11n-seg-448/results.csv",
+      "packaged_sha256": "e54957fcf634e0df4e5418f9040263edca0449845178e8f0bb3a68054219526f"
+    },
+    {
+      "source": "outputs/landslide-training/yolo11n-seg-448/args.yaml",
+      "source_sha256": "acd6a1f2f06440b529dd5696a84cb1556c3afc91bd6dc1d6e3d07ee8ec821b4d",
+      "file": "yolo11n-seg-448/args.yaml",
+      "packaged_sha256": "8cec02855c3a78c635f12b365f95a62d293736fbdf994b3bf6a5eaddd943041a"
+    },
+    {
+      "source": "outputs/landslide-training/yolo11n-seg-448/results.png",
+      "source_sha256": "35167044aaa1b402f329f58472e5138dc14a4efd52e8c7d0d6d91a388823d562",
+      "file": "yolo11n-seg-448/results.png",
+      "packaged_sha256": "35167044aaa1b402f329f58472e5138dc14a4efd52e8c7d0d6d91a388823d562"
+    },
+    {
+      "source": "outputs/landslide-training/yolo11n-seg-448/MaskPR_curve.png",
+      "source_sha256": "0c27563207e67a63432c33af0ef7bc10c30767bfafd5281575206a3dfbff3a66",
+      "file": "yolo11n-seg-448/MaskPR_curve.png",
+      "packaged_sha256": "0c27563207e67a63432c33af0ef7bc10c30767bfafd5281575206a3dfbff3a66"
+    },
+    {
+      "source": "outputs/landslide-training/yolo11n-seg-448/confusion_matrix_normalized.png",
+      "source_sha256": "97ac12f4cbdc66faeee3a783bf174ad0d5b8f2f9851c16747292a2ea94cde1da",
+      "file": "yolo11n-seg-448/confusion_matrix_normalized.png",
+      "packaged_sha256": "97ac12f4cbdc66faeee3a783bf174ad0d5b8f2f9851c16747292a2ea94cde1da"
+    },
+    {
+      "source": "outputs/landslide-training/yolo11l-seg-448/results.csv",
+      "source_sha256": "074a0f75285990bce491ebb639b45b5fc10e3e6d12b40df47255bb45a8c43169",
+      "file": "yolo11l-seg-448/results.csv",
+      "packaged_sha256": "074a0f75285990bce491ebb639b45b5fc10e3e6d12b40df47255bb45a8c43169"
+    },
+    {
+      "source": "outputs/landslide-training/yolo11l-seg-448/args.yaml",
+      "source_sha256": "f947bcf2d411c48a3187b441a4166050f65c36128add3a74233fd02499669dd4",
+      "file": "yolo11l-seg-448/args.yaml",
+      "packaged_sha256": "771833eb347481b0adf95141e68cb670a14d15507105cd40661715cf88787221"
+    },
+    {
+      "source": "outputs/landslide-training/yolo11l-seg-448/results.png",
+      "source_sha256": "392f56eba8d03b1f8cc28b84cc2e897e628f7f0440513c462234513f67d136ff",
+      "file": "yolo11l-seg-448/results.png",
+      "packaged_sha256": "392f56eba8d03b1f8cc28b84cc2e897e628f7f0440513c462234513f67d136ff"
+    },
+    {
+      "source": "outputs/landslide-training/yolo11l-seg-448/MaskPR_curve.png",
+      "source_sha256": "3b46c499a387d4b54c31b9169a2ca4811b8c5f829468a1c1a05c09e9fbc2ddf6",
+      "file": "yolo11l-seg-448/MaskPR_curve.png",
+      "packaged_sha256": "3b46c499a387d4b54c31b9169a2ca4811b8c5f829468a1c1a05c09e9fbc2ddf6"
+    },
+    {
+      "source": "outputs/landslide-training/yolo11l-seg-448/confusion_matrix_normalized.png",
+      "source_sha256": "97ac12f4cbdc66faeee3a783bf174ad0d5b8f2f9851c16747292a2ea94cde1da",
+      "file": "yolo11l-seg-448/confusion_matrix_normalized.png",
+      "packaged_sha256": "97ac12f4cbdc66faeee3a783bf174ad0d5b8f2f9851c16747292a2ea94cde1da"
+    },
+    {
+      "source": "outputs/landslide-training/yolo11l-seg-sentinel2-448/results.csv",
+      "source_sha256": "7e2282f78feca97355f9b36b09ad2dc711405269f5306e70f4e5cd7ecb51169a",
+      "file": "yolo11l-seg-sentinel2-448/results.csv",
+      "packaged_sha256": "7e2282f78feca97355f9b36b09ad2dc711405269f5306e70f4e5cd7ecb51169a"
+    },
+    {
+      "source": "outputs/landslide-training/yolo11l-seg-sentinel2-448/args.yaml",
+      "source_sha256": "2e40a5459be53e2453c2f8a1d3dda3080bcabc2b94e28b0aca9441743faaa5dc",
+      "file": "yolo11l-seg-sentinel2-448/args.yaml",
+      "packaged_sha256": "92bae87a708a168701e11c63e2639704fda29d0cf6d27a9f6ec39886b67bb3d9"
+    },
+    {
+      "source": "outputs/taiwan-landslides-yolo/source_metadata.json",
+      "source_sha256": "6768467280384b640b4ba0104332e16dedded69447097b37b63105a9b2e02488",
+      "file": "datasets/taiwan-landslides-yolo/source_metadata.json",
+      "packaged_sha256": "6768467280384b640b4ba0104332e16dedded69447097b37b63105a9b2e02488"
+    },
+    {
+      "source": "outputs/taiwan-landslides-yolo/preprocessing.json",
+      "source_sha256": "01604a074709db729200844f700068df61289d706a7a8f0ba7ea831d93c49a5a",
+      "file": "datasets/taiwan-landslides-yolo/preprocessing.json",
+      "packaged_sha256": "01604a074709db729200844f700068df61289d706a7a8f0ba7ea831d93c49a5a"
+    },
+    {
+      "source": "outputs/taiwan-landslides-yolo/validation_report.json",
+      "source_sha256": "62001c78113134f81c5926fdb6fa585d5916fd0ff53acbba4f33d5c0a2f55237",
+      "file": "datasets/taiwan-landslides-yolo/validation_report.json",
+      "packaged_sha256": "62001c78113134f81c5926fdb6fa585d5916fd0ff53acbba4f33d5c0a2f55237"
+    },
+    {
+      "source": "outputs/sentinel2-landslides-yolo/source_metadata.json",
+      "source_sha256": "47ce8ce807e4a22694d7b8d482c67c7c0a5507b9a0ac4cf75c055e0975ad88ee",
+      "file": "datasets/sentinel2-landslides-yolo/source_metadata.json",
+      "packaged_sha256": "47ce8ce807e4a22694d7b8d482c67c7c0a5507b9a0ac4cf75c055e0975ad88ee"
+    },
+    {
+      "source": "outputs/sentinel2-landslides-yolo/preprocessing.json",
+      "source_sha256": "a08e14ca0e4c2a9b5a20f049b08aab413e3edd5ca3cde446ea5cd278efa56233",
+      "file": "datasets/sentinel2-landslides-yolo/preprocessing.json",
+      "packaged_sha256": "a08e14ca0e4c2a9b5a20f049b08aab413e3edd5ca3cde446ea5cd278efa56233"
+    },
+    {
+      "source": "outputs/sentinel2-landslides-yolo/validation_report.json",
+      "source_sha256": "e7347ca3d0b5d49b544f7dea9e3156237c16d93063736bd845346e9d706fb400",
+      "file": "datasets/sentinel2-landslides-yolo/validation_report.json",
+      "packaged_sha256": "e7347ca3d0b5d49b544f7dea9e3156237c16d93063736bd845346e9d706fb400"
+    },
+    {
+      "source": "outputs/landslide-training/sentinel2-final-threshold-sweep/results.json",
+      "source_sha256": "ee3917a2321589a8a91a07f77af10200de3651df7df71b1f542561d9f77652a8",
+      "file": "sentinel2-threshold-sweep/results.json",
+      "packaged_sha256": "6aa1ac01b6f4cdd63f7822f5e7b1c292db74a83dce63664ed6daf7d092d21bd5"
+    },
+    {
+      "source": "outputs/landslide-training/sentinel2-final-threshold-sweep/selected-threshold-validation.json",
+      "source_sha256": "f1915f6bd0fba482f99b513e091d1be3ea5302d82aeab1c591c0d6945ed9cbf7",
+      "file": "sentinel2-threshold-sweep/selected-threshold-validation.json",
+      "packaged_sha256": "96b7c6f722000f558951ce9947e5d6729225c334f3df3e2c77dbe4169d1679bb"
+    },
+    {
+      "source": "outputs/landslide-training/sentinel2-final-threshold-sweep/selected-threshold-test.json",
+      "source_sha256": "1120c6598d0be35264013c97a75b32a5600ca43859a554f5942b737c8ea7f07f",
+      "file": "sentinel2-threshold-sweep/selected-threshold-test.json",
+      "packaged_sha256": "7257586845cb0d0a726fe2008af6127d54697e9b321211652cbe5f10f87ce2f5"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "dataset": "Landslide4Sense",
+  "primary_source": "https://zenodo.org/records/10463239",
+  "mirror": "https://huggingface.co/datasets/ibm-nasa-geospatial/Landslide4sense",
+  "revision": "4b291891badf301b5c75c2153f0f8fe00eeb1435",
+  "license": {
+    "id": "cc-by-4.0"
+  },
+  "citation": null,
+  "split_policy": "Preserve published train/validation/test splits. Geographic independence cannot be verified from per-patch files; do not claim unseen-Taiwan performance.",
+  "bands": [
+    "B1",
+    "B2",
+    "B3",
+    "B4",
+    "B5",
+    "B6",
+    "B7",
+    "B8",
+    "B9",
+    "B10",
+    "B11",
+    "B12",
+    "slope",
+    "DEM"
+  ],
+  "rgb_indices_zero_based": [
+    3,
+    2,
+    1
+  ],
+  "geography": "Multi-region benchmark, including western Taitung, Taiwan; individual files lack georeferencing."
+}

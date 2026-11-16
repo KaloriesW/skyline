@@ -1,0 +1,30 @@
+{
+  "title": "LMHLD: A Large-scale Multi-source High-resolution Landslide Dataset for Landslide Detection based on Deep Learning",
+  "creators": [
+    {
+      "name": "Guanting, Liu",
+      "affiliation": null,
+      "orcid": "0000-0003-1854-9790"
+    }
+  ],
+  "publication_date": "2025-10-04",
+  "doi": "10.5281/zenodo.17258777",
+  "license": {
+    "id": "cc-by-4.0"
+  },
+  "version": null,
+  "related_identifiers": null,
+  "source_record": "https://zenodo.org/records/17258777",
+  "retrieved_on": "2026-11-14",
+  "archive_file": {
+    "id": "1ff1a48d-541f-4e91-ae28-f041c6528b62",
+    "key": "LMHLD.rar",
+    "size": 5706541411,
+    "checksum": "md5:f8e8f492c24cdd832d248b4acfd71abc",
+    "links": {
+      "self": "https://zenodo.org/api/records/17258777/files/LMHLD.rar/content"
+    }
+  },
+  "download_scope": "Only Taiwan compressed entries, original byte range 3087609462 through 4893382017 inclusive; repackaged as standalone non-solid RAR.",
+  "source_folder": "LMHLD/LMHLD_dataset_different_patch_sizes/Taiwan_China_224/"
+}

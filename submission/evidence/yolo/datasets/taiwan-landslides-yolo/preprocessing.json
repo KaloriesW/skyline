@@ -1,0 +1,24 @@
+{
+  "rgb_source_band_indices": [
+    2,
+    1,
+    0
+  ],
+  "low": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "high": [
+    1849.0,
+    1595.0,
+    1224.0
+  ],
+  "percentile_range": [
+    0.5,
+    99.5
+  ],
+  "fit_split": "train",
+  "sample_stride": 8,
+  "band_order_note": "Assumed native PlanetScope B,G,R,NIR order; RGB selects [2,1,0]. NPY arrays contain no band-name metadata. Visually inspected."
+}

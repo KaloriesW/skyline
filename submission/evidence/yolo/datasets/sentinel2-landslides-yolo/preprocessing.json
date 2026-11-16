@@ -1,0 +1,18 @@
+{
+  "rgb_indices": [
+    3,
+    2,
+    1
+  ],
+  "rgb_bands": [
+    "B4",
+    "B3",
+    "B2"
+  ],
+  "native_size": 128,
+  "pixel_spacing_m": 10,
+  "transform": "Per-image, per-channel 2nd\u201398th percentile linear stretch; round and clip to uint8. Same transform required at deployment.",
+  "statistics_fit": "None. Deterministic image-only transform; labels and other images are not used.",
+  "source_values": "Publisher-normalized spectral bands; not assumed to be raw reflectance or Sentinel-2 TCI.",
+  "deployment_note": "Current map uses 224-pixel TCI crops. This checkpoint requires 128-pixel native crops and rgb_preprocessing.py. TCI clipping/atmospheric differences remain; validate before deployment."
+}

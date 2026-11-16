@@ -1,0 +1,46 @@
+{
+  "splits": {
+    "train": {
+      "images": 3799,
+      "empty_masks": 1568,
+      "polygons": 13473,
+      "positive_pixels": 1442790,
+      "total_pixels": 62242816,
+      "min_mask_iou": 0.9991394148020654
+    },
+    "val": {
+      "images": 245,
+      "empty_masks": 99,
+      "polygons": 493,
+      "positive_pixels": 68745,
+      "total_pixels": 4014080,
+      "min_mask_iou": 1.0
+    },
+    "test": {
+      "images": 800,
+      "empty_masks": 264,
+      "polygons": 2074,
+      "positive_pixels": 247531,
+      "total_pixels": 13107200,
+      "min_mask_iou": 0.9993981342160698
+    }
+  },
+  "unused_masks": {
+    "train": [
+      "image_1.h5",
+      "image_10.h5",
+      "image_100.h5",
+      "image_1000.h5",
+      "image_1001.h5"
+    ],
+    "validation": [],
+    "test": []
+  },
+  "cross_split_duplicate_images": [],
+  "within_split_duplicate_images": [],
+  "nonfinite_rgb_pixels": 0,
+  "mask_changed_pixels": 3,
+  "mask_intersection": 1759066,
+  "mask_union": 1759069,
+  "global_mask_iou": 0.9999982945524024
+}

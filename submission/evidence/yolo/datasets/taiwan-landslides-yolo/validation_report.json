@@ -1,0 +1,53 @@
+{
+  "splits": {
+    "train": {
+      "images": 5270,
+      "polygons": 13041,
+      "empty_masks": 29,
+      "min_mask_iou": 0.9987297554779295,
+      "mean_mask_iou": 0.9999993186642211,
+      "coverage_min": 0.0,
+      "coverage_max": 0.9207389987244898
+    },
+    "val": {
+      "images": 1506,
+      "polygons": 3679,
+      "empty_masks": 5,
+      "min_mask_iou": 0.9991323210412147,
+      "mean_mask_iou": 0.9999993033418578,
+      "coverage_min": 0.0,
+      "coverage_max": 0.9730747767857143
+    },
+    "test": {
+      "images": 753,
+      "polygons": 1950,
+      "empty_masks": 2,
+      "min_mask_iou": 1.0,
+      "mean_mask_iou": 1.0,
+      "coverage_min": 0.0,
+      "coverage_max": 0.7873086734693877
+    }
+  },
+  "cross_split_exact_duplicates": [],
+  "within_split_exact_duplicates": 0,
+  "total_changed_mask_pixels": 23,
+  "total_original_positive_pixels": 24747085,
+  "total_union_pixels": 24747108,
+  "total_intersection_pixels": 24747085,
+  "holes_bridged": 1292,
+  "degenerate_regions_retained": 689,
+  "split_policy": "Original supplied splits; geographic independence cannot be verified from these arrays.",
+  "global_mask_iou": 0.9999990705984716,
+  "lowest_fidelity_samples": [
+    {
+      "name": "taiwan_train_00530",
+      "mask_iou": 0.9987297554779295,
+      "changed_pixels": 4
+    },
+    {
+      "name": "taiwan_train_02710",
+      "mask_iou": 0.9988947222989776,
+      "changed_pixels": 4
+    }
+  ]
+}

@@ -38,6 +38,7 @@ The integrated merge passed **256 Python tests and 15 JavaScript tests**, plus t
 - [One-page write-up](submission/one-page-writeup.pdf)
 - [Demo script and recording instructions](submission/two-minute-demo-script.txt)
 - [Model results and limitations](submission/MODEL_CARD.md)
+- [Historical YOLO training curves, metrics and threshold experiments](submission/evidence/yolo/README.md)
 - [Data, model and AI-tool credits](submission/CREDITS.md)
 - [Final readiness audit](submission/evidence/final-readiness.json)
 - [Submission checklist and judge access](submission/GITHUB_SUBMISSION.md)

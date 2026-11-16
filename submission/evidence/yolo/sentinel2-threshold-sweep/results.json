@@ -1,0 +1,1078 @@
+{
+  "created_at": "2026-11-15T04:04:55.856324+00:00",
+  "checkpoint_epoch": 7,
+  "checkpoint_sha256": "40bb73fd45f984c290b3d8c387e79018185995d896cbccbdd5733387a8ed6a24",
+  "checkpoint": "outputs/landslide-training/sentinel2-final-threshold-sweep/checkpoint.pt",
+  "split": "validation",
+  "images": 245,
+  "native_rgb_size": 128,
+  "model_input_size": 448,
+  "minimum_inference_confidence": 0.001,
+  "nms_iou": 0.7,
+  "max_det": 1000,
+  "cap_hits": [],
+  "device": "cpu",
+  "selection_objective": "Maximum global union-mask pixel IoU (also maximizes global Dice). Highest confidence breaks exact ties.",
+  "thresholds_tested": 123,
+  "direct_finalists": [
+    {
+      "confidence": 0.09,
+      "pixel_iou": 0.3703176318962292,
+      "pixel_dice": 0.540484371326067,
+      "pixel_precision": 0.564679218967922,
+      "pixel_recall": 0.5182776929231216
+    },
+    {
+      "confidence": 0.089,
+      "pixel_iou": 0.367576591337682,
+      "pixel_dice": 0.5375590568980717,
+      "pixel_precision": 0.5576399962480068,
+      "pixel_recall": 0.5188740999345407
+    },
+    {
+      "confidence": 0.088,
+      "pixel_iou": 0.3669562535341593,
+      "pixel_dice": 0.5368953872304579,
+      "pixel_precision": 0.5558462592661808,
+      "pixel_recall": 0.5191941232089606
+    }
+  ],
+  "cached_mask_best_estimate": {
+    "confidence": 0.09,
+    "tp": 35850,
+    "fp": 28021,
+    "fn": 32895,
+    "tn": 3917314,
+    "pixel_iou": 0.37048136742244175,
+    "pixel_dice": 0.5406587440429511,
+    "pixel_precision": 0.5612875953092953,
+    "pixel_recall": 0.5214924721797949,
+    "false_positive_area_km2": 2.8021000000000003,
+    "missed_landslide_area_km2": 3.2895000000000003
+  },
+  "direct_count_differences": {
+    "tp": -221,
+    "fp": -554,
+    "fn": 221,
+    "tn": 554
+  },
+  "best": {
+    "confidence": 0.09,
+    "tp": 35629,
+    "fp": 27467,
+    "fn": 33116,
+    "tn": 3917868,
+    "pixel_iou": 0.3703176318962292,
+    "pixel_dice": 0.540484371326067,
+    "pixel_precision": 0.564679218967922,
+    "pixel_recall": 0.5182776929231216,
+    "false_positive_area_km2": 2.7467,
+    "missed_landslide_area_km2": 3.3116000000000003
+  },
+  "previous_setting": {
+    "confidence": 0.35,
+    "tp": 19225,
+    "fp": 5954,
+    "fn": 49520,
+    "tn": 3939381,
+    "pixel_iou": 0.25736622980227314,
+    "pixel_dice": 0.40937353605042376,
+    "pixel_precision": 0.7635331029826443,
+    "pixel_recall": 0.27965670230562223,
+    "false_positive_area_km2": 0.5954,
+    "missed_landslide_area_km2": 4.952
+  },
+  "verified_by_direct_inference": true,
+  "original_model_at_035": {
+    "pixel_iou": 0.2308266899350864,
+    "pixel_dice": 0.3750758605133273,
+    "pixel_precision": 0.2973044307461772,
+    "pixel_recall": 0.5079496690668412
+  },
+  "test_set_used": false,
+  "applied_to_map": true,
+  "note": "Validation-only selection for this pinned checkpoint: cached union-mask search followed by direct inference on the three best candidates. Best among tested settings, not a guaranteed global optimum or independent Taiwan field validation. Native 128-pixel RGB preprocessing.",
+  "per_image_instance_counts": [
+    {
+      "image": "l4s_val_1.png",
+      "instances_at_minimum_confidence": 117
+    },
+    {
+      "image": "l4s_val_10.png",
+      "instances_at_minimum_confidence": 119
+    },
+    {
+      "image": "l4s_val_100.png",
+      "instances_at_minimum_confidence": 17
+    },
+    {
+      "image": "l4s_val_101.png",
+      "instances_at_minimum_confidence": 10
+    },
+    {
+      "image": "l4s_val_102.png",
+      "instances_at_minimum_confidence": 19
+    },
+    {
+      "image": "l4s_val_103.png",
+      "instances_at_minimum_confidence": 10
+    },
+    {
+      "image": "l4s_val_104.png",
+      "instances_at_minimum_confidence": 1
+    },
+    {
+      "image": "l4s_val_105.png",
+      "instances_at_minimum_confidence": 142
+    },
+    {
+      "image": "l4s_val_106.png",
+      "instances_at_minimum_confidence": 15
+    },
+    {
+      "image": "l4s_val_107.png",
+      "instances_at_minimum_confidence": 22
+    },
+    {
+      "image": "l4s_val_108.png",
+      "instances_at_minimum_confidence": 56
+    },
+    {
+      "image": "l4s_val_109.png",
+      "instances_at_minimum_confidence": 189
+    },
+    {
+      "image": "l4s_val_11.png",
+      "instances_at_minimum_confidence": 212
+    },
+    {
+      "image": "l4s_val_110.png",
+      "instances_at_minimum_confidence": 63
+    },
+    {
+      "image": "l4s_val_111.png",
+      "instances_at_minimum_confidence": 56
+    },
+    {
+      "image": "l4s_val_112.png",
+      "instances_at_minimum_confidence": 44
+    },
+    {
+      "image": "l4s_val_113.png",
+      "instances_at_minimum_confidence": 126
+    },
+    {
+      "image": "l4s_val_114.png",
+      "instances_at_minimum_confidence": 105
+    },
+    {
+      "image": "l4s_val_115.png",
+      "instances_at_minimum_confidence": 46
+    },
+    {
+      "image": "l4s_val_116.png",
+      "instances_at_minimum_confidence": 45
+    },
+    {
+      "image": "l4s_val_117.png",
+      "instances_at_minimum_confidence": 60
+    },
+    {
+      "image": "l4s_val_118.png",
+      "instances_at_minimum_confidence": 91
+    },
+    {
+      "image": "l4s_val_119.png",
+      "instances_at_minimum_confidence": 137
+    },
+    {
+      "image": "l4s_val_12.png",
+      "instances_at_minimum_confidence": 22
+    },
+    {
+      "image": "l4s_val_120.png",
+      "instances_at_minimum_confidence": 59
+    },
+    {
+      "image": "l4s_val_121.png",
+      "instances_at_minimum_confidence": 82
+    },
+    {
+      "image": "l4s_val_122.png",
+      "instances_at_minimum_confidence": 91
+    },
+    {
+      "image": "l4s_val_123.png",
+      "instances_at_minimum_confidence": 210
+    },
+    {
+      "image": "l4s_val_124.png",
+      "instances_at_minimum_confidence": 151
+    },
+    {
+      "image": "l4s_val_125.png",
+      "instances_at_minimum_confidence": 57
+    },
+    {
+      "image": "l4s_val_126.png",
+      "instances_at_minimum_confidence": 57
+    },
+    {
+      "image": "l4s_val_127.png",
+      "instances_at_minimum_confidence": 8
+    },
+    {
+      "image": "l4s_val_128.png",
+      "instances_at_minimum_confidence": 195
+    },
+    {
+      "image": "l4s_val_129.png",
+      "instances_at_minimum_confidence": 24
+    },
+    {
+      "image": "l4s_val_13.png",
+      "instances_at_minimum_confidence": 58
+    },
+    {
+      "image": "l4s_val_130.png",
+      "instances_at_minimum_confidence": 41
+    },
+    {
+      "image": "l4s_val_131.png",
+      "instances_at_minimum_confidence": 31
+    },
+    {
+      "image": "l4s_val_132.png",
+      "instances_at_minimum_confidence": 109
+    },
+    {
+      "image": "l4s_val_133.png",
+      "instances_at_minimum_confidence": 11
+    },
+    {
+      "image": "l4s_val_134.png",
+      "instances_at_minimum_confidence": 134
+    },
+    {
+      "image": "l4s_val_135.png",
+      "instances_at_minimum_confidence": 26
+    },
+    {
+      "image": "l4s_val_136.png",
+      "instances_at_minimum_confidence": 5
+    },
+    {
+      "image": "l4s_val_137.png",
+      "instances_at_minimum_confidence": 204
+    },
+    {
+      "image": "l4s_val_138.png",
+      "instances_at_minimum_confidence": 26
+    },
+    {
+      "image": "l4s_val_139.png",
+      "instances_at_minimum_confidence": 316
+    },
+    {
+      "image": "l4s_val_14.png",
+      "instances_at_minimum_confidence": 25
+    },
+    {
+      "image": "l4s_val_140.png",
+      "instances_at_minimum_confidence": 14
+    },
+    {
+      "image": "l4s_val_141.png",
+      "instances_at_minimum_confidence": 20
+    },
+    {
+      "image": "l4s_val_142.png",
+      "instances_at_minimum_confidence": 79
+    },
+    {
+      "image": "l4s_val_143.png",
+      "instances_at_minimum_confidence": 23
+    },
+    {
+      "image": "l4s_val_144.png",
+      "instances_at_minimum_confidence": 276
+    },
+    {
+      "image": "l4s_val_145.png",
+      "instances_at_minimum_confidence": 34
+    },
+    {
+      "image": "l4s_val_146.png",
+      "instances_at_minimum_confidence": 44
+    },
+    {
+      "image": "l4s_val_147.png",
+      "instances_at_minimum_confidence": 31
+    },
+    {
+      "image": "l4s_val_148.png",
+      "instances_at_minimum_confidence": 19
+    },
+    {
+      "image": "l4s_val_149.png",
+      "instances_at_minimum_confidence": 86
+    },
+    {
+      "image": "l4s_val_15.png",
+      "instances_at_minimum_confidence": 125
+    },
+    {
+      "image": "l4s_val_150.png",
+      "instances_at_minimum_confidence": 69
+    },
+    {
+      "image": "l4s_val_151.png",
+      "instances_at_minimum_confidence": 49
+    },
+    {
+      "image": "l4s_val_152.png",
+      "instances_at_minimum_confidence": 299
+    },
+    {
+      "image": "l4s_val_153.png",
+      "instances_at_minimum_confidence": 43
+    },
+    {
+      "image": "l4s_val_154.png",
+      "instances_at_minimum_confidence": 79
+    },
+    {
+      "image": "l4s_val_155.png",
+      "instances_at_minimum_confidence": 161
+    },
+    {
+      "image": "l4s_val_156.png",
+      "instances_at_minimum_confidence": 49
+    },
+    {
+      "image": "l4s_val_157.png",
+      "instances_at_minimum_confidence": 47
+    },
+    {
+      "image": "l4s_val_158.png",
+      "instances_at_minimum_confidence": 51
+    },
+    {
+      "image": "l4s_val_159.png",
+      "instances_at_minimum_confidence": 321
+    },
+    {
+      "image": "l4s_val_16.png",
+      "instances_at_minimum_confidence": 288
+    },
+    {
+      "image": "l4s_val_160.png",
+      "instances_at_minimum_confidence": 30
+    },
+    {
+      "image": "l4s_val_161.png",
+      "instances_at_minimum_confidence": 42
+    },
+    {
+      "image": "l4s_val_162.png",
+      "instances_at_minimum_confidence": 100
+    },
+    {
+      "image": "l4s_val_163.png",
+      "instances_at_minimum_confidence": 42
+    },
+    {
+      "image": "l4s_val_164.png",
+      "instances_at_minimum_confidence": 62
+    },
+    {
+      "image": "l4s_val_165.png",
+      "instances_at_minimum_confidence": 177
+    },
+    {
+      "image": "l4s_val_166.png",
+      "instances_at_minimum_confidence": 50
+    },
+    {
+      "image": "l4s_val_167.png",
+      "instances_at_minimum_confidence": 136
+    },
+    {
+      "image": "l4s_val_168.png",
+      "instances_at_minimum_confidence": 32
+    },
+    {
+      "image": "l4s_val_169.png",
+      "instances_at_minimum_confidence": 41
+    },
+    {
+      "image": "l4s_val_17.png",
+      "instances_at_minimum_confidence": 28
+    },
+    {
+      "image": "l4s_val_170.png",
+      "instances_at_minimum_confidence": 28
+    },
+    {
+      "image": "l4s_val_171.png",
+      "instances_at_minimum_confidence": 112
+    },
+    {
+      "image": "l4s_val_172.png",
+      "instances_at_minimum_confidence": 180
+    },
+    {
+      "image": "l4s_val_173.png",
+      "instances_at_minimum_confidence": 21
+    },
+    {
+      "image": "l4s_val_174.png",
+      "instances_at_minimum_confidence": 45
+    },
+    {
+      "image": "l4s_val_175.png",
+      "instances_at_minimum_confidence": 174
+    },
+    {
+      "image": "l4s_val_176.png",
+      "instances_at_minimum_confidence": 17
+    },
+    {
+      "image": "l4s_val_177.png",
+      "instances_at_minimum_confidence": 214
+    },
+    {
+      "image": "l4s_val_178.png",
+      "instances_at_minimum_confidence": 285
+    },
+    {
+      "image": "l4s_val_179.png",
+      "instances_at_minimum_confidence": 247
+    },
+    {
+      "image": "l4s_val_18.png",
+      "instances_at_minimum_confidence": 67
+    },
+    {
+      "image": "l4s_val_180.png",
+      "instances_at_minimum_confidence": 53
+    },
+    {
+      "image": "l4s_val_181.png",
+      "instances_at_minimum_confidence": 131
+    },
+    {
+      "image": "l4s_val_182.png",
+      "instances_at_minimum_confidence": 38
+    },
+    {
+      "image": "l4s_val_183.png",
+      "instances_at_minimum_confidence": 17
+    },
+    {
+      "image": "l4s_val_184.png",
+      "instances_at_minimum_confidence": 8
+    },
+    {
+      "image": "l4s_val_185.png",
+      "instances_at_minimum_confidence": 77
+    },
+    {
+      "image": "l4s_val_186.png",
+      "instances_at_minimum_confidence": 117
+    },
+    {
+      "image": "l4s_val_187.png",
+      "instances_at_minimum_confidence": 183
+    },
+    {
+      "image": "l4s_val_188.png",
+      "instances_at_minimum_confidence": 232
+    },
+    {
+      "image": "l4s_val_189.png",
+      "instances_at_minimum_confidence": 87
+    },
+    {
+      "image": "l4s_val_19.png",
+      "instances_at_minimum_confidence": 46
+    },
+    {
+      "image": "l4s_val_190.png",
+      "instances_at_minimum_confidence": 82
+    },
+    {
+      "image": "l4s_val_191.png",
+      "instances_at_minimum_confidence": 10
+    },
+    {
+      "image": "l4s_val_192.png",
+      "instances_at_minimum_confidence": 142
+    },
+    {
+      "image": "l4s_val_193.png",
+      "instances_at_minimum_confidence": 36
+    },
+    {
+      "image": "l4s_val_194.png",
+      "instances_at_minimum_confidence": 31
+    },
+    {
+      "image": "l4s_val_195.png",
+      "instances_at_minimum_confidence": 13
+    },
+    {
+      "image": "l4s_val_196.png",
+      "instances_at_minimum_confidence": 36
+    },
+    {
+      "image": "l4s_val_197.png",
+      "instances_at_minimum_confidence": 146
+    },
+    {
+      "image": "l4s_val_198.png",
+      "instances_at_minimum_confidence": 31
+    },
+    {
+      "image": "l4s_val_199.png",
+      "instances_at_minimum_confidence": 144
+    },
+    {
+      "image": "l4s_val_2.png",
+      "instances_at_minimum_confidence": 47
+    },
+    {
+      "image": "l4s_val_20.png",
+      "instances_at_minimum_confidence": 309
+    },
+    {
+      "image": "l4s_val_200.png",
+      "instances_at_minimum_confidence": 49
+    },
+    {
+      "image": "l4s_val_201.png",
+      "instances_at_minimum_confidence": 307
+    },
+    {
+      "image": "l4s_val_202.png",
+      "instances_at_minimum_confidence": 169
+    },
+    {
+      "image": "l4s_val_203.png",
+      "instances_at_minimum_confidence": 25
+    },
+    {
+      "image": "l4s_val_204.png",
+      "instances_at_minimum_confidence": 18
+    },
+    {
+      "image": "l4s_val_205.png",
+      "instances_at_minimum_confidence": 123
+    },
+    {
+      "image": "l4s_val_206.png",
+      "instances_at_minimum_confidence": 27
+    },
+    {
+      "image": "l4s_val_207.png",
+      "instances_at_minimum_confidence": 15
+    },
+    {
+      "image": "l4s_val_208.png",
+      "instances_at_minimum_confidence": 174
+    },
+    {
+      "image": "l4s_val_209.png",
+      "instances_at_minimum_confidence": 23
+    },
+    {
+      "image": "l4s_val_21.png",
+      "instances_at_minimum_confidence": 36
+    },
+    {
+      "image": "l4s_val_210.png",
+      "instances_at_minimum_confidence": 98
+    },
+    {
+      "image": "l4s_val_211.png",
+      "instances_at_minimum_confidence": 28
+    },
+    {
+      "image": "l4s_val_212.png",
+      "instances_at_minimum_confidence": 166
+    },
+    {
+      "image": "l4s_val_213.png",
+      "instances_at_minimum_confidence": 108
+    },
+    {
+      "image": "l4s_val_214.png",
+      "instances_at_minimum_confidence": 105
+    },
+    {
+      "image": "l4s_val_215.png",
+      "instances_at_minimum_confidence": 37
+    },
+    {
+      "image": "l4s_val_216.png",
+      "instances_at_minimum_confidence": 213
+    },
+    {
+      "image": "l4s_val_217.png",
+      "instances_at_minimum_confidence": 80
+    },
+    {
+      "image": "l4s_val_218.png",
+      "instances_at_minimum_confidence": 45
+    },
+    {
+      "image": "l4s_val_219.png",
+      "instances_at_minimum_confidence": 34
+    },
+    {
+      "image": "l4s_val_22.png",
+      "instances_at_minimum_confidence": 48
+    },
+    {
+      "image": "l4s_val_220.png",
+      "instances_at_minimum_confidence": 127
+    },
+    {
+      "image": "l4s_val_221.png",
+      "instances_at_minimum_confidence": 7
+    },
+    {
+      "image": "l4s_val_222.png",
+      "instances_at_minimum_confidence": 157
+    },
+    {
+      "image": "l4s_val_223.png",
+      "instances_at_minimum_confidence": 127
+    },
+    {
+      "image": "l4s_val_224.png",
+      "instances_at_minimum_confidence": 129
+    },
+    {
+      "image": "l4s_val_225.png",
+      "instances_at_minimum_confidence": 62
+    },
+    {
+      "image": "l4s_val_226.png",
+      "instances_at_minimum_confidence": 53
+    },
+    {
+      "image": "l4s_val_227.png",
+      "instances_at_minimum_confidence": 31
+    },
+    {
+      "image": "l4s_val_228.png",
+      "instances_at_minimum_confidence": 22
+    },
+    {
+      "image": "l4s_val_229.png",
+      "instances_at_minimum_confidence": 263
+    },
+    {
+      "image": "l4s_val_23.png",
+      "instances_at_minimum_confidence": 55
+    },
+    {
+      "image": "l4s_val_230.png",
+      "instances_at_minimum_confidence": 114
+    },
+    {
+      "image": "l4s_val_231.png",
+      "instances_at_minimum_confidence": 18
+    },
+    {
+      "image": "l4s_val_232.png",
+      "instances_at_minimum_confidence": 26
+    },
+    {
+      "image": "l4s_val_233.png",
+      "instances_at_minimum_confidence": 119
+    },
+    {
+      "image": "l4s_val_234.png",
+      "instances_at_minimum_confidence": 19
+    },
+    {
+      "image": "l4s_val_235.png",
+      "instances_at_minimum_confidence": 81
+    },
+    {
+      "image": "l4s_val_236.png",
+      "instances_at_minimum_confidence": 305
+    },
+    {
+      "image": "l4s_val_237.png",
+      "instances_at_minimum_confidence": 63
+    },
+    {
+      "image": "l4s_val_238.png",
+      "instances_at_minimum_confidence": 15
+    },
+    {
+      "image": "l4s_val_239.png",
+      "instances_at_minimum_confidence": 420
+    },
+    {
+      "image": "l4s_val_24.png",
+      "instances_at_minimum_confidence": 14
+    },
+    {
+      "image": "l4s_val_240.png",
+      "instances_at_minimum_confidence": 30
+    },
+    {
+      "image": "l4s_val_241.png",
+      "instances_at_minimum_confidence": 293
+    },
+    {
+      "image": "l4s_val_242.png",
+      "instances_at_minimum_confidence": 201
+    },
+    {
+      "image": "l4s_val_243.png",
+      "instances_at_minimum_confidence": 412
+    },
+    {
+      "image": "l4s_val_244.png",
+      "instances_at_minimum_confidence": 180
+    },
+    {
+      "image": "l4s_val_245.png",
+      "instances_at_minimum_confidence": 316
+    },
+    {
+      "image": "l4s_val_25.png",
+      "instances_at_minimum_confidence": 26
+    },
+    {
+      "image": "l4s_val_26.png",
+      "instances_at_minimum_confidence": 63
+    },
+    {
+      "image": "l4s_val_27.png",
+      "instances_at_minimum_confidence": 44
+    },
+    {
+      "image": "l4s_val_28.png",
+      "instances_at_minimum_confidence": 22
+    },
+    {
+      "image": "l4s_val_29.png",
+      "instances_at_minimum_confidence": 120
+    },
+    {
+      "image": "l4s_val_3.png",
+      "instances_at_minimum_confidence": 155
+    },
+    {
+      "image": "l4s_val_30.png",
+      "instances_at_minimum_confidence": 102
+    },
+    {
+      "image": "l4s_val_31.png",
+      "instances_at_minimum_confidence": 16
+    },
+    {
+      "image": "l4s_val_32.png",
+      "instances_at_minimum_confidence": 94
+    },
+    {
+      "image": "l4s_val_33.png",
+      "instances_at_minimum_confidence": 74
+    },
+    {
+      "image": "l4s_val_34.png",
+      "instances_at_minimum_confidence": 320
+    },
+    {
+      "image": "l4s_val_35.png",
+      "instances_at_minimum_confidence": 188
+    },
+    {
+      "image": "l4s_val_36.png",
+      "instances_at_minimum_confidence": 24
+    },
+    {
+      "image": "l4s_val_37.png",
+      "instances_at_minimum_confidence": 115
+    },
+    {
+      "image": "l4s_val_38.png",
+      "instances_at_minimum_confidence": 56
+    },
+    {
+      "image": "l4s_val_39.png",
+      "instances_at_minimum_confidence": 30
+    },
+    {
+      "image": "l4s_val_4.png",
+      "instances_at_minimum_confidence": 112
+    },
+    {
+      "image": "l4s_val_40.png",
+      "instances_at_minimum_confidence": 227
+    },
+    {
+      "image": "l4s_val_41.png",
+      "instances_at_minimum_confidence": 17
+    },
+    {
+      "image": "l4s_val_42.png",
+      "instances_at_minimum_confidence": 1
+    },
+    {
+      "image": "l4s_val_43.png",
+      "instances_at_minimum_confidence": 44
+    },
+    {
+      "image": "l4s_val_44.png",
+      "instances_at_minimum_confidence": 85
+    },
+    {
+      "image": "l4s_val_45.png",
+      "instances_at_minimum_confidence": 91
+    },
+    {
+      "image": "l4s_val_46.png",
+      "instances_at_minimum_confidence": 126
+    },
+    {
+      "image": "l4s_val_47.png",
+      "instances_at_minimum_confidence": 42
+    },
+    {
+      "image": "l4s_val_48.png",
+      "instances_at_minimum_confidence": 100
+    },
+    {
+      "image": "l4s_val_49.png",
+      "instances_at_minimum_confidence": 46
+    },
+    {
+      "image": "l4s_val_5.png",
+      "instances_at_minimum_confidence": 86
+    },
+    {
+      "image": "l4s_val_50.png",
+      "instances_at_minimum_confidence": 14
+    },
+    {
+      "image": "l4s_val_51.png",
+      "instances_at_minimum_confidence": 167
+    },
+    {
+      "image": "l4s_val_52.png",
+      "instances_at_minimum_confidence": 141
+    },
+    {
+      "image": "l4s_val_53.png",
+      "instances_at_minimum_confidence": 70
+    },
+    {
+      "image": "l4s_val_54.png",
+      "instances_at_minimum_confidence": 112
+    },
+    {
+      "image": "l4s_val_55.png",
+      "instances_at_minimum_confidence": 184
+    },
+    {
+      "image": "l4s_val_56.png",
+      "instances_at_minimum_confidence": 204
+    },
+    {
+      "image": "l4s_val_57.png",
+      "instances_at_minimum_confidence": 77
+    },
+    {
+      "image": "l4s_val_58.png",
+      "instances_at_minimum_confidence": 58
+    },
+    {
+      "image": "l4s_val_59.png",
+      "instances_at_minimum_confidence": 107
+    },
+    {
+      "image": "l4s_val_6.png",
+      "instances_at_minimum_confidence": 312
+    },
+    {
+      "image": "l4s_val_60.png",
+      "instances_at_minimum_confidence": 42
+    },
+    {
+      "image": "l4s_val_61.png",
+      "instances_at_minimum_confidence": 39
+    },
+    {
+      "image": "l4s_val_62.png",
+      "instances_at_minimum_confidence": 12
+    },
+    {
+      "image": "l4s_val_63.png",
+      "instances_at_minimum_confidence": 283
+    },
+    {
+      "image": "l4s_val_64.png",
+      "instances_at_minimum_confidence": 85
+    },
+    {
+      "image": "l4s_val_65.png",
+      "instances_at_minimum_confidence": 27
+    },
+    {
+      "image": "l4s_val_66.png",
+      "instances_at_minimum_confidence": 63
+    },
+    {
+      "image": "l4s_val_67.png",
+      "instances_at_minimum_confidence": 74
+    },
+    {
+      "image": "l4s_val_68.png",
+      "instances_at_minimum_confidence": 23
+    },
+    {
+      "image": "l4s_val_69.png",
+      "instances_at_minimum_confidence": 48
+    },
+    {
+      "image": "l4s_val_7.png",
+      "instances_at_minimum_confidence": 113
+    },
+    {
+      "image": "l4s_val_70.png",
+      "instances_at_minimum_confidence": 63
+    },
+    {
+      "image": "l4s_val_71.png",
+      "instances_at_minimum_confidence": 56
+    },
+    {
+      "image": "l4s_val_72.png",
+      "instances_at_minimum_confidence": 85
+    },
+    {
+      "image": "l4s_val_73.png",
+      "instances_at_minimum_confidence": 14
+    },
+    {
+      "image": "l4s_val_74.png",
+      "instances_at_minimum_confidence": 163
+    },
+    {
+      "image": "l4s_val_75.png",
+      "instances_at_minimum_confidence": 181
+    },
+    {
+      "image": "l4s_val_76.png",
+      "instances_at_minimum_confidence": 39
+    },
+    {
+      "image": "l4s_val_77.png",
+      "instances_at_minimum_confidence": 85
+    },
+    {
+      "image": "l4s_val_78.png",
+      "instances_at_minimum_confidence": 84
+    },
+    {
+      "image": "l4s_val_79.png",
+      "instances_at_minimum_confidence": 67
+    },
+    {
+      "image": "l4s_val_8.png",
+      "instances_at_minimum_confidence": 228
+    },
+    {
+      "image": "l4s_val_80.png",
+      "instances_at_minimum_confidence": 141
+    },
+    {
+      "image": "l4s_val_81.png",
+      "instances_at_minimum_confidence": 55
+    },
+    {
+      "image": "l4s_val_82.png",
+      "instances_at_minimum_confidence": 76
+    },
+    {
+      "image": "l4s_val_83.png",
+      "instances_at_minimum_confidence": 143
+    },
+    {
+      "image": "l4s_val_84.png",
+      "instances_at_minimum_confidence": 2
+    },
+    {
+      "image": "l4s_val_85.png",
+      "instances_at_minimum_confidence": 105
+    },
+    {
+      "image": "l4s_val_86.png",
+      "instances_at_minimum_confidence": 98
+    },
+    {
+      "image": "l4s_val_87.png",
+      "instances_at_minimum_confidence": 40
+    },
+    {
+      "image": "l4s_val_88.png",
+      "instances_at_minimum_confidence": 137
+    },
+    {
+      "image": "l4s_val_89.png",
+      "instances_at_minimum_confidence": 118
+    },
+    {
+      "image": "l4s_val_9.png",
+      "instances_at_minimum_confidence": 49
+    },
+    {
+      "image": "l4s_val_90.png",
+      "instances_at_minimum_confidence": 45
+    },
+    {
+      "image": "l4s_val_91.png",
+      "instances_at_minimum_confidence": 78
+    },
+    {
+      "image": "l4s_val_92.png",
+      "instances_at_minimum_confidence": 50
+    },
+    {
+      "image": "l4s_val_93.png",
+      "instances_at_minimum_confidence": 161
+    },
+    {
+      "image": "l4s_val_94.png",
+      "instances_at_minimum_confidence": 326
+    },
+    {
+      "image": "l4s_val_95.png",
+      "instances_at_minimum_confidence": 58
+    },
+    {
+      "image": "l4s_val_96.png",
+      "instances_at_minimum_confidence": 218
+    },
+    {
+      "image": "l4s_val_97.png",
+      "instances_at_minimum_confidence": 78
+    },
+    {
+      "image": "l4s_val_98.png",
+      "instances_at_minimum_confidence": 141
+    },
+    {
+      "image": "l4s_val_99.png",
+      "instances_at_minimum_confidence": 117
+    }
+  ],
+  "applied_at": "2026-11-15T04:08:14.555604+00:00"
+}

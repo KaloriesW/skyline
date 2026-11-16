@@ -67,6 +67,10 @@ Coordinates are points inside polygons derived from imagery, not surveyed locati
 
 The landslide holdout is small, geographically limited and positive-enriched. Boundaries, uncertain inventory negatives and prior benchmark exposure limit interpretation. Live-image accuracy remains unmeasured. See [evaluation evidence](evidence/) and [the model card](MODEL_CARD.md), including an error-example figure. PM2.5 and PM10 targets are CAMS estimates rather than station measurements; historical error does not establish future sensor-level accuracy.
 
+### Earlier YOLO experiments
+
+The [YOLO experiment evidence](evidence/yolo/README.md) includes four training histories, available Ultralytics curves and confusion matrices, training settings, dataset/split metadata, and the final Sentinel-2 confidence sweep. At a validation-selected confidence of 0.09, the earlier RGB YOLO checkpoint obtained 38.27% pixel IoU on 800 Landslide4Sense test images. This is a different evaluation set from the final U-Net's Taiwan holdout and does not establish a head-to-head improvement. The submitted map uses U-Net.
+
 ## Verify the release
 
 ```bash
