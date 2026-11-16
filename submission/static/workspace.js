@@ -14,7 +14,7 @@ if(typeof window!=='undefined')window.WorkspaceQwen={mount:function(adapter){
   const find=s=>panel.querySelector(s);
   function close(){panel.hidden=true;lastFocus?.focus();}
   function sync(){const c=adapter.context(),key=JSON.stringify([c.lat,c.lon,c.scan_id]);if(key!==scope){scope=key;messages=[];find('[data-wq-log]').replaceChildren();}find('[data-wq-context]').textContent=(c.location_name||'Selected location')+' · '+(c.scan_id?'saved scan included':'no scan selected')+' · live data refreshed when asking';return c;}
-  function bubble(role,text,source){const el=document.createElement('article'),label=document.createElement('strong'),p=document.createElement('p');el.className='wq-'+role;label.textContent=role==='user'?'You':(['Measured scan evidence','Monitoring controls'].includes(source)?source:'Qwen');p.textContent=text;el.append(label,p);if(role==='assistant'&&adapter.reviewAreas&&adapter.viewArea){
+  function bubble(role,text,source){const el=document.createElement('article'),label=document.createElement('strong'),p=document.createElement('p');el.className='wq-'+role;label.textContent=role==='user'?'You':(['Measured scan evidence','Monitoring controls','National monitoring'].includes(source)?source:'Qwen');p.textContent=text;el.append(label,p);if(role==='assistant'&&source!=='National monitoring'&&adapter.reviewAreas&&adapter.viewArea){
       const scanId=adapter.context().scan_id,actions=document.createElement('div');actions.className='wq-area-actions';
       for(const feature of referencedReviewAreas(text,adapter.reviewAreas())){
         const area=feature.properties,button=document.createElement('button');button.type='button';

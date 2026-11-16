@@ -2,13 +2,13 @@
   "files": [
     {
       "path": ".gitignore",
-      "bytes": 315,
-      "sha256": "297c48d5a2ea948dd087645c44ed25fbcf4b18162b4b312c1f303122a9f98cf7"
+      "bytes": 355,
+      "sha256": "f58fd0f1d69a8ecddb6d5cbe79ca66b2a03ce48b4592697a25a7fc2197dc5ca0"
     },
     {
       "path": "CREDITS.md",
-      "bytes": 5199,
-      "sha256": "9c1030b45ff10830609a7e83a90e62a48fce275216a3a821df1417abcaccbd1a"
+      "bytes": 5767,
+      "sha256": "bbf5769f494783ce7cb9d51ef0e214f92d4983d47181f6045c4c2a2e29ef3051"
     },
     {
       "path": "GITHUB_SUBMISSION.md",
@@ -22,13 +22,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 8111,
-      "sha256": "07de938ec9767a3f41f23cf95b570554de89becd38a5ecfb650872ae1301d825"
+      "bytes": 10644,
+      "sha256": "3d74d444420ed150ba3b1f6b81148f5d64ee575ced5d736773e1e10726bbb8b6"
     },
     {
       "path": "app.py",
-      "bytes": 39919,
-      "sha256": "5c5de4280f678efa2666c3e4c3bec0f8e3c6fa5dc5dff7efff01b3d52a58b7b2"
+      "bytes": 40071,
+      "sha256": "ad2b808dee38d37a945372f34f2b613c6ab5aa4251ac8be185727edae1c9f803"
     },
     {
       "path": "check_setup.py",
@@ -44,6 +44,11 @@
       "path": "docs/final-short-summary.jpg",
       "bytes": 121044,
       "sha256": "29520b9bd83004b0e8720ad747825077c31039a5959b109f285b2ad99b8c5dbd"
+    },
+    {
+      "path": "docs/national-monitor-preview.jpg",
+      "bytes": 118249,
+      "sha256": "088577f8ad953b0d7348dbb12043620fb75672cb4b67dad94fcffcfc2a5c4fc3"
     },
     {
       "path": "docs/qwen-evidence-fix.jpg",
@@ -151,6 +156,11 @@
       "sha256": "7824f9316fc45a8f551298aad3bc6008c7eef1a35036cc4d8f87aba62f238d75"
     },
     {
+      "path": "evidence/national-monitor-validation.json",
+      "bytes": 902,
+      "sha256": "dfe4ffd906da8180a7b2e1238aa476829219ae52749677564e204e5a00398535"
+    },
+    {
       "path": "evidence/pm25-taichung.json",
       "bytes": 3933,
       "sha256": "a2d4177d16f124408d4421b4038466b80cac8b22c68a6d47ddeaba3f69a0211f"
@@ -219,6 +229,11 @@
       "path": "mosaic.py",
       "bytes": 5333,
       "sha256": "278e79874ffa76b6b3bfbfb17f0f7c9ece973c917afaf282fa8b0c20158a603e"
+    },
+    {
+      "path": "national_monitor.py",
+      "bytes": 21744,
+      "sha256": "9520214ad83682848ed8699154ae18bf151a7bae938c46503fd1cd48ee4137bc"
     },
     {
       "path": "one-page-writeup.pdf",
@@ -612,8 +627,8 @@
     },
     {
       "path": "skyline/ui/app/web/index.html",
-      "bytes": 7817,
-      "sha256": "af8495a24b4ea9c0d436e9a38d5a1f88264e095b2598de3213652ed0bbfabe3e"
+      "bytes": 7811,
+      "sha256": "2b2e4728efbf004697a4238e55e49427737451de065574cd52a3dc13d2a1a814"
     },
     {
       "path": "skyline/ui/app/web/location.js",
@@ -717,13 +732,18 @@
     },
     {
       "path": "static/index.html",
-      "bytes": 18009,
-      "sha256": "f452acc2274ecb7ca0f1dc0f4860306835bce3a37426c14fe2ae400bfa88ce52"
+      "bytes": 18139,
+      "sha256": "a9888c2feaec2529d456f9be63c67edac3f8fce7c452a1c898bf5f3c16bfb122"
     },
     {
       "path": "static/monitor-ui.js",
       "bytes": 4440,
       "sha256": "a985a2dae23ba2b957d2bc1b0bbd00b0fa094ce293938268d8aaacc68abf9c7c"
+    },
+    {
+      "path": "static/national.js",
+      "bytes": 9964,
+      "sha256": "c86faf85f8b294d32d31ba1543b969638d5e048bcffb0de52601e659f2e2e5d0"
     },
     {
       "path": "static/review.js",
@@ -756,6 +776,11 @@
       "sha256": "0a743d09c360ebd2d0f28b6f642998722e063af2073fb586197b176177ed5273"
     },
     {
+      "path": "static/taiwan-monitor-boundary.geojson",
+      "bytes": 1386694,
+      "sha256": "f6143878a68d0b59fe3fcd65ac02d0f2642b7d1fcc61294066d8fcac43bc2842"
+    },
+    {
       "path": "static/vendor/LEAFLET-LICENSE.txt",
       "bytes": 1395,
       "sha256": "53e8dc25862014e4324741ca18fbe3611e11d42ef69f59f86ea8c5389647d4cb"
@@ -782,8 +807,8 @@
     },
     {
       "path": "static/workspace.js",
-      "bytes": 5786,
-      "sha256": "1af83e465f02426e6540962d6112b38778582ff01590cc3bc3f4f262c2441938"
+      "bytes": 5840,
+      "sha256": "8596b5abc47764199b11b64dd9eb6fddcd1c1d825b128963a95c4015d73edbe3"
     },
     {
       "path": "test_assistant.py",
@@ -824,6 +849,11 @@
       "path": "test_mosaic.py",
       "bytes": 4713,
       "sha256": "4a84c3e1552214215a74b3fc90341c4f194ddddb1a57cfa1a801408dd61f9a0e"
+    },
+    {
+      "path": "test_national_monitor.py",
+      "bytes": 7386,
+      "sha256": "8fb93d1b563b02e645daedf68c45deb76a902875d2eab13276da7c8abff9d88e"
     },
     {
       "path": "test_regions.py",
@@ -897,8 +927,8 @@
     },
     {
       "path": "workspace_assistant.py",
-      "bytes": 10259,
-      "sha256": "646184dea46404eec85197b4d34ff40a0483aea9d719c79d8f3115c7ba08ba80"
+      "bytes": 10559,
+      "sha256": "1a3f8b11935c679654440600cac5ba260bca10a81e19aca0ef7c8fcb17a7b58d"
     }
   ]
 }

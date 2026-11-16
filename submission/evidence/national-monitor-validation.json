@@ -1,0 +1,27 @@
+{
+  "catalogue_items": 225,
+  "planned_cells": 433,
+  "queued_initial_jobs": 433,
+  "cells_without_current_scene": 0,
+  "forecast_status": "available",
+  "available_weather_points": 3,
+  "forecast_start": "2026-11-16T00:00:00+00:00",
+  "weather_source": "MET Norway \u00b7 Locationforecast",
+  "seconds": 4.7,
+  "national_mode_enabled": false,
+  "date": "2026-11-16",
+  "national_regression_tests": 13,
+  "other_python_tests_previously_passed": 243,
+  "javascript_tests": 15,
+  "optional_skipped": 3,
+  "ui_coverage_preview_verified": true,
+  "workspace_national_status_verified": true,
+  "full_national_scan_completed": false,
+  "estimated_initial_hours": [
+    28.9,
+    79.4
+  ],
+  "boundary_sha256": "f6143878a68d0b59fe3fcd65ac02d0f2642b7d1fcc61294066d8fcac43bc2842",
+  "boundary_source": "https://github.com/g0v/twgeojson/blob/master/json/twCounty2010.geo.json",
+  "boundary_license": "CC0-1.0"
+}

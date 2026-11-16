@@ -19,3 +19,5 @@ models/*.pt
 results/
 *.zip
 monitor_reports/
+national_monitor.json
+national_reports/

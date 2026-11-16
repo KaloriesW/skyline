@@ -29,3 +29,6 @@ The submitting team built the Taiwan landslide review workflow and integrated it
 - [ReportLab](https://www.reportlab.com/) and [Poppler](https://poppler.freedesktop.org/): submission PDF creation and rendering.
 
 Upstream notices and licenses remain applicable. This credit list does not relicense third-party datasets, libraries, model weights or embedded services. No blanket license has been asserted for the team's combined submission. See `MANIFEST.json` for the distributed files and hashes.
+
+- National scan planning boundaries: [g0v/twgeojson](https://github.com/g0v/twgeojson), CC0 1.0, historic 2010 county GeoJSON; simplified and clipped to 118–122.1°E / 21.8–26.5°N. Approximate planning coverage, not authoritative legal boundaries. [Source data](https://github.com/g0v/twgeojson/blob/master/json/twCounty2010.geo.json).
+- National weather context: [MET Norway Locationforecast](https://api.met.no/doc/ForecastJSON), CC BY 4.0; ECMWF regional forecast samples. Experimental priority thresholds are project heuristics, not official CWA thresholds.

@@ -5,7 +5,7 @@ from typing import Literal
 from pydantic import BaseModel,Field,ConfigDict
 from fastapi import Request
 from starlette.concurrency import run_in_threadpool
-import scan_assistant,weather
+import scan_assistant,weather,national_monitor
 
 class Turn(BaseModel):
     role:Literal['user','assistant']
@@ -98,11 +98,13 @@ def register(api,backend,skyline):
                 import re
                 ids=set(re.findall(r'(?:area|candidate|區域)\s*#?\s*(\d+)',body.message+' '+' '.join(t.content for t in body.history),re.I))
                 context['scan']['named_candidates']=[r for r in rows if str(r['id']) in ids][:10]
+        context['national_monitor']=national_monitor.assistant_context()
         history=[t.model_dump() for t in body.history]
         while sum(len(t['content']) for t in history)>9000:history.pop(0)
-        control_answer=monitoring_answer(body.message,history,context['monitor'])
+        national_answer=national_monitor.assistant_answer(body.message,context['national_monitor'])
+        control_answer=national_answer if national_answer is not None else monitoring_answer(body.message,history,context['monitor'])
         measured=control_answer if control_answer is not None else scan_assistant.grounded_scan_answer(body.message,context)
         answer=scan_assistant.Answer(answer=measured) if measured is not None else await run_in_threadpool(scan_assistant.qwen,SYSTEM,json.dumps(context,ensure_ascii=False),scan_assistant.Answer,
                                        history=history)
-        return {'answer':answer.answer,'model':'Monitoring controls' if control_answer is not None else 'Measured scan evidence' if measured is not None else scan_assistant.QWEN,'context_time':context['now'],
+        return {'answer':answer.answer,'model':'National monitoring' if national_answer is not None else 'Monitoring controls' if control_answer is not None else 'Measured scan evidence' if measured is not None else scan_assistant.QWEN,'context_time':context['now'],
                 'sources':['Displayed dashboard','Saved scan' if body.scan_id else 'No scan selected','Skyline city model/report','MET Norway','CWA','Satellite monitor']}

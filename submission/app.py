@@ -764,3 +764,7 @@ scan_assistant.register(app,sys.modules[__name__])
 # Skyline city models, typhoon feed and connected weather dashboard.
 import skyline_integration
 skyline_integration.register(app,sys.modules[__name__])
+
+# Independent persisted national queue; shares the single inference slot.
+import national_monitor
+national_monitor.register(app,sys.modules[__name__])
