@@ -164,3 +164,5 @@ body[data-page="home"] .home .grid > .tile:nth-child(-n+3) .note { display: -web
 @media (max-width: 760px) {
   body[data-page="home"] .home .tile[data-id="daily"]:nth-child(-n+3) .day:nth-child(n+5) { display: none; }
 }
+/* lower tiles grow to fit their content instead of clipping */
+body[data-page="home"] .home .grid { grid-auto-rows: minmax(var(--row), auto); }
