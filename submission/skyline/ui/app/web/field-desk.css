@@ -78,3 +78,12 @@ body[data-page="home"] .hero .headline { display: none; }
 .terrain-focus .terrain-line { margin-left: 40px; }
 body[data-page="home"] .home .grid { --main: 205px; }
 @media (max-width: 760px) { .terrain-focus .tw-by, .terrain-focus .terrain-line { margin-left: 0; } .terrain-focus .tw-logo svg { width: 24px; height: 24px; } }
+
+/* TerrainWatch wordmark: one continuous ridge running over the name */
+.terrain-focus .tw-logo { display: block; margin: 0; line-height: 0; }
+.terrain-focus .tw-logo svg { width: clamp(170px, 18vw, 220px); height: auto; box-shadow: none; border-radius: 0; overflow: visible; }
+.terrain-focus .tw-logo .tw-ridge { fill: none; stroke: var(--gold); stroke-width: 3.2; stroke-linejoin: round; stroke-linecap: round; }
+.terrain-focus .tw-logo text { fill: #fff; font-family: var(--display); font-weight: 800; font-size: 30px; letter-spacing: -.02em; }
+.terrain-focus .tw-by { margin: 2px 0 4px; }
+.terrain-focus .terrain-line { margin-left: 0; }
+@media (max-width: 760px) { .terrain-focus .tw-logo svg { width: 160px; } }
