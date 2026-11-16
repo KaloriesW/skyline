@@ -28,7 +28,7 @@ from rasterio.warp import transform_bounds, transform_geom, reproject, calculate
 from rasterio.windows import Window, from_bounds
 from shapely.geometry import shape, mapping
 from PIL import Image
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import RedirectResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, model_validator
