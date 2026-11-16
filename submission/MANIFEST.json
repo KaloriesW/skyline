@@ -7,8 +7,8 @@
     },
     {
       "path": "CREDITS.md",
-      "bytes": 5199,
-      "sha256": "9c1030b45ff10830609a7e83a90e62a48fce275216a3a821df1417abcaccbd1a"
+      "bytes": 5505,
+      "sha256": "398735559dad2f7c45071b37eb3f45ad93b8f8c9eb09d6a9c5569c688370625d"
     },
     {
       "path": "GITHUB_SUBMISSION.md",
@@ -22,18 +22,18 @@
     },
     {
       "path": "README.md",
-      "bytes": 6951,
-      "sha256": "0a96ca141f8b9c1eadbeebbfcdb7e74e16ef4e305783dc5bf3a4e8ed00ad5c39"
+      "bytes": 6976,
+      "sha256": "5b94344235c508238d4c46ecd472887666feb1a742ea5b8e6b2cfd94d0d7e4a5"
     },
     {
       "path": "app.py",
-      "bytes": 34933,
-      "sha256": "a8a9548d07772391931c382601d610a7453d03600134a3f95e933165cb037efc"
+      "bytes": 35472,
+      "sha256": "353d19e5278f77a672511349fdf35dca9236506c86b5ac71cd59e9d73acb306f"
     },
     {
       "path": "check_setup.py",
-      "bytes": 2577,
-      "sha256": "78852f5984efdd19d187642b89af80a89ad30e8c2a152dd86bb1bff8aaf531f4"
+      "bytes": 2589,
+      "sha256": "c7ece139759fddf66ad2e0787e4cb3d1cf228f04f8139721ea1cc2ec72d66e19"
     },
     {
       "path": "docs/qwen-evidence-fix.jpg",
@@ -202,13 +202,13 @@
     },
     {
       "path": "one-page-writeup.pdf",
-      "bytes": 4349,
-      "sha256": "cdd1b32e14e1390ecb5763b8eca1a9e7c31893f5366de279a7ea27f8c730f01b"
+      "bytes": 4922,
+      "sha256": "a394bfd8423cac6c5b1f6e7aca94b9f54678b45b31df816057de721352685113"
     },
     {
       "path": "one-page-writeup.txt",
-      "bytes": 3198,
-      "sha256": "951f67f95f37e0a5c5d10949a754ceeccb16738ce9bc4d2ee636446e65939db3"
+      "bytes": 3947,
+      "sha256": "b5dc2818ffe8afc5684def752d441645bc3cdbfc2f219779db1d147ab50cb80e"
     },
     {
       "path": "requirements-dev.txt",
@@ -557,13 +557,13 @@
     },
     {
       "path": "skyline/ui/app/web/app.js",
-      "bytes": 343363,
-      "sha256": "1d208ed626d78f5e9f36a20e8ba4ae46738b6d96aa0d58088a43f5b7a70375f5"
+      "bytes": 342234,
+      "sha256": "8b51326089932adf5aafe8217e19d8293ab6cd3b81b510134ae4d162635d1e00"
     },
     {
       "path": "skyline/ui/app/web/field-desk.css",
-      "bytes": 2778,
-      "sha256": "9d3944624ec96613bf181fa74c5da0b392d51f3b1bed76ef81a952dcafed2c1a"
+      "bytes": 4352,
+      "sha256": "147bddbe802abee53d16647cfaf606a59f99684c1e72c7ff52b9704777717c09"
     },
     {
       "path": "skyline/ui/app/web/horizon.js",
@@ -587,8 +587,8 @@
     },
     {
       "path": "skyline/ui/app/web/index.html",
-      "bytes": 7773,
-      "sha256": "8ced830a337622e9cfab43d3b8728aa2d7dc6a61f8c4afa804ee64c2c95f2d23"
+      "bytes": 7794,
+      "sha256": "e943d4b84a933411d0d8b6702fd45cc128f77c78d34330ce9d8ef8990ba93d9d"
     },
     {
       "path": "skyline/ui/app/web/location.js",
@@ -667,8 +667,8 @@
     },
     {
       "path": "skyline_integration.py",
-      "bytes": 3412,
-      "sha256": "bd90e9b8afc66105b5c243383bc96dcd5412ce3315dbc3e15d64fbd56e11508b"
+      "bytes": 3428,
+      "sha256": "b745467ff9c0d59e1dbebe88986d0e0c27dba67e59df0674ecb6c6bb13af8fc3"
     },
     {
       "path": "spatial.py",
@@ -697,8 +697,8 @@
     },
     {
       "path": "static/monitor-ui.js",
-      "bytes": 4440,
-      "sha256": "a985a2dae23ba2b957d2bc1b0bbd00b0fa094ce293938268d8aaacc68abf9c7c"
+      "bytes": 4456,
+      "sha256": "83a4f7fa75af2271b4d2f265e364e5f10e63d60dc151c6014f67ea7f5213381c"
     },
     {
       "path": "static/review.js",
@@ -827,8 +827,8 @@
     },
     {
       "path": "test_unet_integration.py",
-      "bytes": 3924,
-      "sha256": "2b4d08ef7c15ee72e26849a3ee836efa46d3e44f2d6ff6de4b8b0b2820e464c5"
+      "bytes": 3932,
+      "sha256": "eb03a7b86c71fdf38554734b00eb0000dd253ef327584dea75b7241ef02c6c8a"
     },
     {
       "path": "test_weather.py",
