@@ -119,3 +119,11 @@ body[data-page="home"] .home .grid { --main: 205px; }
   body[data-page="home"] .home .tile[data-id="advice"] .advice h4 { font-size: 13px; margin: 0; }
   body[data-page="home"] .home .tile[data-id="advice"] .light { width: 40px; height: 40px; font-size: 20px; }
 }
+@media (max-width: 760px) {
+  body[data-page="home"] .home .tile[data-id="tomorrow"] .tm { display: flex !important; flex-direction: column; align-items: center; }
+  body[data-page="home"] .home .tile[data-id="tomorrow"] .vals { width: 100%; text-align: center; }
+  body[data-page="home"] .home .tile[data-id="tomorrow"] .aqring { margin: 0 auto; }
+  body[data-page="home"] .home .tile[data-id="daily"] .day { display: flex !important; justify-content: space-between; gap: 4px; }
+  body[data-page="home"] .home .tile[data-id="daily"] .day .ic { display: none; }
+  body[data-page="home"] .home .tile[data-id="daily"] .day .lo { margin-left: auto; opacity: .7; }
+}
