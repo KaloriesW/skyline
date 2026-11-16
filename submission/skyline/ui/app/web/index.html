@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!-- ?v= forces a fresh copy: Cloudflare lets browsers cache .js/.css for 4 hours. Bump it on each deploy. -->
-<link rel="stylesheet" href="styles.css?v=terrain-glass-v9">
+<link rel="stylesheet" href="styles.css?v=terrain-glass-v10">
 <link rel="stylesheet" href="/static/workspace.css?v=2"><link rel="stylesheet" href="field-desk.css?v=2"></head>
 <body data-page="home" data-mood="neutral" data-day="1">
 <!-- Sky behind every screen: mood gradient, haze and the effects canvas (sky.js) -->
@@ -38,7 +38,7 @@
   <nav class="topnav" aria-label="Main">
     <a href="#home" data-nav="home" data-action="go-home">Home</a>
     <a href="#predictions" data-nav="predictions">Predictions</a>
-    <a href="#ask" data-workspace-qwen>Ask Qwen</a><a href="/">Landslide map ↗</a>
+    <a href="#ask" data-workspace-qwen>Ask Qwen</a><a href="/terrain/">Landslide map ↗</a>
     <a href="#settings" data-nav="settings">Settings</a>
   </nav>
   <div class="compact" id="compact" aria-hidden="true"><b id="compactPlace"></b><span class="c2"><span id="compactTemp"></span><i class="sep">|</i><span id="compactCond"></span></span></div>
@@ -67,7 +67,7 @@
 <nav class="tabbar" aria-label="Main">
   <a href="#home" data-nav="home" data-action="go-home"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Home</a>
   <a href="#predictions" data-nav="predictions"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Predictions</a>
-  <a href="/?assistant=1"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg>Ask Qwen</a>
+  <a href="/terrain/?assistant=1"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg>Ask Qwen</a>
   <a href="#settings" data-nav="settings"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>Settings</a>
 </nav>
 
@@ -100,11 +100,11 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="icons.js?v=terrain-glass-v9"></script>
-<script src="sky.js?v=terrain-glass-v9"></script>
-<script src="horizon.js?v=terrain-glass-v9"></script>
+<script src="icons.js?v=terrain-glass-v10"></script>
+<script src="sky.js?v=terrain-glass-v10"></script>
+<script src="horizon.js?v=terrain-glass-v10"></script>
 <script src="location.js?v=1"></script>
 <script src="/static/workspace.js?v=1"></script><script src="/static/monitor-ui.js?v=1"></script>
-<script src="app.js?v=terrain-glass-v9"></script>
+<script src="app.js?v=terrain-glass-v10"></script>
 </body>
 </html>

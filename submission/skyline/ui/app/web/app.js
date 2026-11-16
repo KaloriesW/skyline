@@ -1894,9 +1894,9 @@ var TILES = {
     title: 'Landslide observations', icon: 'slope', size: 'w', source: 'Terrain Watch', needs: 'none', desc: 'Saved satellite segmentation with coordinates. Candidates require review.',
     available: function () { return S.sources.landslide !== false; },
     na: function () { return null; },
-    open: function () { var d=feedData('terrain-scan'); location.href=d&&d.map_url?d.map_url:'/'; },
+    open: function () { var d=feedData('terrain-scan'); location.href=d&&d.map_url?d.map_url:'/terrain/'; },
     render: function () { var d=feedData('terrain-scan');
-      if (!d || d.status !== 'completed') return '<p>No completed scan selected.</p><a href="/">Open landslide map →</a>';
+      if (!d || d.status !== 'completed') return '<p>No completed scan selected.</p><a href="/terrain/">Open landslide map →</a>';
       return '<div style="padding:12px 0"><strong style="font-size:32px">'+esc(d.count)+'</strong> suspected areas'+
         '<p>Latest saved scan · '+esc(d.acquired.slice(0,10))+' · '+esc(d.width_km)+' × '+esc(d.width_km)+' km</p>'+
         '<p>'+esc(d.model)+' · '+esc(d.usable_percent)+'% usable · '+esc(d.center[0].toFixed(3))+', '+esc(d.center[1].toFixed(3))+'</p>'+
@@ -2110,25 +2110,20 @@ function footHTML() {
     'A widget whose source isn’t connected or can’t be reached says so and shows no number.';
 }
 function terrainFocusHTML() {
+  // Compact banner: Terrain Watch is the project's centrepiece, but the weather stays the home page.
   var d = S.sources.landslide !== false ? feedData('terrain-scan') : null;
   var ready = d && d.status === 'completed' && /^[a-f0-9]{32}$/.test(d.id);
-  var scanLink = ready ? '/?scan=' + d.id : '/';
-  var facts = ready
-    ? '<div class="terrain-facts"><div><strong data-count="' + esc(d.count) + '">' + esc(d.count) + '</strong><span>' + tx('suspected regions', '疑似區域') + '</span></div>' +
-      '<div><strong>' + esc(d.width_km) + ' × ' + esc(d.width_km) + ' km</strong><span>' + tx('scanned footprint', '掃描範圍') + '</span></div>' +
-      '<div><strong>' + esc(d.usable_percent) + '%</strong><span>' + tx('usable imagery', '可用影像') + '</span></div></div>' +
-      '<p class="terrain-meta">' + tx('Latest saved scan', '最近儲存的掃描') + ' · ' + esc(String(d.acquired).slice(0, 10)) + '<br>' +
-      esc(Number(d.center[0]).toFixed(4)) + ', ' + esc(Number(d.center[1]).toFixed(4)) + ' · ' + esc(d.model) + '</p>'
-    : '<p class="terrain-meta">' + tx('Choose an area on the map or ask Qwen to prepare a scan.', '在地圖選擇區域，或請 Qwen 規劃掃描。') + '</p>';
-  return '<div class="terrain-intro"><p class="terrain-kicker">Skyline / Terrain Watch</p>' +
-    '<h1>' + tx('Taiwan landslide watch.', '台灣山崩觀測') + '</h1>' +
-    '<p class="terrain-lead">' + tx('Explore suspected landslides from space. Compare the evidence, find the coordinates, and keep watch as new imagery arrives.', '從衛星觀測疑似山崩，比對影像證據、查看座標，並持續監測新影像。') + '</p>' +
-    '<div class="terrain-actions"><a class="terrain-primary" href="/">' + tx('Open landslide map ↗', '開啟山崩地圖 ↗') + '</a>' +
-    '<a href="#monitor-panel" data-action="show-monitor">Set up monitoring →</a><button type="button" data-workspace-qwen>Ask Qwen →</button></div>' + facts +
-    '<p class="terrain-note">' + tx('Satellite candidates need review. Weather supports the assessment; it does not confirm or predict a landslide.', '衛星辨識的疑似區域仍需查證。天氣提供判讀背景，並非山崩確認或預測。') + '</p></div>' +
-    '<a class="terrain-preview" href="' + scanLink + '" aria-label="' + tx('Review saved scan on the map', '在地圖檢視儲存的掃描') + '">' +
-    (ready ? '<img src="/results/' + d.id + '/satellite.png" alt="' + tx('Satellite image of the latest scanned footprint', '最近掃描範圍的衛星影像') + '">' : '<span class="terrain-empty">' + tx('Your next study area starts on the map.', '從地圖開始選擇下一個研究區域。') + '</span>') +
-    '<span class="terrain-caption">' + (ready ? tx('View segmentation & coordinates →', '查看分割結果與座標 →') : tx('Choose an area →', '選擇區域 →')) + '</span></a>';
+  var scanLink = ready ? '/terrain/?scan=' + d.id : '/terrain/';
+  var line = ready
+    ? '<b data-count="' + esc(d.count) + '">' + esc(d.count) + '</b> ' + tx('suspected regions', '個疑似區域') + ' · ' + esc(d.width_km) + ' × ' + esc(d.width_km) + ' km · ' + esc(String(d.acquired).slice(0, 10))
+    : tx('Pick an area on the map to run your first satellite scan.', '在地圖選擇區域，開始第一次衛星掃描。');
+  return '<a class="terrain-thumb" href="' + scanLink + '" aria-label="' + tx('Open the latest scan on the landslide map', '在山崩地圖開啟最近的掃描') + '">' +
+      (ready ? '<img src="/results/' + d.id + '/satellite.png" alt="">' : '<span>⛰</span>') + '</a>' +
+    '<div class="terrain-intro"><p class="terrain-kicker">' + tx('Our flagship · Terrain Watch', '我們的主力 · Terrain Watch') + '</p>' +
+      '<h1>' + tx('Spot landslides from space', '從太空找出山崩') + '</h1>' +
+      '<p class="terrain-line">' + tx('AI on Sentinel-2 imagery · ', 'AI 判讀 Sentinel-2 衛星影像 · ') + line + '</p></div>' +
+    '<div class="terrain-actions"><a class="terrain-primary" href="' + scanLink + '">' + tx('Open landslide map', '開啟山崩地圖') + '</a>' +
+      '<button type="button" data-workspace-qwen>' + tx('Ask Qwen', '問 Qwen') + '</button></div>';
 }
 function homeView() {
   return '<div class="home"><section id="terrain-focus" class="terrain-focus" aria-label="Landslide review"></section>' +

@@ -29,7 +29,7 @@ from rasterio.windows import Window, from_bounds
 from shapely.geometry import shape, mapping
 from PIL import Image
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import RedirectResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, model_validator
 import model_profiles
@@ -129,7 +129,19 @@ def write_selection(state):
 
 
 @app.get('/')
-def index():
+def index(request: Request):
+    # Skyline weather is the home page; Terrain Watch's map is one part of it, at /terrain/.
+    # Old map links (/?scan=..., /?selection=1) still land on the map.
+    q=request.url.query
+    return RedirectResponse('/terrain/'+('?'+q if q else '') if q else '/skyline/', status_code=307)
+
+@app.get('/terrain')
+def terrain_redirect(request: Request):
+    q=request.url.query
+    return RedirectResponse('/terrain/'+('?'+q if q else ''), status_code=307)
+
+@app.get('/terrain/')
+def terrain_map():
     return FileResponse(HERE / 'static/index.html')
 
 @app.get('/api/models')

@@ -62,7 +62,7 @@ def test_single_server_contract_and_geographic_lookup(monkeypatch,tmp_path):
     directory=tmp_path/row['id'];directory.mkdir();(directory/'result.json').write_text(json.dumps(row))
     assert client.get('/api/landslide?lat=24&lon=121').json()['id']==row['id']
     assert client.get('/api/landslide?lat=23&lon=121').json()['count'] is None
-    assert client.get('/api/landslide').json()['map_url']=='/?scan='+row['id']
+    assert client.get('/api/landslide').json()['map_url']=='/terrain/?scan='+row['id']
 
 
 def test_missing_optional_yolo_calibration_does_not_break_model_list(monkeypatch):

@@ -12,7 +12,7 @@ def check(inference=False):
     import rasterio
     checks=[]
     client=TestClient(app.app)  # No lifespan: the monitoring thread stays stopped.
-    for route in ['/','/skyline/','/api/health','/api/models','/api/model/cities']:
+    for route in ['/','/skyline/','/terrain/','/api/health','/api/models','/api/model/cities']:
         response=client.get(route);assert response.status_code==200,(route,response.text[:200])
         checks.append(route)
     cities=client.get('/api/model/cities').json()['cities']
