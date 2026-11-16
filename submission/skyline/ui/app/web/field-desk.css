@@ -44,3 +44,29 @@
 /* Home stays clean: location is changed from the place name or Search, not a second control block. */
 .home .location-controls { display: none; }
 .home .monitor-disclosure { margin-top: 18px; }
+
+/* ---- Home: three main tiles on the skyline, the rest below the first screen ---- */
+body[data-page="home"] .home .grid {
+  --main: 230px;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: var(--main) var(--fold, 24px);
+  grid-auto-rows: var(--row);
+  margin-top: calc(-0.62 * clamp(130px, 15vw, 230px));
+  z-index: 2;
+}
+body[data-page="home"] .home .grid::before { content: ""; grid-column: 1 / -1; grid-row: 2; }
+body[data-page="home"] .home .grid > .tile:nth-child(-n+3) { grid-column: span 2; grid-row: 1; overflow: hidden; }
+body[data-page="home"] .home .grid > .tile:nth-child(n+4) { grid-row: auto; }
+/* tomorrow's air is already the first tile, so the pill under the temperature would repeat it */
+body[data-page="home"] .hero .headline { display: none; }
+@media (max-width: 760px) {
+  body[data-page="home"] .home .grid { --main: 168px; gap: 8px; margin-top: calc(-0.55 * clamp(130px, 15vw, 230px)); }
+  body[data-page="home"] .home .grid > .tile:nth-child(n+4) { grid-column: span 6; }
+  body[data-page="home"] .home .grid > .tile:nth-child(n+4).size-s { grid-column: span 3; }
+  /* compact main tiles: title and the key reading only */
+  body[data-page="home"] .home .grid > .tile:nth-child(-n+3) { padding: 10px; }
+  body[data-page="home"] .home .grid > .tile:nth-child(-n+3) .note,
+  body[data-page="home"] .home .grid > .tile:nth-child(-n+3) .fine,
+  body[data-page="home"] .home .grid > .tile:nth-child(-n+3) .badge { display: none; }
+  .hero .temp, .hero-main .temp { font-size: 76px; }
+}

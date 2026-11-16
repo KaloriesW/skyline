@@ -2136,7 +2136,7 @@ function homeView() {
 // Fills Home from the feeds. Called after the first paint and whenever a feed arrives or the location changes.
 // The three main tiles sit on the skyline; everything after them starts below the first screen.
 function fitFold() {
-  var g = $('#grid'); if (!g || !document.body.classList.contains('page-home')) return;
+  var g = $('#grid'); if (!g || !document.body.dataset.page === 'home') return;
   var main = g.querySelector('.tile'); if (!main) return;
   var r = main.getBoundingClientRect(), bottom = r.bottom + window.scrollY;
   g.style.setProperty('--fold', Math.max(16, Math.round(window.innerHeight - bottom - 12)) + 'px');
@@ -2157,6 +2157,7 @@ function homeUpdate(first) {
     if (anim) countUp(hero);
   }
   if (first) renderGrid(true); else syncGrid();
+  requestAnimationFrame(fitFold);
   var foot = footHTML(), fe = $('#foot');
   if (fe._h !== foot) { fe.innerHTML = foot; fe._h = foot; }
   syncCompact();
