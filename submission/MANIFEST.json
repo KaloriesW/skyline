@@ -597,13 +597,13 @@
     },
     {
       "path": "skyline/ui/app/web/app.js",
-      "bytes": 344742,
-      "sha256": "c57ef337d4db1bd5ac6138e76ccfbc08223211d1fd1b5d885fbaec22a150fa23"
+      "bytes": 344818,
+      "sha256": "234012e2e94e40b529889f258c99c0c4e35aacba1ac4435bd208367f53cd3dfa"
     },
     {
       "path": "skyline/ui/app/web/field-desk.css",
-      "bytes": 12506,
-      "sha256": "095cb174e6cea3ceaf1faaf62b118a6855f6877bc5cb8f21ab5878b890eb9dee"
+      "bytes": 13558,
+      "sha256": "9ed731888d8828b59ef7a9a7de34e180718efc829709f09776b6e9f124ab1f20"
     },
     {
       "path": "skyline/ui/app/web/horizon.js",
@@ -628,7 +628,7 @@
     {
       "path": "skyline/ui/app/web/index.html",
       "bytes": 7832,
-      "sha256": "e63c463bfb32ff570d4cbdcea8bc47bbc3b6858840f876071b9bb93b04e3c3f1"
+      "sha256": "00489fe2b66a0fa6bb2b46a04f0cbc7cf24741ab543b12ff6079df126864c949"
     },
     {
       "path": "skyline/ui/app/web/location.js",

@@ -2153,6 +2153,7 @@ function fitFold() {
   var g = $('#grid'); if (!g || !document.body.dataset.page === 'home') return;
   var main = g.querySelector('.tile'); if (!main) return;
   var r = main.getBoundingClientRect(), bottom = r.bottom + window.scrollY;
+  document.body.style.setProperty('--main-h', Math.round(r.height) + 'px');
   g.style.setProperty('--fold', Math.max(16, Math.round(window.innerHeight - bottom - 12)) + 'px');
 }
 window.addEventListener('resize', function () { fitFold(); });
