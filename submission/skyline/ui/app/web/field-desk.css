@@ -152,3 +152,15 @@ body[data-page="home"] .home .grid {
   body[data-page="home"] .hero .temp { font-size: clamp(72px, 7.5vw, 104px); line-height: 1; }
   body[data-page="home"] .skyline-wrap { transform: translateY(calc(var(--main-h) + 26px)); }
 }
+/* main tiles size to their content (nothing clipped); the 10-day tile shows the next days and opens for all 10 */
+body[data-page="home"] .home .grid { grid-template-rows: auto max(calc(var(--sky-h) + 30px), var(--fold, 24px)); align-items: stretch; }
+body[data-page="home"] .home .grid > .tile:nth-child(-n+3) { overflow: visible; }
+body[data-page="home"] .home .tile[data-id="daily"]:nth-child(-n+3) .day:nth-child(n+5) { display: none; }
+body[data-page="home"] .home .grid > .tile:nth-child(-n+3) .note { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+@media (min-width: 761px) {
+  body[data-page="home"] .terrain-focus { padding: 10px 16px; }
+  body[data-page="home"] .terrain-thumb { width: 80px; height: 56px; }
+}
+@media (max-width: 760px) {
+  body[data-page="home"] .home .tile[data-id="daily"]:nth-child(-n+3) .day:nth-child(n+5) { display: none; }
+}
