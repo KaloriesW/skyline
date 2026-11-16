@@ -1648,7 +1648,7 @@ var TILES = {
   },
 
   model: {
-    title: 'Model Check', icon: 'target', size: 's', needs: 'none',
+    title: 'Model Check', icon: 'target', size: 'w', needs: 'none',
     desc: 'How much better the Skyline model is than guessing “tomorrow = today”, on 12 months it never saw.',
     gold: function () { return !!modelMetrics(); },
     open: function () { if (modelMetrics()) openModel(); },
@@ -1891,7 +1891,7 @@ var TILES = {
     render: function () { return factTile('climate'); }
   },
   landslide: {
-    title: 'Landslide observations', icon: 'slope', size: 'w', source: 'Terrain Watch', needs: 'none', desc: 'Saved satellite segmentation with coordinates. Candidates require review.',
+    title: 'Landslide observations', icon: 'slope', size: 'h', source: 'Terrain Watch', needs: 'none', desc: 'Saved satellite segmentation with coordinates. Candidates require review.',
     available: function () { return S.sources.landslide !== false; },
     na: function () { return null; },
     open: function () { var d=feedData('terrain-scan'); location.href=d&&d.map_url?d.map_url:'/terrain/'; },
@@ -2134,6 +2134,14 @@ function homeView() {
     '<footer class="foot" id="foot"></footer></div>';
 }
 // Fills Home from the feeds. Called after the first paint and whenever a feed arrives or the location changes.
+// The three main tiles sit on the skyline; everything after them starts below the first screen.
+function fitFold() {
+  var g = $('#grid'); if (!g || !document.body.classList.contains('page-home')) return;
+  var main = g.querySelector('.tile'); if (!main) return;
+  var r = main.getBoundingClientRect(), bottom = r.bottom + window.scrollY;
+  g.style.setProperty('--fold', Math.max(16, Math.round(window.innerHeight - bottom - 12)) + 'px');
+}
+window.addEventListener('resize', function () { fitFold(); });
 function homeUpdate(first) {
   var hero = $('#hero'); if (!hero) return;
   var terrain = $('#terrain-focus'), terrainHTML = terrainFocusHTML();
