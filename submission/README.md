@@ -22,7 +22,7 @@ python check_setup.py --inference
 python run.py
 ```
 
-Open **http://127.0.0.1:8765/skyline/** for the home workspace or **http://127.0.0.1:8765/** for the map. On Windows, environment activation is `.venv\Scripts\activate`; Windows has not been tested. `python run.py --port 8766` selects another port. Keep the server local; this prototype is not configured for an unauthenticated public deployment.
+Open **http://127.0.0.1:8765/skyline/** for the home workspace or **http://127.0.0.1:8765/terrain/** for the landslide map. On Windows, environment activation is `.venv\Scripts\activate`; Windows has not been tested. `python run.py --port 8766` selects another port. A public demo runs at https://veritas.premiersalesri.com; anyone there can start a scan (one at a time).
 
 ### Real scans only
 
