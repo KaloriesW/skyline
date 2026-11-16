@@ -87,3 +87,35 @@ body[data-page="home"] .home .grid { --main: 205px; }
 .terrain-focus .tw-by { margin: 2px 0 4px; }
 .terrain-focus .terrain-line { margin-left: 0; }
 @media (max-width: 760px) { .terrain-focus .tw-logo svg { width: 160px; } }
+
+/* ---- Phone: compact banner and hero so the three main tiles fit above the tab bar ---- */
+@media (max-width: 760px) {
+  .terrain-focus { margin-top: 64px; padding: 10px 12px; gap: 8px 10px; }
+  .terrain-thumb, .terrain-focus .terrain-line { display: none; }
+  .terrain-focus { grid-template-columns: 1fr auto; }
+  .terrain-focus .terrain-actions { grid-column: auto; flex-direction: column; gap: 6px; }
+  .terrain-focus .terrain-actions a, .terrain-focus .terrain-actions button { padding: 7px 12px; font-size: 12px; white-space: nowrap; }
+  .terrain-focus .tw-logo svg { width: 150px; }
+  body[data-page="home"] .hero { padding-top: 10px; }
+  body[data-page="home"] .hero .temp, body[data-page="home"] .hero-main .temp { font-size: 64px; line-height: 1; }
+  body[data-page="home"] .hero .chips { margin-top: 6px; }
+  body[data-page="home"] .skyline-wrap { height: 110px; }
+  body[data-page="home"] .home .grid { --main: 150px; margin-top: -64px; }
+  /* compact contents of the three main tiles */
+  body[data-page="home"] .home .grid > .tile:nth-child(-n+3) .tile-head { font-size: 9.5px; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  body[data-page="home"] .home .grid > .tile:nth-child(-n+3) .tile-head svg { width: 11px; height: 11px; }
+  body[data-page="home"] .home .grid > .tile:nth-child(-n+3) .note,
+  body[data-page="home"] .home .grid > .tile:nth-child(-n+3) .badge,
+  body[data-page="home"] .home .grid > .tile:nth-child(-n+3) .remove-badge:not(:hover) { }
+  body[data-page="home"] .home .tile[data-id="tomorrow"] .tm { flex-direction: column; align-items: center; gap: 4px; }
+  body[data-page="home"] .home .tile[data-id="tomorrow"] .aqring { width: 64px; height: 64px; }
+  body[data-page="home"] .home .tile[data-id="tomorrow"] .vals > div:not(.cat), body[data-page="home"] .home .tile[data-id="tomorrow"] .trend { display: none; }
+  body[data-page="home"] .home .tile[data-id="tomorrow"] .cat { font-size: 12px; text-align: center; }
+  body[data-page="home"] .home .tile[data-id="daily"] .day { grid-template-columns: 1fr auto auto; font-size: 12px; padding: 3px 0; }
+  body[data-page="home"] .home .tile[data-id="daily"] .day .bar, body[data-page="home"] .home .tile[data-id="daily"] .day .ic small { display: none; }
+  body[data-page="home"] .home .tile[data-id="daily"] .day .ic svg { width: 16px; height: 16px; }
+  body[data-page="home"] .home .tile[data-id="advice"] .advice { flex-direction: column; align-items: center; text-align: center; gap: 6px; }
+  body[data-page="home"] .home .tile[data-id="advice"] .advice p { display: none; }
+  body[data-page="home"] .home .tile[data-id="advice"] .advice h4 { font-size: 13px; margin: 0; }
+  body[data-page="home"] .home .tile[data-id="advice"] .light { width: 40px; height: 40px; font-size: 20px; }
+}
