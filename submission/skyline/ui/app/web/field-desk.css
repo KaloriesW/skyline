@@ -40,3 +40,7 @@
   .terrain-focus .terrain-actions { grid-column: 1 / -1; }
   .terrain-focus .terrain-actions a, .terrain-focus .terrain-actions button { flex: 1 1 0; text-align: center; }
 }
+
+/* Home stays clean: location is changed from the place name or Search, not a second control block. */
+.home .location-controls { display: none; }
+.home .monitor-disclosure { margin-top: 18px; }

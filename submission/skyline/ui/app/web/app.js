@@ -1921,17 +1921,18 @@ var TILE_GROUPS = [
   ['Storms & sea', ['thunder', 'storms', 'typhoon', 'waves', 'climate']],
   ['Maps', ['map']]
 ];
-var DEFAULT_LAYOUT = ['landslide', 'hourly', 'tomorrow', 'daily', 'aqi', 'advice', 'pmtrend', 'wind', 'uv', 'sunrise', 'feels', 'map', 'thunder', 'storms', 'typhoon',
-  'pm25', 'pm10', 'precip', 'humidity', 'visibility', 'pressure', 'waves', 'climate', 'model'];
+// Home shows our own work first: tomorrow's PM2.5 prediction, the weather forecast and the PE plan, then
+// hourly weather, the PM2.5 outlook, saved landslide scans and the model report. Every other widget is in the + gallery.
+var DEFAULT_LAYOUT = ['tomorrow', 'daily', 'advice', 'hourly', 'pmtrend', 'landslide', 'model'];
 
 // ----- layout (saved in S.layout) -----
 function tileOn(id) { var t = TILES[id]; return !!t && (!t.available || t.available()); }
 // The saved layout, minus anything unknown (an older build's ids) or not available right now
 function layoutIds() {
-  var seen = {}, src = S.skylineTerrainLayout && Array.isArray(S.layout) ? S.layout : DEFAULT_LAYOUT;
+  var seen = {}, src = S.homeLayoutV === 2 && Array.isArray(S.layout) ? S.layout : DEFAULT_LAYOUT;
   return src.filter(function (id) { if (seen[id] || !tileOn(id)) return false; seen[id] = 1; return true; });
 }
-function saveLayout(ids) { S.skylineTerrainLayout = true; S.layout = ids; save(); }
+function saveLayout(ids) { S.homeLayoutV = 2; S.layout = ids; save(); }
 
 // ----- one tile -----
 var FACTS = null;
@@ -2127,9 +2128,10 @@ function terrainFocusHTML() {
 }
 function homeView() {
   return '<div class="home"><section id="terrain-focus" class="terrain-focus" aria-label="Landslide review"></section>' +
-    '<details class="monitor-disclosure"><summary>Satellite monitoring <span>Choose an area &amp; keep watch ↗</span></summary><section id="monitor-panel" aria-label="Automatic landslide monitoring"></section></details>' +
     '<section class="hero" id="hero" aria-label="Current weather"></section>' +
-    '<section class="grid" id="grid" aria-label="Widgets"></section><footer class="foot" id="foot"></footer></div>';
+    '<section class="grid" id="grid" aria-label="Widgets"></section>' +
+    '<details class="monitor-disclosure"><summary>Satellite monitoring <span>Choose an area &amp; keep watch ↗</span></summary><section id="monitor-panel" aria-label="Automatic landslide monitoring"></section></details>' +
+    '<footer class="foot" id="foot"></footer></div>';
 }
 // Fills Home from the feeds. Called after the first paint and whenever a feed arrives or the location changes.
 function homeUpdate(first) {
