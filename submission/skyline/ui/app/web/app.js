@@ -2120,9 +2120,9 @@ function terrainFocusHTML() {
     : tx('Pick an area on the map to run your first satellite scan.', '在地圖選擇區域，開始第一次衛星掃描。');
   return '<a class="terrain-thumb" href="' + scanLink + '" aria-label="' + tx('Open the latest scan on the landslide map', '在山崩地圖開啟最近的掃描') + '">' +
       (ready ? '<img src="/results/' + d.id + '/satellite.png" alt="">' : '<span>⛰</span>') + '</a>' +
-    '<div class="terrain-intro"><p class="terrain-kicker">' + tx('Our flagship · Terrain Watch', '我們的主力 · Terrain Watch') + '</p>' +
-      '<h1>' + tx('Spot landslides from space', '從太空找出山崩') + '</h1>' +
-      '<p class="terrain-line">' + tx('AI on Sentinel-2 imagery · ', 'AI 判讀 Sentinel-2 衛星影像 · ') + line + '</p></div>' +
+    '<div class="terrain-intro"><h1 class="tw-logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="12" fill="#1b2422"/><path d="M10 48L28 14L38 34L45 24L56 48" fill="none" stroke="#FFC24B" stroke-width="4"/></svg><span>Terrain Watch</span></h1>' +
+      '<p class="tw-by">' + tx('By Skyline', 'Skyline 出品') + '</p>' +
+      '<p class="terrain-line">' + tx('Spot landslides from space with AI · ', '用 AI 從太空找出山崩 · ') + line + '</p></div>' +
     '<div class="terrain-actions"><a class="terrain-primary" href="' + scanLink + '">' + tx('Open landslide map', '開啟山崩地圖') + '</a>' +
       '<button type="button" data-workspace-qwen>' + tx('Ask Qwen', '問 Qwen') + '</button></div>';
 }

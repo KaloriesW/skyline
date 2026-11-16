@@ -70,3 +70,11 @@ body[data-page="home"] .hero .headline { display: none; }
   body[data-page="home"] .home .grid > .tile:nth-child(-n+3) .badge { display: none; }
   .hero .temp, .hero-main .temp { font-size: 76px; }
 }
+
+/* Terrain Watch logo lockup in the home banner */
+.terrain-focus .tw-logo { display: flex; align-items: center; gap: 10px; margin: 0; font-family: var(--display); font-size: clamp(20px, 2.3vw, 26px); font-weight: 700; letter-spacing: -.01em; line-height: 1.1; }
+.terrain-focus .tw-logo svg { width: 30px; height: 30px; flex: none; border-radius: 8px; box-shadow: 0 0 0 1px rgba(255,255,255,.18); }
+.terrain-focus .tw-by { margin: 2px 0 4px 40px; color: var(--gold); font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.terrain-focus .terrain-line { margin-left: 40px; }
+body[data-page="home"] .home .grid { --main: 205px; }
+@media (max-width: 760px) { .terrain-focus .tw-by, .terrain-focus .terrain-line { margin-left: 0; } .terrain-focus .tw-logo svg { width: 24px; height: 24px; } }
