@@ -150,5 +150,5 @@ body[data-page="home"] .home .grid {
   body[data-page="home"] .terrain-focus { margin-top: 70px; }
   body[data-page="home"] .hero { padding-top: 10px; }
   body[data-page="home"] .hero .temp { font-size: clamp(72px, 7.5vw, 104px); line-height: 1; }
-  body[data-page="home"] .skyline-wrap { transform: translateY(calc(var(--main-h) + 12px)); }
+  body[data-page="home"] .skyline-wrap { transform: translateY(calc(var(--main-h) + 26px)); }
 }
