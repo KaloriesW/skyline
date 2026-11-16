@@ -1,4 +1,4 @@
-/* Skyline's glass, type, accent and motion, scoped to Terrain Watch's controls. */
+/* Skyline's glass, type, accent and motion, scoped to TerrainWatch's controls. */
 :root {
   --accent:#FFC24B; --accent-ink:#2A1A00;
   --display:'Bricolage Grotesque',system-ui,sans-serif;
@@ -92,3 +92,24 @@ input[type=range],.filter-check input,#compare-position { accent-color:var(--acc
 .feature-back a,.feature-back button { color:var(--accent); font-size:12px; text-decoration:none; min-height:32px; display:inline-flex; align-items:center; }
 .workspace-nav { flex-wrap:wrap; gap:10px; }
 #close-compare { white-space:nowrap; }
+
+/* Same TerrainWatch wordmark as the Skyline home banner */
+.tw-brand { display:flex; align-items:center; gap:10px; }
+.tw-brand .tw-logo { display:flex; flex-direction:column; line-height:0; }
+.tw-brand .tw-logo svg { width:170px; height:auto; overflow:visible; }
+.tw-brand .tw-ridge { fill:none; stroke:var(--accent); stroke-width:3.2; stroke-linejoin:round; stroke-linecap:round; }
+.tw-brand text { fill:var(--ink); font-family:var(--display); font-weight:800; font-size:30px; letter-spacing:-.02em; }
+.tw-brand .tw-by { display:block; margin-top:3px; color:var(--accent); font:700 10px/1.2 var(--body); letter-spacing:.14em; }
+
+/* Light appearance (shared with Skyline: Settings > Appearance; Dynamic follows the time of day) */
+html[data-appearance="light"] {
+  color-scheme: light;
+  --ink:#13233a; --muted:rgba(19,35,58,.66); --line:rgba(19,35,58,.14);
+  --panel:rgba(255,255,255,.84); --field:rgba(255,255,255,.7); --accent-ink:#2A1A00;
+}
+html[data-appearance="light"] body, html[data-appearance="light"] #map { background:#dce8f6; color:var(--ink); }
+html[data-appearance="light"] .controls, html[data-appearance="light"] .result-drawer, html[data-appearance="light"] #compare-toolbar,
+html[data-appearance="light"] .weather-map-readout { color:var(--ink); box-shadow:0 14px 40px rgba(20,40,80,.16); }
+html[data-appearance="light"] input, html[data-appearance="light"] select, html[data-appearance="light"] textarea { color:var(--ink); background:var(--field); border-color:var(--line); }
+html[data-appearance="light"] .tw-by { color:#9a6400; }
+html[data-appearance="light"] .tw-brand .tw-ridge { stroke:#e0a020; }

@@ -1,12 +1,12 @@
-# Skyline / Terrain Watch
+# Skyline / TerrainWatch
 
 **A Taiwan landslide review workspace built for the Veritas AI International High School Hackathon 2026 · Climate track.**
 
-Terrain Watch uses a trained multispectral U-Net to outline suspected landslides in free Sentinel-2 imagery. It puts the candidates, coordinates, before/after vegetation, terrain slope, nearby roads and weather in one review workflow. Local Qwen can propose a scan and answer follow-up questions. Skyline adds city weather and trained PM2.5 forecasts.
+TerrainWatch uses a trained multispectral U-Net to outline suspected landslides in free Sentinel-2 imagery. It puts the candidates, coordinates, before/after vegetation, terrain slope, nearby roads and weather in one review workflow. Local Qwen can propose a scan and answer follow-up questions. Skyline adds city weather and trained PM2.5 forecasts.
 
 **These are suspected satellite observations, not confirmed landslides or predictions of slope failure.**
 
-![Terrain Watch workspace](docs/workspace.jpg)
+![TerrainWatch workspace](docs/workspace.jpg)
 
 ## Run it
 
@@ -22,7 +22,7 @@ python check_setup.py --inference
 python run.py
 ```
 
-Open **http://127.0.0.1:8765/skyline/** for the home workspace or **http://127.0.0.1:8765/** for the map. On Windows, environment activation is `.venv\Scripts\activate`; Windows has not been tested. `python run.py --port 8766` selects another port. Keep the server local; this prototype is not configured for an unauthenticated public deployment.
+Open **http://127.0.0.1:8765/skyline/** for the home workspace or **http://127.0.0.1:8765/terrain/** for the landslide map. On Windows, environment activation is `.venv\Scripts\activate`; Windows has not been tested. `python run.py --port 8766` selects another port. A public demo runs at https://veritas.premiersalesri.com; anyone there can start a scan (one at a time).
 
 ### Real scans only
 

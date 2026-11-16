@@ -7,13 +7,13 @@ window.SkylineMonitor={mount:function(host,latest){
   async function api(path,body){const r=await fetch(path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined}),d=await r.json();if(!r.ok)throw Error(typeof d.detail==='string'?d.detail:'Check the coordinates and retry.');return d;}
   function render(s){state=s;f('badge').textContent=s.enabled?'● Monitoring on':'○ Monitoring paused';f('start').textContent=s.enabled?'Pause monitoring':'Start hourly monitoring';f('check').disabled=!s.enabled||busy;f('status').textContent=s.message||'Choose an area to begin.';const time=v=>v?new Date(typeof v==='number'?v*1000:v).toLocaleString():'—';f('times').textContent='Last check: '+time(s.last_checked)+' · Next: '+(s.enabled?(s.next_check?time(s.next_check):'soon'):'paused')+(s.enabled?' · Model: '+s.model:'');
     for(const id of ['lat','lon','width','latest'])f(id).disabled=!!s.enabled;
-    f('result').hidden=!s.last_result;if(s.last_result)f('result').href='/?scan='+encodeURIComponent(s.last_result);
+    f('result').hidden=!s.last_result;if(s.last_result)f('result').href='/terrain/?scan='+encodeURIComponent(s.last_result);
     if(s.enabled){f('lat').value=s.lat;f('lon').value=s.lon;f('width').value=s.width_km;}
   }
   async function poll(){if(!host.isConnected){clearTimeout(timer);return;}try{render(await api('/api/watch'));}catch(e){f('status').textContent=e.message;}timer=setTimeout(poll,10000);}
   async function action(fn){if(busy)return;busy=true;f('start').disabled=true;f('check').disabled=true;try{render(await fn());}catch(e){f('status').textContent=e.message;}finally{busy=false;f('start').disabled=false;f('check').disabled=!state?.enabled;}}
   f('latest').onclick=()=>{const s=latest();if(!s?.center){f('status').textContent='No completed scan available. Choose coordinates or open the map.';return;}f('lat').value=s.center[0];f('lon').value=s.center[1];f('width').value=s.width_km;};
-  f('preview').onclick=()=>{try{const a=area();location.href='/?'+new URLSearchParams({...a,selection:'1'});}catch(e){f('status').textContent=e.message;}};
+  f('preview').onclick=()=>{try{const a=area();location.href='/terrain/?'+new URLSearchParams({...a,selection:'1'});}catch(e){f('status').textContent=e.message;}};
   f('start').onclick=()=>action(()=>api('/api/watch',{...(state?.enabled?{lat:state.lat,lon:state.lon,width_km:state.width_km}:area()),enabled:!state?.enabled,model:state?.enabled?state.model:'unet13',...(state?.enabled?{confidence:state.confidence}:{})}));
   f('check').onclick=()=>action(()=>api('/api/watch/check',{}));poll();
 }};

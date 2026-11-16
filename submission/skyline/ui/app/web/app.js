@@ -579,13 +579,13 @@ var KEY = 'skyline-v1', OLD_KEY = 'skyline-mockup-v1';
 var DEFAULTS = {
   loc: { name: 'Xinyi District', sub: 'Taipei · 110 信義區', lat: 25.0330, lon: 121.5654, kind: 'District' },
   locationMode: 'manual', skylineTerrainLayout: false, weather: 'live', dataV: 2, uiV: 3, layout: null,
-  accent: '#FFC24B', risk: 'default', bgMode: 'live', fonts: 'system', radius: 18, skyline: 'city', mapBase: 'auto',
+  accent: '#FFC24B', risk: 'default', bgMode: 'live', appearance: 'dynamic', fonts: 'system', radius: 18, skyline: 'city', mapBase: 'auto',
   reduceMotion: false, units: 'C', lang: 'en',
   sources: { openMeteo: true, windyMap: true, pm25: true, landslide: true, typhoon: true },
   recents: [], predBase: {}, predT: NOW,
   ai: { provider: 'builtin', oaBase: 'https://openrouter.ai/api/v1', oaModel: '', claudeModel: 'claude-opus-5-5', remember: false }
 };
-var THEME_KEYS = ['accent', 'risk', 'bgMode', 'fonts', 'radius', 'skyline', 'mapBase'];
+var THEME_KEYS = ['accent', 'risk', 'bgMode', 'appearance', 'fonts', 'radius', 'skyline', 'mapBase'];
 function clone(o) { return JSON.parse(JSON.stringify(o)); }
 var S = clone(DEFAULTS);
 try {
@@ -741,8 +741,21 @@ function skyState() {
   return { mood: liveMood(wx), day: !!c.is_day, pm: pm, haze: Math.max(0, Math.min(0.6, (pm - 12) / 70)),
     wind: -(c.wind_speed_10m || 0) * Math.sin((c.wind_direction_10m || 0) * Math.PI / 180) };
 }
+// Appearance is shared with the TerrainWatch map page through localStorage 'skyline-appearance'.
+var DAY_OF = { 'clear-night': 'clear-day', 'partly-night': 'partly-day', 'cloudy-night': 'cloudy-day', dusk: 'clear-day', dawn: 'clear-day', neutral: 'clear-day' };
+var NIGHT_OF = { 'clear-day': 'clear-night', 'partly-day': 'partly-night', 'cloudy-day': 'cloudy-night', dusk: 'clear-night', dawn: 'clear-night', neutral: 'clear-night', fog: 'cloudy-night' };
+function appearance() { return S.appearance === 'light' || S.appearance === 'dark' ? S.appearance : 'dynamic'; }
+function applyAppearance(s) {
+  var a = appearance();
+  try { localStorage.setItem('skyline-appearance', a); } catch (e) {}
+  if (a === 'light') { s.mood = DAY_OF[s.mood] || s.mood; s.day = true; }
+  else if (a === 'dark') { s.mood = NIGHT_OF[s.mood] || s.mood; s.day = false; }
+  else if (s.mood === 'neutral') { var h = new Date().getHours(); s.day = h >= 6 && h < 18; s.mood = s.day ? 'clear-day' : 'clear-night'; }
+  document.documentElement.dataset.appearance = s.day ? 'light' : 'dark';
+  return s;
+}
 function applySky() {
-  var s = skyState();
+  var s = previewOn() ? skyState() : applyAppearance(skyState());
   document.body.dataset.mood = s.mood;
   document.body.dataset.day = s.day ? '1' : '0';
   if (window.Sky) Sky.start({ mood: s.mood, wind: s.wind, haze: s.haze, reduce: !!S.reduceMotion });
@@ -1648,7 +1661,7 @@ var TILES = {
   },
 
   model: {
-    title: 'Model Check', icon: 'target', size: 's', needs: 'none',
+    title: 'Model Check', icon: 'target', size: 'w', needs: 'none',
     desc: 'How much better the Skyline model is than guessing “tomorrow = today”, on 12 months it never saw.',
     gold: function () { return !!modelMetrics(); },
     open: function () { if (modelMetrics()) openModel(); },
@@ -1891,12 +1904,12 @@ var TILES = {
     render: function () { return factTile('climate'); }
   },
   landslide: {
-    title: 'Landslide observations', icon: 'slope', size: 'w', source: 'Terrain Watch', needs: 'none', desc: 'Saved satellite segmentation with coordinates. Candidates require review.',
+    title: 'Landslide observations', icon: 'slope', size: 'h', source: 'TerrainWatch', needs: 'none', desc: 'Saved satellite segmentation with coordinates. Candidates require review.',
     available: function () { return S.sources.landslide !== false; },
     na: function () { return null; },
-    open: function () { var d=feedData('terrain-scan'); location.href=d&&d.map_url?d.map_url:'/'; },
+    open: function () { var d=feedData('terrain-scan'); location.href=d&&d.map_url?d.map_url:'/terrain/'; },
     render: function () { var d=feedData('terrain-scan');
-      if (!d || d.status !== 'completed') return '<p>No completed scan selected.</p><a href="/">Open landslide map →</a>';
+      if (!d || d.status !== 'completed') return '<p>No completed scan selected.</p><a href="/terrain/">Open landslide map →</a>';
       return '<div style="padding:12px 0"><strong style="font-size:32px">'+esc(d.count)+'</strong> suspected areas'+
         '<p>Latest saved scan · '+esc(d.acquired.slice(0,10))+' · '+esc(d.width_km)+' × '+esc(d.width_km)+' km</p>'+
         '<p>'+esc(d.model)+' · '+esc(d.usable_percent)+'% usable · '+esc(d.center[0].toFixed(3))+', '+esc(d.center[1].toFixed(3))+'</p>'+
@@ -1921,17 +1934,18 @@ var TILE_GROUPS = [
   ['Storms & sea', ['thunder', 'storms', 'typhoon', 'waves', 'climate']],
   ['Maps', ['map']]
 ];
-var DEFAULT_LAYOUT = ['landslide', 'hourly', 'tomorrow', 'daily', 'aqi', 'advice', 'pmtrend', 'wind', 'uv', 'sunrise', 'feels', 'map', 'thunder', 'storms', 'typhoon',
-  'pm25', 'pm10', 'precip', 'humidity', 'visibility', 'pressure', 'waves', 'climate', 'model'];
+// Home shows our own work first: tomorrow's PM2.5 prediction, the weather forecast and the PE plan, then
+// hourly weather, the PM2.5 outlook, saved landslide scans and the model report. Every other widget is in the + gallery.
+var DEFAULT_LAYOUT = ['tomorrow', 'daily', 'advice', 'hourly', 'pmtrend', 'landslide', 'model'];
 
 // ----- layout (saved in S.layout) -----
 function tileOn(id) { var t = TILES[id]; return !!t && (!t.available || t.available()); }
 // The saved layout, minus anything unknown (an older build's ids) or not available right now
 function layoutIds() {
-  var seen = {}, src = S.skylineTerrainLayout && Array.isArray(S.layout) ? S.layout : DEFAULT_LAYOUT;
+  var seen = {}, src = S.homeLayoutV === 2 && Array.isArray(S.layout) ? S.layout : DEFAULT_LAYOUT;
   return src.filter(function (id) { if (seen[id] || !tileOn(id)) return false; seen[id] = 1; return true; });
 }
-function saveLayout(ids) { S.skylineTerrainLayout = true; S.layout = ids; save(); }
+function saveLayout(ids) { S.homeLayoutV = 2; S.layout = ids; save(); }
 
 // ----- one tile -----
 var FACTS = null;
@@ -2110,33 +2124,38 @@ function footHTML() {
     'A widget whose source isn’t connected or can’t be reached says so and shows no number.';
 }
 function terrainFocusHTML() {
+  // Compact banner: TerrainWatch is the project's centrepiece, but the weather stays the home page.
   var d = S.sources.landslide !== false ? feedData('terrain-scan') : null;
   var ready = d && d.status === 'completed' && /^[a-f0-9]{32}$/.test(d.id);
-  var scanLink = ready ? '/?scan=' + d.id : '/';
-  var facts = ready
-    ? '<div class="terrain-facts"><div><strong data-count="' + esc(d.count) + '">' + esc(d.count) + '</strong><span>' + tx('suspected regions', '疑似區域') + '</span></div>' +
-      '<div><strong>' + esc(d.width_km) + ' × ' + esc(d.width_km) + ' km</strong><span>' + tx('scanned footprint', '掃描範圍') + '</span></div>' +
-      '<div><strong>' + esc(d.usable_percent) + '%</strong><span>' + tx('usable imagery', '可用影像') + '</span></div></div>' +
-      '<p class="terrain-meta">' + tx('Latest saved scan', '最近儲存的掃描') + ' · ' + esc(String(d.acquired).slice(0, 10)) + '<br>' +
-      esc(Number(d.center[0]).toFixed(4)) + ', ' + esc(Number(d.center[1]).toFixed(4)) + ' · ' + esc(d.model) + '</p>'
-    : '<p class="terrain-meta">' + tx('Choose an area on the map or ask Qwen to prepare a scan.', '在地圖選擇區域，或請 Qwen 規劃掃描。') + '</p>';
-  return '<div class="terrain-intro"><p class="terrain-kicker">Skyline / Terrain Watch</p>' +
-    '<h1>' + tx('Taiwan landslide watch.', '台灣山崩觀測') + '</h1>' +
-    '<p class="terrain-lead">' + tx('Explore suspected landslides from space. Compare the evidence, find the coordinates, and keep watch as new imagery arrives.', '從衛星觀測疑似山崩，比對影像證據、查看座標，並持續監測新影像。') + '</p>' +
-    '<div class="terrain-actions"><a class="terrain-primary" href="/">' + tx('Open landslide map ↗', '開啟山崩地圖 ↗') + '</a>' +
-    '<a href="#monitor-panel" data-action="show-monitor">Set up monitoring →</a><button type="button" data-workspace-qwen>Ask Qwen →</button></div>' + facts +
-    '<p class="terrain-note">' + tx('Satellite candidates need review. Weather supports the assessment; it does not confirm or predict a landslide.', '衛星辨識的疑似區域仍需查證。天氣提供判讀背景，並非山崩確認或預測。') + '</p></div>' +
-    '<a class="terrain-preview" href="' + scanLink + '" aria-label="' + tx('Review saved scan on the map', '在地圖檢視儲存的掃描') + '">' +
-    (ready ? '<img src="/results/' + d.id + '/satellite.png" alt="' + tx('Satellite image of the latest scanned footprint', '最近掃描範圍的衛星影像') + '">' : '<span class="terrain-empty">' + tx('Your next study area starts on the map.', '從地圖開始選擇下一個研究區域。') + '</span>') +
-    '<span class="terrain-caption">' + (ready ? tx('View segmentation & coordinates →', '查看分割結果與座標 →') : tx('Choose an area →', '選擇區域 →')) + '</span></a>';
+  var scanLink = ready ? '/terrain/?scan=' + d.id : '/terrain/';
+  var line = ready
+    ? '<b data-count="' + esc(d.count) + '">' + esc(d.count) + '</b> ' + tx('suspected regions', '個疑似區域') + ' · ' + esc(d.width_km) + ' × ' + esc(d.width_km) + ' km · ' + esc(String(d.acquired).slice(0, 10))
+    : tx('Pick an area on the map to run your first satellite scan.', '在地圖選擇區域，開始第一次衛星掃描。');
+  return '<a class="terrain-thumb" href="' + scanLink + '" aria-label="' + tx('Open the latest scan on the landslide map', '在山崩地圖開啟最近的掃描') + '">' +
+      (ready ? '<img src="/results/' + d.id + '/satellite.png" alt="">' : '<span>⛰</span>') + '</a>' +
+    '<div class="terrain-intro"><h1 class="tw-logo" aria-label="TerrainWatch"><svg viewBox="0 0 260 56" aria-hidden="true"><path class="tw-ridge" d="M2 30 L20 12 L31 24 L44 6 L58 22 L70 14 L84 26 L100 8 L114 22 L128 16 L142 27 L158 4 L172 20 L186 13 L200 25 L216 9 L230 21 L244 15 L258 30"/><text x="130" y="52" text-anchor="middle">TerrainWatch</text></svg></h1>' +
+      '<p class="tw-by">' + tx('By Skyline', 'Skyline 出品') + '</p>' +
+      '<p class="terrain-line">' + tx('Spot landslides from space with AI · ', '用 AI 從太空找出山崩 · ') + line + '</p></div>' +
+    '<div class="terrain-actions"><a class="terrain-primary" href="' + scanLink + '">' + tx('Open landslide map', '開啟山崩地圖') + '</a>' +
+      '<button type="button" data-workspace-qwen>' + tx('Ask Qwen', '問 Qwen') + '</button></div>';
 }
 function homeView() {
   return '<div class="home"><section id="terrain-focus" class="terrain-focus" aria-label="Landslide review"></section>' +
-    '<details class="monitor-disclosure"><summary>Satellite monitoring <span>Choose an area &amp; keep watch ↗</span></summary><section id="monitor-panel" aria-label="Automatic landslide monitoring"></section></details>' +
     '<section class="hero" id="hero" aria-label="Current weather"></section>' +
-    '<section class="grid" id="grid" aria-label="Widgets"></section><footer class="foot" id="foot"></footer></div>';
+    '<section class="grid" id="grid" aria-label="Widgets"></section>' +
+    '<div class="customize-row"><button type="button" class="pill-btn" onclick="document.getElementById(\'editBtn\').click()">' + tx('Edit widgets', '編輯小工具') + '</button><button type="button" class="pill-btn" onclick="document.getElementById(\'addBtn\').click()">+ ' + tx('Add widget', '新增小工具') + '</button></div>' +
+    '<details class="monitor-disclosure"><summary>Satellite monitoring <span>Choose an area &amp; keep watch ↗</span></summary><section id="monitor-panel" aria-label="Automatic landslide monitoring"></section></details>' +
+    '<footer class="foot" id="foot"></footer></div>';
 }
 // Fills Home from the feeds. Called after the first paint and whenever a feed arrives or the location changes.
+// The three main tiles sit on the skyline; everything after them starts below the first screen.
+function fitFold() {
+  var g = $('#grid'); if (!g || !document.body.dataset.page === 'home') return;
+  var main = g.querySelector('.tile'); if (!main) return;
+  var r = main.getBoundingClientRect(), bottom = r.bottom + window.scrollY;
+  g.style.setProperty('--fold', Math.max(16, Math.round(window.innerHeight - bottom - 12)) + 'px');
+}
+window.addEventListener('resize', function () { fitFold(); });
 function homeUpdate(first) {
   var hero = $('#hero'); if (!hero) return;
   var terrain = $('#terrain-focus'), terrainHTML = terrainFocusHTML();
@@ -2152,6 +2171,7 @@ function homeUpdate(first) {
     if (anim) countUp(hero);
   }
   if (first) renderGrid(true); else syncGrid();
+  requestAnimationFrame(fitFold);
   var foot = footHTML(), fe = $('#foot');
   if (fe._h !== foot) { fe.innerHTML = foot; fe._h = foot; }
   syncCompact();
@@ -3568,7 +3588,7 @@ function settingsView() {
     setRow('Open-Meteo', 'Live conditions, forecast, air quality, waves and the seasonal outlook at your coordinates', sw('sources.openMeteo', 'Open-Meteo')) +
     setRow('Windy maps', 'Live map embeds', sw('sources.windyMap', 'Windy maps')) +
     setRow('Team PM2.5 model', 'Next-day forecast from the nearest of 22 city models · ' + featNote('pm25'), sw('sources.pm25', 'Team PM2.5 model')) +
-    setRow('Team landslide model', 'Connected · Terrain Watch', sw('sources.landslide', 'Team landslide model')) +
+    setRow('Team landslide model', 'Connected · TerrainWatch', sw('sources.landslide', 'Team landslide model')) +
     setRow('CWA typhoon warnings', featNote('typhoon', 'ty'), sw('sources.typhoon', 'CWA typhoon warnings')) +
   '</section></div>' +
 
@@ -3580,8 +3600,9 @@ function settingsView() {
       '<input type="color" id="accent-custom" data-input="accent" value="' + S.accent + '" aria-label="Custom accent color"' + (isPreset ? '' : ' class="on"') + '></div></div>' +
     setRow('Risk color scale', '<span style="display:flex;gap:3px;margin-top:4px">' + pal().map(function (c) { return '<i style="display:block;width:18px;height:10px;border-radius:3px;background:' + c + '"></i>'; }).join('') + '</span>',
       seg('risk', 'Risk color scale', [['default', 'Default'], ['cb', 'Color-blind safe']])) +
+    setRow('Appearance', 'Dynamic follows the time of day and the weather. Applies to the landslide map too', seg('appearance', 'Appearance', [['dynamic', 'Dynamic'], ['light', 'Light'], ['dark', 'Dark']])) +
     setRow('Sky', 'Follows live weather at your location, on every screen', seg('bgMode', 'Sky', [['live', 'Live weather'], ['static', 'Static']])) +
-    setRow('Fonts', '', seg('fonts', 'Fonts', [['system', 'System (SF on Apple)'], ['default', 'Bricolage + Inter']])) +
+    setRow('Fonts', '', seg('fonts', 'Fonts', [['system', 'System (SF on Apple)'], ['default', 'Original (Bricolage + Inter)']])) +
     '<div class="set-row"><label for="radius" class="lbl">Corner roundness<small id="radius-out">' + S.radius + ' px</small></label><input id="radius" class="plain" style="max-width:200px" type="range" min="6" max="36" value="' + S.radius + '" data-input="radius"></div>' +
     setRow('Skyline art', 'Taiwan city silhouettes under the temperature on Home', seg('skyline', 'Skyline art', [['city', 'Follow my city'], ['off', 'Off']])) +
     setRow('Map base', 'Default for prediction maps', seg('mapBase', 'Map base', [['auto', 'Auto'], ['sat', 'Satellite'], ['windy', 'Windy']])) +
@@ -3690,7 +3711,7 @@ var ACTIONS = {
   'set-base': function (el) { var sub = route().sub; S.predBase[sub] = el.dataset.base; save(); updatePred(); },
   'ask': function (el) { ask(typeof tr === 'function' ? tr(el.dataset.q) : el.dataset.q); },
   'ask-about': function (el) { pendingAsk = el.dataset.q; location.hash = 'ask'; },
-  'set': function (el) { S[el.dataset.key] = el.dataset.val; save(); applyTheme(); rerender(); },
+  'set': function (el) { S[el.dataset.key] = el.dataset.val; save(); applyTheme(); if (el.dataset.key === 'appearance') applySky(); rerender(); },
   'toggle': function (el) {
     var k = el.dataset.key;
     if (k.indexOf('sources.') === 0) { var sk = k.split('.')[1]; S.sources[sk] = !S.sources[sk]; } else S[k] = !S[k];

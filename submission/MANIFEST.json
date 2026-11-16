@@ -7,13 +7,13 @@
     },
     {
       "path": "CREDITS.md",
-      "bytes": 5767,
-      "sha256": "bbf5769f494783ce7cb9d51ef0e214f92d4983d47181f6045c4c2a2e29ef3051"
+      "bytes": 6073,
+      "sha256": "256919748a71ce13b8363f3ab419812877620640060760e65ac3c3b8c24977d8"
     },
     {
       "path": "GITHUB_SUBMISSION.md",
-      "bytes": 3431,
-      "sha256": "790fcac4fabcf10f0583d9be0d2dfb327f5e00f53b119ae8cc441cc583b50f70"
+      "bytes": 3537,
+      "sha256": "3c4dc38e31e8c77f0dcb9ba954f313ccec3a01f3eacbf7eea4ed113ca7a9e791"
     },
     {
       "path": "MODEL_CARD.md",
@@ -22,18 +22,18 @@
     },
     {
       "path": "README.md",
-      "bytes": 10644,
-      "sha256": "3d74d444420ed150ba3b1f6b81148f5d64ee575ced5d736773e1e10726bbb8b6"
+      "bytes": 10666,
+      "sha256": "08aed623ad868080f64dee488e1dc2e9f8742e49c8cb7615c9451a10cf4a96da"
     },
     {
       "path": "app.py",
-      "bytes": 40071,
-      "sha256": "ad2b808dee38d37a945372f34f2b613c6ab5aa4251ac8be185727edae1c9f803"
+      "bytes": 40609,
+      "sha256": "ee955960646008ac47134b57f0bb9816a3c347cd164ae3fd1e87b7bb085f85f0"
     },
     {
       "path": "check_setup.py",
-      "bytes": 2577,
-      "sha256": "78852f5984efdd19d187642b89af80a89ad30e8c2a152dd86bb1bff8aaf531f4"
+      "bytes": 2589,
+      "sha256": "c7ece139759fddf66ad2e0787e4cb3d1cf228f04f8139721ea1cc2ec72d66e19"
     },
     {
       "path": "docs/final-audit-qwen.jpg",
@@ -116,6 +116,11 @@
       "sha256": "cc1e5486ee3d64a49f42863092051ca5fafcd341d5f7188ac1225cc2742be60e"
     },
     {
+      "path": "evidence.py",
+      "bytes": 14848,
+      "sha256": "1b7155fabbd5df186391f44a1bc2f5c9a559b2f01d637258d2ceab218a82e176"
+    },
+    {
       "path": "evidence/checkpoint-verification.json",
       "bytes": 3471,
       "sha256": "d65a4ef603e4682d46842a5ea73dfa811f5cbeefb3e3b8d7e179daea8b31daf8"
@@ -196,11 +201,6 @@
       "sha256": "e11a1c4a1fde6ac2e22c9209547901dff2e89ba508ebf28730f9e9261c3993d0"
     },
     {
-      "path": "evidence.py",
-      "bytes": 14848,
-      "sha256": "1b7155fabbd5df186391f44a1bc2f5c9a559b2f01d637258d2ceab218a82e176"
-    },
-    {
       "path": "geocoder.py",
       "bytes": 4782,
       "sha256": "0a2534f62f0b2f0211e86fcf17625e11efd529f0dcc55c7c7bf2dc507074837a"
@@ -237,13 +237,13 @@
     },
     {
       "path": "one-page-writeup.pdf",
-      "bytes": 4349,
-      "sha256": "cdd1b32e14e1390ecb5763b8eca1a9e7c31893f5366de279a7ea27f8c730f01b"
+      "bytes": 4922,
+      "sha256": "a394bfd8423cac6c5b1f6e7aca94b9f54678b45b31df816057de721352685113"
     },
     {
       "path": "one-page-writeup.txt",
-      "bytes": 3198,
-      "sha256": "951f67f95f37e0a5c5d10949a754ceeccb16738ce9bc4d2ee636446e65939db3"
+      "bytes": 3944,
+      "sha256": "e252ea47277ff20b7bcd543426ae1c6d0ea2d008b55dbc7e3814ed40b7d91354"
     },
     {
       "path": "requirements-dev.txt",
@@ -277,8 +277,8 @@
     },
     {
       "path": "scan_assistant.py",
-      "bytes": 39523,
-      "sha256": "6b0d98f987e17b20722fe5d712f644a536ba54b612bb1177b9964a41414dcfc6"
+      "bytes": 39522,
+      "sha256": "072bddab94cd92dfab1d608eecb966e1d2d040be37428292be530d2a8ee3773b"
     },
     {
       "path": "skyline/README.md",
@@ -597,13 +597,13 @@
     },
     {
       "path": "skyline/ui/app/web/app.js",
-      "bytes": 343363,
-      "sha256": "1d208ed626d78f5e9f36a20e8ba4ae46738b6d96aa0d58088a43f5b7a70375f5"
+      "bytes": 344742,
+      "sha256": "c57ef337d4db1bd5ac6138e76ccfbc08223211d1fd1b5d885fbaec22a150fa23"
     },
     {
       "path": "skyline/ui/app/web/field-desk.css",
-      "bytes": 2778,
-      "sha256": "9d3944624ec96613bf181fa74c5da0b392d51f3b1bed76ef81a952dcafed2c1a"
+      "bytes": 12506,
+      "sha256": "095cb174e6cea3ceaf1faaf62b118a6855f6877bc5cb8f21ab5878b890eb9dee"
     },
     {
       "path": "skyline/ui/app/web/horizon.js",
@@ -627,8 +627,8 @@
     },
     {
       "path": "skyline/ui/app/web/index.html",
-      "bytes": 7811,
-      "sha256": "2b2e4728efbf004697a4238e55e49427737451de065574cd52a3dc13d2a1a814"
+      "bytes": 7832,
+      "sha256": "e63c463bfb32ff570d4cbdcea8bc47bbc3b6858840f876071b9bb93b04e3c3f1"
     },
     {
       "path": "skyline/ui/app/web/location.js",
@@ -707,8 +707,8 @@
     },
     {
       "path": "skyline_integration.py",
-      "bytes": 3412,
-      "sha256": "bd90e9b8afc66105b5c243383bc96dcd5412ce3315dbc3e15d64fbd56e11508b"
+      "bytes": 3427,
+      "sha256": "623c8a0033bf9ed5e4bb9c8d83c688f722a288b25909153860c5ea828e5133e8"
     },
     {
       "path": "spatial.py",
@@ -732,13 +732,13 @@
     },
     {
       "path": "static/index.html",
-      "bytes": 18139,
-      "sha256": "a9888c2feaec2529d456f9be63c67edac3f8fce7c452a1c898bf5f3c16bfb122"
+      "bytes": 18680,
+      "sha256": "c400e75fb5c344df56ff6b558915deeaadc5ca1b0f18fe0b0ee2762e12c0b920"
     },
     {
       "path": "static/monitor-ui.js",
-      "bytes": 4440,
-      "sha256": "a985a2dae23ba2b957d2bc1b0bbd00b0fa094ce293938268d8aaacc68abf9c7c"
+      "bytes": 4456,
+      "sha256": "83a4f7fa75af2271b4d2f265e364e5f10e63d60dc151c6014f67ea7f5213381c"
     },
     {
       "path": "static/national.js",
@@ -762,8 +762,8 @@
     },
     {
       "path": "static/skyline-theme.css",
-      "bytes": 7889,
-      "sha256": "70318a9d66b363559907ae1dad3c81aeb4a775ba59f48ca0b218abbbc9101289"
+      "bytes": 9512,
+      "sha256": "09b8582f10fd547960686db2c4e1cc76a1db6b70424c588cb016055addd0516e"
     },
     {
       "path": "static/skyline.js",
@@ -892,8 +892,8 @@
     },
     {
       "path": "test_unet_integration.py",
-      "bytes": 3924,
-      "sha256": "2b4d08ef7c15ee72e26849a3ee836efa46d3e44f2d6ff6de4b8b0b2820e464c5"
+      "bytes": 3932,
+      "sha256": "eb03a7b86c71fdf38554734b00eb0000dd253ef327584dea75b7241ef02c6c8a"
     },
     {
       "path": "test_weather.py",
@@ -912,8 +912,8 @@
     },
     {
       "path": "two-minute-demo-script.txt",
-      "bytes": 4793,
-      "sha256": "be73b68bc7dc0c9b7e41a6ef91d4ab465d66a232eee46264c24c6f05f2169945"
+      "bytes": 4790,
+      "sha256": "a04e309afc81724e452d0f0f05cfb1c2d8e1ebd292c63c650a3259641c7a0a34"
     },
     {
       "path": "unet_inference.py",

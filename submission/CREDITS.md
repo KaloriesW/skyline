@@ -26,6 +26,7 @@ The submitting team built the Taiwan landslide review workflow and integrated it
 - [Rasterio](https://rasterio.readthedocs.io/), [Shapely](https://shapely.readthedocs.io/), [NumPy](https://numpy.org/), [Pillow](https://python-pillow.org/), [Leaflet](https://leafletjs.com/): imagery processing, geometry and map presentation.
 - [scikit-learn](https://scikit-learn.org/) and [pandas](https://pandas.pydata.org/): Skyline air-model training/evaluation. Its exported models use the supplied plain-Python inference implementation.
 - [OpenAI Codex](https://openai.com/codex/): AI-assisted coding, debugging, tests, data preparation, interface integration and submission-document drafting. The team must understand and verify the submitted work.
+- [Claude Code](https://claude.com/claude-code) (Anthropic's Claude): AI-assisted coding for Skyline: the per-city PM2.5 models and their plain-Python serving, the app server, Ask AI proxy and MCP server, merging the two Skyline interfaces, code review fixes, deployment and the revised one-page write-up.
 - [ReportLab](https://www.reportlab.com/) and [Poppler](https://poppler.freedesktop.org/): submission PDF creation and rendering.
 
 Upstream notices and licenses remain applicable. This credit list does not relicense third-party datasets, libraries, model weights or embedded services. No blanket license has been asserted for the team's combined submission. See `MANIFEST.json` for the distributed files and hashes.

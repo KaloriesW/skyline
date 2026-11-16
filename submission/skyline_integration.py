@@ -1,4 +1,4 @@
-"""One local server: Terrain Watch scans and Skyline's original city models."""
+"""One local server: TerrainWatch scans and Skyline's original city models."""
 import importlib.util
 import json
 from pathlib import Path
@@ -45,9 +45,9 @@ def register(app,backend):
                     'acquired':r['acquired'],'created_at':r['created_at'],'count':r['count'],
                     'center':r['center'],'bbox':r['bbox'],'width_km':r['width_km'],
                     'usable_percent':r['usable_percent'],'geojson':r['geojson'],
-                    'map_url':'/?scan='+r['id'],'classification':'suspected landslide',
+                    'map_url':'/terrain/?scan='+r['id'],'classification':'suspected landslide',
                     'note':'Observed satellite candidates in the displayed scan footprint. Not future risk, county-wide coverage or confirmed events.'}
-        return {'status':'not_scanned','count':None,'map_url':'/',
+        return {'status':'not_scanned','count':None,'map_url':'/terrain/',
                 'note':'No saved scan covers this location. Open the map to prepare a scan.'}
 
     @app.on_event('shutdown')

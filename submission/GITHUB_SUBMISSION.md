@@ -14,7 +14,7 @@ python check_setup.py --inference
 python run.py
 ```
 
-Open http://127.0.0.1:8765/skyline/. This is a local application, not a hosted public website. The tested environment is macOS Apple Silicon with Python 3.14.4. See [README](README.md) for optional Qwen setup. No API key is required for manual satellite scans. A new installation has no saved scans or simulated data.
+Open http://127.0.0.1:8765/skyline/. The local landslide map is at http://127.0.0.1:8765/terrain/. The teammate also lists a hosted demo in the README; its deployed version must be checked separately. The tested environment is macOS Apple Silicon with Python 3.14.4. See [README](README.md) for optional Qwen setup. No API key is required for manual satellite scans. A new installation has no saved scans or simulated data.
 
 The repository contains the trained U-Net, 22 city air-quality models, setup checks, one-page write-up, recording script and evaluation evidence. It excludes runtime conversations, scan histories, monitoring state, environments and experimental YOLO weights. The retained checkpoint is below GitHub's 100 MiB per-file limit; clone with Git/GitHub Desktop rather than uploading it through the browser.
 

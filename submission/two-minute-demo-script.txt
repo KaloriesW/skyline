@@ -1,4 +1,4 @@
-SKYLINE / TERRAIN WATCH — TWO-MINUTE SUBMISSION DEMO
+SKYLINE / TERRAINWATCH — TWO-MINUTE SUBMISSION DEMO
 
 Target: 1:50–1:58, including short click pauses. Do not exceed 2:00.
 Read only NARRATION. ACTION describes the screen, not words to read aloud.
@@ -7,7 +7,7 @@ Use a real completed scan from History. Its acquisition date and measured result
 00:00–00:15 | THE PROBLEM
 ACTION: Show the Skyline home workspace, then open a real completed scan from History.
 NARRATION:
-After heavy rain in Taiwan, where should a reviewer look first? Skyline Terrain Watch turns free satellite imagery into a map of suspected landslides, with the evidence needed to inspect them.
+After heavy rain in Taiwan, where should a reviewer look first? Skyline TerrainWatch turns free satellite imagery into a map of suspected landslides, with the evidence needed to inspect them.
 
 00:15–00:32 | THE MODEL
 ACTION: Show the orange outlines. Briefly show the U-Net model name in Settings.
@@ -39,7 +39,7 @@ Our retained model reached fifty-four-point-three percent pixel IoU and seventy-
 01:45–01:57 | WHY IT MATTERS
 ACTION: Return to the segmented map; finish on one candidate and its evidence.
 NARRATION:
-We built this to help reviewers prioritize inspection with dated, inspectable evidence. Our next step is independent review with local experts. Terrain Watch supports human decisions; it does not predict when a slope will fail.
+We built this to help reviewers prioritize inspection with dated, inspectable evidence. Our next step is independent review with local experts. TerrainWatch supports human decisions; it does not predict when a slope will fail.
 
 RECORDING CHECKLIST
 
