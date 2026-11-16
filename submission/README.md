@@ -2,7 +2,7 @@
 
 **A Taiwan landslide review workspace built for the Veritas AI International High School Hackathon 2026 · Climate track.**
 
-TerrainWatch uses a trained multispectral U-Net to outline suspected landslides in free Sentinel-2 imagery. It puts the candidates, coordinates, before/after vegetation, terrain slope, nearby roads and weather in one review workflow. Local Qwen can propose a scan and answer follow-up questions. Skyline adds city weather and trained PM2.5 forecasts.
+TerrainWatch uses a trained multispectral U-Net to outline suspected landslides in free Sentinel-2 imagery. It puts the candidates, coordinates, before/after vegetation, terrain slope, nearby roads and weather in one review workflow. Local Qwen can propose a scan and answer follow-up questions. Skyline adds city weather and trained PM2.5 and PM10 forecasts of tomorrow’s daily-average concentrations.
 
 **These are suspected satellite observations, not confirmed landslides or predictions of slope failure.**
 
@@ -65,7 +65,7 @@ Coordinates are points inside polygons derived from imagery, not surveyed locati
 | Live Taichung pipeline check | 6 × 6 km; 130 seconds; 148 candidates | 2 stitched tiles; 76.9% usable imagery |
 | Taichung PM2.5 model | **4.379 µg/m³ MAE**, versus 5.906 persistence | 25.9% lower error; 365 test days, 2025-11-08 through 2026-11-07 |
 
-The landslide holdout is small, geographically limited and positive-enriched. Boundaries, uncertain inventory negatives and prior benchmark exposure limit interpretation. Live-image accuracy remains unmeasured. See [evaluation evidence](evidence/) and [the model card](MODEL_CARD.md), including an error-example figure. PM2.5 targets are CAMS estimates rather than station measurements; historical error does not establish future sensor-level accuracy.
+The landslide holdout is small, geographically limited and positive-enriched. Boundaries, uncertain inventory negatives and prior benchmark exposure limit interpretation. Live-image accuracy remains unmeasured. See [evaluation evidence](evidence/) and [the model card](MODEL_CARD.md), including an error-example figure. PM2.5 and PM10 targets are CAMS estimates rather than station measurements; historical error does not establish future sensor-level accuracy.
 
 ## Verify the release
 

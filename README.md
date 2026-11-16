@@ -2,9 +2,19 @@
 
 **Taiwan landslide review, weather and air quality — Veritas AI Hackathon 2026, Climate track.**
 
-The final tested hackathon app is in **[submission/](submission/)**. It includes the trained multispectral U-Net checkpoint, Sentinel-2 scan pipeline, local Qwen assistant, new glass Skyline interface, automatic monitoring controls, evaluation evidence and submission documents.
+This is our **hackathon submission repository**. Run the integrated application in **[submission/](submission/)**; that folder contains the trained checkpoint, source code, setup instructions, evaluation evidence and submission documents.
 
 ![TerrainWatch](submission/docs/workspace.jpg)
+
+## What it does
+
+- **Review suspected landslides across Taiwan:** scan Sentinel-2 imagery with our retained multispectral U-Net and inspect mapped candidate polygons.
+- **Investigate each candidate:** compare before/after vegetation, slope and nearby roads, with close-up buttons for areas recommended for review.
+- **Ask follow-up questions:** Qwen uses the current scan, weather, air-quality and monitoring context.
+- **Monitor new imagery:** selected-area checks and hourly reports, plus an optional resumable whole-Taiwan queue with rainfall-informed review priorities.
+- **View weather and air quality:** Skyline's interface includes city weather and trained forecasts of tomorrow's daily-average **PM2.5 and PM10**.
+
+Monitoring starts only when enabled. The whole-Taiwan mode has not completed a full national live pass; its estimated initial run is **29–79 hours** on the development Mac. Rainfall-informed ranking is experimental review guidance, not a validated prediction of slope failure.
 
 ## Run the final version
 
@@ -17,7 +27,11 @@ python check_setup.py --inference
 python run.py
 ```
 
-Open http://127.0.0.1:8765/skyline/ for the home workspace. Tested on macOS Apple Silicon with Python 3.14.4. See the [complete setup, optional Qwen configuration and limitations](submission/README.md).
+Open http://127.0.0.1:8765/skyline/ for the home workspace or http://127.0.0.1:8765/terrain/ for the landslide map. Tested on macOS Apple Silicon with Python 3.14.4. See the [complete setup, optional Qwen configuration and limitations](submission/README.md).
+
+## Validation
+
+The integrated merge passed **256 Python tests and 15 JavaScript tests**, plus the setup check and actual U-Net inference. Three optional Python checks were skipped. The subsequent teammate updates changed layout/CSS and asset versions; the app JavaScript syntax check passed. These checks verify software behavior, not live landslide accuracy.
 
 ## Submission documents
 
