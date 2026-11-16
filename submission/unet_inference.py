@@ -120,7 +120,8 @@ def run(item,transform,crs,shape,bbox,directory,catalog,get_json,safe_asset,thre
     if device not in {'cpu','mps'}:raise ValueError('TERRAIN_UNET_DEVICE must be cpu or mps.')
     if device=='mps' and not torch.backends.mps.is_available():raise ValueError('MPS unavailable.')
     data,valid,metadata=fetch_inputs(item,transform,crs,shape,bbox,directory,catalog,get_json,safe_asset,update)
-    if valid.mean()<.02:raise ValueError('Less than 2% clear land has all 13 U-Net inputs. Choose another scene.')
+    from scene_quality import require_usable
+    require_usable(valid)
     mask,scores,used=segment(data,valid,threshold,update,device=device)
     with rasterio.open(directory/'segmentation.tif','w',driver='GTiff',height=shape[0],width=shape[1],
                        count=2,dtype='float32',crs=crs,transform=transform,nodata=-9999,compress='deflate') as dst:

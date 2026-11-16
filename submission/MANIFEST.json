@@ -22,13 +22,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 11282,
-      "sha256": "46a5a166936f983079583b3b0c2acd51ae10e73a6ea224212fe0585c6fd05364"
+      "bytes": 11939,
+      "sha256": "dc14d7c757722391a2957e3b1a65b0170cb47ffc219fd8e488e6643d809c7b62"
     },
     {
       "path": "app.py",
-      "bytes": 40609,
-      "sha256": "ee955960646008ac47134b57f0bb9816a3c347cd164ae3fd1e87b7bb085f85f0"
+      "bytes": 42655,
+      "sha256": "cbcb4ca10d40c4c087ed861ce8c6f9d2d5b4573ea9b89983c5e0bb6ac45825fa"
     },
     {
       "path": "check_setup.py",
@@ -427,8 +427,13 @@
     },
     {
       "path": "scan_assistant.py",
-      "bytes": 39522,
-      "sha256": "072bddab94cd92dfab1d608eecb966e1d2d040be37428292be530d2a8ee3773b"
+      "bytes": 40987,
+      "sha256": "2b66ef3121b5b3bc6d97e886416535ed5de38a679f492c0c13a33f40e75509b9"
+    },
+    {
+      "path": "scene_quality.py",
+      "bytes": 1329,
+      "sha256": "a140eb08a8459f4c4ae5d30bf3b914223e5930fa66546ff66ea326b3c1ae7116"
     },
     {
       "path": "skyline/README.md",
@@ -857,8 +862,8 @@
     },
     {
       "path": "skyline_integration.py",
-      "bytes": 3427,
-      "sha256": "623c8a0033bf9ed5e4bb9c8d83c688f722a288b25909153860c5ea828e5133e8"
+      "bytes": 3498,
+      "sha256": "09941a41332aa22757b3898ce68848aa800a1f604d9a64da527ba6b6e78ee788"
     },
     {
       "path": "spatial.py",
@@ -872,8 +877,8 @@
     },
     {
       "path": "static/app.js",
-      "bytes": 23713,
-      "sha256": "fcbfd6cc390f728d4c9c87c2aacf81ae30a609fe4cec48896a5ab9c24a763f9a"
+      "bytes": 23811,
+      "sha256": "a455fcf1adbb798a19ab74865cac7af9a588f2557d2306f66c6a097e58103bdc"
     },
     {
       "path": "static/assistant.js",
@@ -962,8 +967,8 @@
     },
     {
       "path": "test_assistant.py",
-      "bytes": 17585,
-      "sha256": "8af49d8ea7782706014f327ad356417abd62d182bc86d805da4d3b446119f405"
+      "bytes": 19407,
+      "sha256": "e8ceb2e8d1c0636b346d9694c86a706a4610865e7366cb4556395cf57f28019d"
     },
     {
       "path": "test_evidence.py",
@@ -1036,6 +1041,11 @@
       "sha256": "3e6992f0b83beec43f38cf8bf4c59118a97b12600fc1975e1959ed15128da1f2"
     },
     {
+      "path": "test_scene_quality.py",
+      "bytes": 4472,
+      "sha256": "e6e7bf17a6d40220c056947a6af4a41a9d777652f3b518929ddb7481e5c0b91d"
+    },
+    {
       "path": "test_skyline_update.py",
       "bytes": 2914,
       "sha256": "58af0976dd0d53c395065e2d34f8c69fae4577f17e41fc84382eb5e06c20bb2c"
@@ -1067,8 +1077,8 @@
     },
     {
       "path": "unet_inference.py",
-      "bytes": 7399,
-      "sha256": "3a011b4e1fa20f659ce03f6c745f1fc0808bdb18e5a65887c5c8919348e8fee3"
+      "bytes": 7355,
+      "sha256": "a234c74304c87af077bcef486db9db20fd93f7b11ff8253e4148f11d7101398a"
     },
     {
       "path": "weather.py",
@@ -1077,8 +1087,8 @@
     },
     {
       "path": "workspace_assistant.py",
-      "bytes": 10559,
-      "sha256": "1a3f8b11935c679654440600cac5ba260bca10a81e19aca0ef7c8fcb17a7b58d"
+      "bytes": 10637,
+      "sha256": "2e009842a1b2161750857127c440f1701744b8b3ca1ba4aadc630e3011497db8"
     }
   ]
 }

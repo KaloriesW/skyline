@@ -3,7 +3,7 @@ from datetime import date,datetime,timedelta,timezone
 from pathlib import Path
 from typing import Literal
 import json,math,os,re,statistics,threading,time,uuid
-import geocoder,weather
+import geocoder,weather,scene_quality
 import requests
 from fastapi import HTTPException
 from pydantic import BaseModel,Field,ConfigDict,create_model
@@ -125,6 +125,8 @@ def review_brief(result, rows):
 
 
 def measured_report(result):
+    quality=scene_quality.saved_quality(result)
+    if not quality['suitable']:raise ValueError(quality['message'])
     rows=priority_rows(result)
     brief=review_brief(result,rows)
     return {'review_brief':brief,'scan_id':result['id'],'acquired':result['acquired'],'center':result['center'],
@@ -141,6 +143,8 @@ def measured_report(result):
 
 def grounded_scan_answer(question, context):
     """Use measured records for common scan-review questions; free-form Qwen handles the rest."""
+    if context.get('scan_quality',{}).get('suitable') is False:
+        return context['scan_quality']['message']
     report=context.get('report') or context.get('scan') or {}
     brief=report.get('review_brief')
     if not brief:return None
@@ -281,6 +285,8 @@ def register(api,backend):
             key='scan-'+scan_id
         else:
             key='general';context['note']='No scan selected. Give general explanations only.'
+        if plan_id or scan_id:
+            context['scan_quality']=job.get('quality',{}) if (scan_id or plan.get('job_id')) else {}
         if result:
             report=measured_report(result)
             context['report']={k:v for k,v in report.items() if k not in ['weather','priority_locations']}
@@ -360,7 +366,10 @@ def register(api,backend):
             if end>datetime.now(ZoneInfo('Asia/Taipei')).date():raise HTTPException(400,'Future satellite imagery is unavailable.')
         found=backend.scenes(backend.Search(**area.model_dump(),start=start,end=end,cloud=60))['scenes']
         if not found:return {'state':'clarify','message':'No matching imagery was found in the search period. Try another date or nearby location.'}
-        found.sort(key=lambda scene:scene['date'],reverse=True);scene=found[0]
+        selected=backend.select_usable_scene(found,area)
+        scene=selected['scene']
+        if scene is None:
+            return {'state':'clarify','message':f"No suitable image was verified among {len(selected['checked'])} recent acquisitions for this exact area. At least {scene_quality.MIN_USABLE_PERCENT:g}% usable land is required. No scan was started. Try another date range or a smaller study area.",'quality_checks':selected['checked']}
         models=backend.model_list();model=next((m for m in models if m['available'] and m['preferred']),next((m for m in models if m['available']),None))
         if not model:raise HTTPException(409,'No completed segmentation model is available yet.')
         scope='Study square centered on the mapped location. It may cross administrative boundaries and include valleys or urban land; it is not a mountain-only mask.'
@@ -372,7 +381,8 @@ def register(api,backend):
               'request':{**area.model_dump(),'scene_id':scene['id'],'model':model['id'],'confidence':model.get('confidence',.35)},
               'model_label':model['label'],'area_km2':area.width_km**2,'scene':scene,'estimate':estimate(area.width_km,model['id'],backend.RESULTS),
               'message':'Review the outlined boundary and acquisition date. Start this scan?',
-              'scene_note':'Latest matching scene with ≤60% whole-tile clouds. Adjacent tiles are stitched; missing or cloudy pixels remain unassessed.'}
+              'quality_checks':selected['checked'],
+              'scene_note':f"Latest checked acquisition passing local quality: {scene['quality']['usable_percent']:.1f}% usable land in this selected area (minimum {scene_quality.MIN_USABLE_PERCENT:g}%). All model inputs are checked again before inference. Missing or cloudy pixels remain unassessed."}
         save(plan);return plan
 
     def choices(prompt,intent,places,phase,identifier=None):
@@ -425,6 +435,10 @@ def register(api,backend):
     @api.get('/api/assistant/plans/{identifier}')
     def get_plan(identifier:str):
         plan=read(identifier)
+        if plan['state']=='completed' and not scene_quality.saved_quality(plan.get('report',{}))['suitable']:
+            quality=scene_quality.saved_quality(plan.get('report',{}))
+            plan.update(state='failed',message=quality['message'],quality=quality)
+            plan.pop('report',None);save(plan)
         if plan['state']=='completed' and not plan.get('report',{}).get('review_brief'):
             result=backend.scan_status(plan['job_id']).get('result')
             if result:
@@ -442,6 +456,8 @@ def register(api,backend):
             if plan['state'] in ['running','reporting','completed']:return plan
             if plan['state']!='awaiting_confirmation':raise HTTPException(409,'Prepare a new plan to start another scan.')
             if datetime.now(timezone.utc)>datetime.fromisoformat(plan['expires_at']):raise HTTPException(409,'This plan expired. Prepare a new plan for current imagery.')
+            if not plan.get('scene',{}).get('quality',{}).get('suitable'):
+                raise HTTPException(409,'This plan predates local imagery quality checks. Prepare a new plan.')
             job=backend.start_scan(backend.Scan(**plan['request']))
             plan.update(state='running',job_id=job['id'],confirmed_at=datetime.now(timezone.utc).isoformat(),message='Starting the approved scan…');save(plan)
         launch(identifier);return plan
@@ -456,8 +472,8 @@ def register(api,backend):
     @api.get('/api/assistant/plans/{identifier}/report')
     def download_report(identifier:str):
         from fastapi.responses import Response
-        p=read(identifier)
-        if p['state']!='completed':raise HTTPException(409,'Report is not ready.')
+        p=get_plan(identifier)
+        if p['state']!='completed':raise HTTPException(409,p.get('message','Report is not ready.'))
         r=p['report'];lines=[p['area_name'],r['overview'],f"Image: {r['acquired']}",f"Model: {r['model']}",
           f"Area: {r['width_km']} km square at {r['center']}",f"Candidates: {r['count']}; both checks: {r['both_checks_count']}",
           f"Imagery coverage: {r['imagery_coverage_percent']}%; usable: {r['usable_percent']}%",'',r['ranking_method'],'']

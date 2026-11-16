@@ -89,7 +89,9 @@ def register(api,backend,skyline):
         w=context['location_weather']
         context['location_weather']={k:w.get(k) for k in ['status','summary','source','forecast_start','forecast_end','fetched_at']}
         if body.scan_id:
-            result=backend.scan_status(body.scan_id).get('result')
+            job=backend.scan_status(body.scan_id)
+            context['scan_quality']=job.get('quality',{})
+            result=job.get('result')
             if result:
                 report=scan_assistant.measured_report(result)
                 context['scan']={k:v for k,v in report.items() if k!='weather'}

@@ -14,6 +14,7 @@ class AssistantTests(unittest.TestCase):
         self.root=Path(self.temp.name);(self.root/'results').mkdir()
         self.backend=SimpleNamespace(HERE=self.root,RESULTS=self.root/'results',Area=app.Area,Search=app.Search,Scan=app.Scan,
             scenes=Mock(return_value={'scenes':[{'id':'S2C_51RUH_20261105_0_L2A','date':'2026-11-05T02:40:00Z','cloud':1}]}),
+            select_usable_scene=Mock(side_effect=lambda found,area:{'scene':{**found[0],'quality':{'suitable':True,'usable_percent':90}},'checked':[]}),
             model_list=Mock(return_value=[{'id':'nano448','label':'YOLO11n · 448','available':True,'preferred':True}]),
             start_scan=Mock(return_value={'id':'b'*32,'state':'running'}),scan_status=Mock(return_value={'state':'running','progress':20,'message':'Scanning'}))
         api=FastAPI();assistant.register(api,self.backend);self.client=TestClient(api)
@@ -230,3 +231,31 @@ class AssistantTests(unittest.TestCase):
         self.backend.start_scan.assert_called_once()
 
 if __name__=='__main__':unittest.main()
+
+class QualityPlanTests(AssistantTests):
+    def test_no_qualifying_scene_produces_no_confirmable_plan(self):
+        self.backend.select_usable_scene.return_value={'scene':None,'checked':[{'usable_percent':2.6,'suitable':False}]}
+        self.backend.select_usable_scene.side_effect=None
+        p=self.plan()
+        self.assertEqual(p['state'],'clarify')
+        self.assertIn('No scan was started',p['message'])
+        self.assertNotIn('request',p)
+        self.backend.start_scan.assert_not_called()
+
+    def test_old_completed_cloudy_plan_is_rejected_and_export_blocked(self):
+        p=self.plan();p.update(state='completed',job_id='b'*32,report={'usable_percent':2.6,'count':0})
+        (self.root/'assistant'/f"{p['id']}.json").write_text(json.dumps(p))
+        response=self.client.get(f"/api/assistant/plans/{p['id']}").json()
+        self.assertEqual(response['state'],'failed')
+        self.assertNotIn('report',response)
+        self.assertIn('Imagery unsuitable',response['message'])
+        self.assertEqual(self.client.get(f"/api/assistant/plans/{p['id']}/report").status_code,409)
+
+    def test_failed_quality_check_never_becomes_completed_report(self):
+        p=self.plan();self.client.post(f"/api/assistant/plans/{p['id']}/start",json={'confirm':True})
+        self.backend.scan_status.return_value={'state':'failed','message':'Imagery unsuitable: 2.6% usable.'}
+        self.qwen.reset_mock()
+        target,identifier=self.thread.call_args.args;target(identifier)
+        p=self.client.get(f"/api/assistant/plans/{p['id']}").json()
+        self.assertEqual(p['state'],'failed');self.assertNotIn('report',p)
+        self.qwen.assert_not_called()

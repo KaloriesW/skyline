@@ -33,6 +33,7 @@ from fastapi.responses import RedirectResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, model_validator
 import model_profiles
+import scene_quality
 
 CATALOG = 'https://earth-search.aws.element84.com/v1'
 COLLECTION = 'sentinel-2-l2a'
@@ -166,6 +167,37 @@ def scenes(query: Search):
                 'note': 'Up to 100 matching scenes, sorted by whole-scene cloud cover. Local cloud coverage is checked during scanning.'}
     except requests.RequestException as e:
         raise HTTPException(502, 'Satellite catalogue unavailable. Please retry. '+str(e))
+
+
+
+def scene_preflight(scene,area):
+    """Check local SCL pixels, not the catalogue's whole-tile cloud percentage."""
+    import mosaic
+    from evidence import clear_land
+    item=get_json(f"{CATALOG}/collections/{COLLECTION}/items/{scene['id']}")
+    combined=mosaic.discover(item,area.bbox(),CATALOG,get_json)
+    transform,crs,shape=mosaic.grid(item,area.bbox(),safe_asset)
+    scl,_=mosaic.quality(combined,transform,crs,shape,safe_asset)
+    quality=scene_quality.assessment(float(clear_land(scl).mean())*100)
+    quality['stage']='local_scene_classification_preflight'
+    quality['note']='All model inputs are checked again before inference.'
+    return quality
+
+
+def select_usable_scene(found,area):
+    checked=[];seen=set()
+    for scene in sorted(found,key=lambda s:s['date'],reverse=True):
+        # Adjacent tile records from one acquisition must not use up the retry budget.
+        key=(scene.get('platform'),scene['date'][:10])
+        if key in seen:continue
+        seen.add(key)
+        try: quality=scene_preflight(scene,area)
+        except Exception:
+            quality={'suitable':False,'message':'Local imagery quality could not be verified. Scene skipped.'}
+        checked.append({'scene_id':scene['id'],'date':scene['date'],**quality})
+        if quality['suitable']:return {'scene':{**scene,'quality':quality},'checked':checked}
+        if len(checked)>=scene_quality.MAX_PREFLIGHT_SCENES:break
+    return {'scene':None,'checked':checked}
 
 
 def safe_asset(item, key):
@@ -320,8 +352,10 @@ def scan_job(job_id,request):
         item=get_json(f'{CATALOG}/collections/{COLLECTION}/items/{request.scene_id}')
         import mosaic
         item,rgb,valid,clear,transform,crs=fetch_crop(item,request.bbox())
-        if clear.mean()<0.02:
-            raise ValueError('Less than 2% of this area has usable clear pixels. Choose another scene or location.')
+        from evidence import clear_land
+        scl,_=mosaic.quality(item,transform,crs,valid.shape,safe_asset)
+        clear=valid & clear_land(scl)
+        scene_quality.require_usable(clear)
         job_dir=RESULTS/job_id;job_dir.mkdir()
         bounds=save_overlay(rgb,valid,transform,crs,job_dir/'satellite.png')
         # Excluded pixels have a separate overlay, leaving true-color imagery intact.
@@ -356,7 +390,7 @@ def scan_job(job_id,request):
                 update('Fetching native Sentinel-2 RGB bands for the fine-tuned model…',20)
                 inference_rgb,inference_valid=mosaic.native_rgb(item,transform,crs,(h,w),safe_asset)
                 clear=clear & inference_valid
-                if clear.mean()<.02:raise ValueError('Insufficient valid native RGB coverage for Sentinel-2 inference.')
+                scene_quality.require_usable(clear)
             union=np.zeros((h,w),bool);scores=np.zeros((h,w),np.float32)
             tiles=[(y,x) for y in tile_starts(h,native,stride) for x in tile_starts(w,native,stride)]
             used=0
@@ -381,6 +415,7 @@ def scan_job(job_id,request):
                         union[y:y+th,x:x+tw] |= m
                         target=scores[y:y+th,x:x+tw];target[m]=np.maximum(target[m],score)
                 update(f'Analyzing tile {i+1} of {len(tiles)}…',20+int(65*(i+1)/len(tiles)))
+        quality=scene_quality.require_usable(clear)
         update('Converting detected boundaries to geographic coordinates…',90)
         geojson=make_features(union,scores,transform,crs,item['id'],item['properties']['datetime'])
         if request.model == 'unet13':
@@ -409,7 +444,7 @@ def scan_job(job_id,request):
                 'source_scene_ids':[t['id'] for t in item['_tiles']],
                 'imagery_coverage_percent':round(float(valid.mean()*100),1),
                 'coverage_warning':None if valid.all() else 'Some pixels have no imagery for this satellite pass. Missing or cloudy pixels are not assessed.',
-                'usable_percent':round(float(clear.mean()*100),1),'model':label,'model_id':request.model,
+                'usable_percent':round(float(clear.mean()*100),1),'quality':quality,'model':label,'model_id':request.model,
                 'checkpoint_sha256':checkpoint_hash,'checkpoint_name':checkpoint.name,
                 'confidence_threshold':request.confidence,'tiles_analyzed':used,'minimum_mapped_area_m2':400,
                 'pixel_size_m':abs(transform.a),'overlay_bounds':bounds,'bbox':request.bbox(),
@@ -448,11 +483,21 @@ def start_scan(request: Scan):
     threading.Thread(target=scan_job,args=(job_id,request),daemon=True).start()
     return JOBS[job_id].copy()
 
+def validated_saved_job(job_id,result):
+    quality=scene_quality.saved_quality(result)
+    if not quality['suitable']:
+        return {'id':job_id,'state':'failed','progress':0,'message':quality['message'],
+                'quality':quality,'reason':'unsuitable_imagery'}
+    return {'id':job_id,'state':'completed','progress':100,'result':{**result,'quality':quality}}
+
 @app.get('/api/scans/{job_id}')
 def scan_status(job_id: str):
-    if job_id in JOBS:return JOBS[job_id].copy()
+    if job_id in JOBS:
+        job=JOBS[job_id].copy()
+        if job.get('state')=='completed':return validated_saved_job(job_id,job['result'])
+        return job
     f=RESULTS/job_id/'result.json' if re.fullmatch('[a-f0-9]{32}',job_id) else None
-    if f and f.exists():return {'id':job_id,'state':'completed','progress':100,'result':json.loads(f.read_text())}
+    if f and f.exists():return validated_saved_job(job_id,json.loads(f.read_text()))
     raise HTTPException(404,'Scan not found.')
 
 @app.get('/api/history')
@@ -460,7 +505,7 @@ def history():
     results=[]
     for f in sorted(RESULTS.glob('*/result.json'),key=lambda p:p.stat().st_mtime,reverse=True)[:12]:
         r=json.loads(f.read_text())
-        if r.get('demo_snapshot'):continue
+        if r.get('demo_snapshot') or not scene_quality.saved_quality(r)['suitable']:continue
         results.append({k:r[k] for k in ['id','acquired','model','count','usable_percent','created_at']})
     return results
 

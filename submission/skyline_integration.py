@@ -1,6 +1,7 @@
 """One local server: TerrainWatch scans and Skyline's original city models."""
 import importlib.util
 import json
+import scene_quality
 from pathlib import Path
 from fastapi import HTTPException, Query
 from fastapi.staticfiles import StaticFiles
@@ -37,7 +38,7 @@ def register(app,backend):
         if (lat is None)!=(lon is None):raise HTTPException(400,'Provide both latitude and longitude.')
         for path in sorted(backend.RESULTS.glob('*/result.json'),key=lambda p:p.stat().st_mtime,reverse=True):
             r=json.loads(path.read_text())
-            if r.get('demo_snapshot'):continue
+            if r.get('demo_snapshot') or not scene_quality.saved_quality(r)['suitable']:continue
             if lat is not None:
                 west,south,east,north=r['bbox']
                 if not west<=lon<=east or not south<=lat<=north:continue
