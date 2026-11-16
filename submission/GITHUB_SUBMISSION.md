@@ -23,7 +23,7 @@ Run from the prepared `skyline-terrain/` directory. Create an EMPTY public GitHu
 git init -b main
 git add .
 git status --short
-git commit -m "Submit Skyline Terrain Watch hackathon project"
+git commit -m "Submit Skyline TerrainWatch hackathon project"
 git remote add origin YOUR_PUBLIC_REPOSITORY_HTTPS_URL
 git push -u origin main
 ```

@@ -1,4 +1,4 @@
-"""One local server: Terrain Watch scans and Skyline's original city models."""
+"""One local server: TerrainWatch scans and Skyline's original city models."""
 import importlib.util
 import json
 from pathlib import Path

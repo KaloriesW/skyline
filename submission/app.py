@@ -130,7 +130,7 @@ def write_selection(state):
 
 @app.get('/')
 def index(request: Request):
-    # Skyline weather is the home page; Terrain Watch's map is one part of it, at /terrain/.
+    # Skyline weather is the home page; TerrainWatch's map is one part of it, at /terrain/.
     # Old map links (/?scan=..., /?selection=1) still land on the map.
     q=request.url.query
     return RedirectResponse('/terrain/'+('?'+q if q else '') if q else '/skyline/', status_code=307)

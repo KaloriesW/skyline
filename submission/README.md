@@ -1,12 +1,12 @@
-# Skyline / Terrain Watch
+# Skyline / TerrainWatch
 
 **A Taiwan landslide review workspace built for the Veritas AI International High School Hackathon 2026 · Climate track.**
 
-Terrain Watch uses a trained multispectral U-Net to outline suspected landslides in free Sentinel-2 imagery. It puts the candidates, coordinates, before/after vegetation, terrain slope, nearby roads and weather in one review workflow. Local Qwen can propose a scan and answer follow-up questions. Skyline adds city weather and trained PM2.5 forecasts.
+TerrainWatch uses a trained multispectral U-Net to outline suspected landslides in free Sentinel-2 imagery. It puts the candidates, coordinates, before/after vegetation, terrain slope, nearby roads and weather in one review workflow. Local Qwen can propose a scan and answer follow-up questions. Skyline adds city weather and trained PM2.5 forecasts.
 
 **These are suspected satellite observations, not confirmed landslides or predictions of slope failure.**
 
-![Terrain Watch workspace](docs/workspace.jpg)
+![TerrainWatch workspace](docs/workspace.jpg)
 
 ## Run it
 

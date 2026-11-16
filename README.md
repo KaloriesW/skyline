@@ -1,10 +1,10 @@
-# Skyline / Terrain Watch
+# Skyline / TerrainWatch
 
 **Taiwan landslide review, weather and air quality — Veritas AI Hackathon 2026, Climate track.**
 
 The final tested hackathon app is in **[submission/](submission/)**. It includes the trained multispectral U-Net checkpoint, Sentinel-2 scan pipeline, local Qwen assistant, new glass Skyline interface, automatic monitoring controls, evaluation evidence and submission documents.
 
-![Terrain Watch](submission/docs/workspace.jpg)
+![TerrainWatch](submission/docs/workspace.jpg)
 
 ## Run the final version
 
